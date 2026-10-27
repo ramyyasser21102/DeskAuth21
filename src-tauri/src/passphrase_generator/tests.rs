@@ -13,7 +13,7 @@ fn the_bundled_list_is_the_full_unique_dice_list() {
 fn it_builds_six_words_joined_by_hyphens() {
     let list = ["alpha", "bravo", "charlie"];
     let mut next = 0u32;
-    let phrase = passphrase_from(&list, || {
+    let phrase = phrase_from(&list, 6, "-", || {
         next += 1;
         next
     });
