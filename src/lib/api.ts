@@ -15,3 +15,4 @@ export const createVault = (passphrase: string) => invoke<void>("create_vault", 
 export const unlockVault = (passphrase: string) => invoke<void>("unlock", { passphrase });
 export const lockVault = () => invoke<void>("lock");
 export const listCodes = () => invoke<CodeView[]>("list_codes");
+export const copyCode = (accountIndex: number) => invoke<void>("copy_code", { accountIndex });

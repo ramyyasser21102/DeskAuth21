@@ -10,6 +10,10 @@ pub enum CommandError {
     VaultLocked,
     #[error("a vault already exists")]
     VaultAlreadyExists,
+    #[error("no account at position {0}")]
+    AccountNotFound(usize),
+    #[error("clipboard unavailable: {0}")]
+    Clipboard(String),
     #[error("passphrase must be at least {0} characters")]
     PassphraseTooShort(usize),
     #[error(transparent)]

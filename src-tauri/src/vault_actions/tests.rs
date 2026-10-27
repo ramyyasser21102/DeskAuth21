@@ -74,6 +74,18 @@ fn imported_accounts_survive_a_lock_cycle() {
 }
 
 #[test]
+fn looks_up_a_single_code_by_position() {
+    let (state, directory) = unlocked_state();
+    import_accounts(&state, ACCOUNT_URI).unwrap();
+    let all_codes = current_codes(&state, 59).unwrap();
+    assert_eq!(code_for_account(&state, 0, 59).unwrap(), all_codes[0].code);
+    assert!(matches!(code_for_account(&state, 1, 59), Err(CommandError::AccountNotFound(1))));
+    lock_vault(&state);
+    assert!(matches!(code_for_account(&state, 0, 59), Err(CommandError::VaultLocked)));
+    remove(directory);
+}
+
+#[test]
 fn a_failed_save_rolls_the_import_back() {
     let (_state, directory) = unlocked_state();
     let blocked = AppState::new(directory.join("vault.da21").join("cannot-create-under-a-file"));
