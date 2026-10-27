@@ -19,6 +19,12 @@ fn rejects_text_that_is_no_known_format() {
 }
 
 #[test]
+fn refuses_input_far_larger_than_any_export() {
+    let huge = " ".repeat(MAX_IMPORT_TEXT_BYTES + 1);
+    assert_eq!(import_text(&huge, Vendor::Other), Err(ImportError::TooLarge));
+}
+
+#[test]
 fn rejects_broken_json() {
     assert_eq!(import_text("{ not json", Vendor::Other), Err(ImportError::MalformedFile));
 }
