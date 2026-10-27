@@ -1,5 +1,8 @@
 //! DeskAuth21: wires the modules together. No business logic lives here.
 
+mod activity;
+mod auto_lock;
+mod auto_lock_policy;
 mod autostart;
 mod clipboard;
 mod clock;
@@ -14,6 +17,8 @@ mod launch_options;
 mod otp;
 mod passphrase;
 mod persistence;
+mod settings;
+mod settings_store;
 mod state;
 mod tray;
 mod vault;
@@ -43,6 +48,9 @@ pub fn run() {
             commands::import_uri,
             commands::list_codes,
             commands::copy_code,
+            commands::get_settings,
+            commands::set_auto_lock_minutes,
+            commands::record_activity,
         ])
         .setup(setup_app)
         .run(tauri::generate_context!())
@@ -51,11 +59,14 @@ pub fn run() {
 
 fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let vault_path = app.path().app_data_dir()?.join(VAULT_FILE_NAME);
-    app.manage(AppState::new(vault_path));
+    let state = AppState::new(vault_path);
+    state.replace_settings(settings_store::load_settings(&state.settings_path()));
+    app.manage(state);
     autostart::load_initial_state(app.handle());
     hotkey::register(app.handle());
     tray::create_tray(app.handle())?;
     tray::spawn_refresh_loop(app.handle().clone());
+    auto_lock::spawn_loop(app.handle().clone());
     if !should_start_hidden(std::env::args()) {
         window::show_main_window(app.handle());
     }

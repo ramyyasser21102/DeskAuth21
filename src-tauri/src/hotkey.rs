@@ -1,8 +1,9 @@
 //! The global show/hide hotkey.
 
+use crate::state::AppState;
 use crate::window::toggle_main_window;
 use tauri::plugin::TauriPlugin;
-use tauri::{AppHandle, Wry};
+use tauri::{AppHandle, Manager, Wry};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 /// Cmd on macOS, Ctrl elsewhere. "A" for Authenticator.
@@ -12,6 +13,7 @@ pub fn plugin() -> TauriPlugin<Wry> {
     tauri_plugin_global_shortcut::Builder::new()
         .with_handler(|app, _shortcut, event| {
             if event.state() == ShortcutState::Pressed {
+                app.state::<AppState>().record_activity();
                 toggle_main_window(app);
             }
         })

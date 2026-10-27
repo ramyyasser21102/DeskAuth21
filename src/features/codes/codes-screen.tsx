@@ -1,8 +1,9 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImportPanel } from "@/features/import/import-panel";
-import { lockVault } from "@/lib/api";
+import { AutoLockSetting } from "@/features/settings/auto-lock-setting";
+import { useActivityReporter } from "@/features/settings/use-activity-reporter";
 import { CodeRow } from "./code-row";
+import { CodesFooter } from "./codes-footer";
 import { useImportVisibility } from "./use-import-visibility";
 import { useLiveCodes } from "./use-live-codes";
 
@@ -10,13 +11,9 @@ const COPY_HINT = "Click a code to copy it; it is cleared from the clipboard aft
 const EMPTY_HINT = "No accounts yet. Import them from Google Authenticator below.";
 
 export function CodesScreen({ onLocked }: { onLocked: () => void }) {
+  useActivityReporter();
   const { codes, hadNoAccountsOnLoad } = useLiveCodes(onLocked);
   const { isImportOpen, toggleImport } = useImportVisibility(hadNoAccountsOnLoad);
-
-  const handleLock = async () => {
-    await lockVault();
-    onLocked();
-  };
 
   return (
     <Card>
@@ -31,13 +28,9 @@ export function CodesScreen({ onLocked }: { onLocked: () => void }) {
           ))}
         </ul>
         {isImportOpen && <ImportPanel />}
+        <AutoLockSetting />
       </CardContent>
-      <CardFooter className="gap-2">
-        <Button variant="outline" onClick={toggleImport}>
-          {isImportOpen ? "Hide import" : "Add accounts"}
-        </Button>
-        <Button variant="outline" onClick={handleLock}>Lock</Button>
-      </CardFooter>
+      <CodesFooter isImportOpen={isImportOpen} onToggleImport={toggleImport} onLocked={onLocked} />
     </Card>
   );
 }

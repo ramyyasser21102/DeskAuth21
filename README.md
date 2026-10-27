@@ -14,8 +14,9 @@ Early development. Currently working:
 - Closing the window keeps the app running in the tray
 - Global hotkey `Cmd/Ctrl+Shift+A` shows or hides the window
 - "Launch at login" toggle in the tray menu (starts hidden in the tray)
+- Auto-lock after 1, 5, 15 or 30 minutes without activity, or never (default 5)
 
-Planned: biometric/keychain unlock, auto-lock, code search, CLI, end-to-end
+Planned: biometric/keychain unlock, lock on sleep/screen lock, code search, CLI, end-to-end
 encrypted sync.
 
 ## Development

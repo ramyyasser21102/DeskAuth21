@@ -23,3 +23,13 @@ export interface ImportSummary {
 }
 
 export const importUri = (uri: string) => invoke<ImportSummary>("import_uri", { uri });
+
+export interface Settings {
+  /** `null` means never lock automatically. */
+  auto_lock_minutes: number | null;
+}
+
+export const getSettings = () => invoke<Settings>("get_settings");
+export const setAutoLockMinutes = (minutes: number | null) =>
+  invoke<Settings>("set_auto_lock_minutes", { minutes });
+export const recordActivity = () => invoke<void>("record_activity");
