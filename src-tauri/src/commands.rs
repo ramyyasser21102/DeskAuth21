@@ -40,6 +40,17 @@ pub async fn unlock(passphrase: String, state: State<'_, AppState>, app: AppHand
     Ok(())
 }
 
+/// 1 for a vault made before unlock slots, 2 for the current format.
+#[tauri::command]
+pub fn vault_format_version(state: State<AppState>) -> Result<u8, CommandError> {
+    vault_actions::vault_format_version(&state)
+}
+
+#[tauri::command]
+pub fn upgrade_vault_format(state: State<AppState>) -> Result<(), CommandError> {
+    vault_actions::upgrade_vault_format(&state)
+}
+
 #[tauri::command]
 pub fn lock(app: AppHandle) {
     lock_and_clean_up(&app);

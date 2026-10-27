@@ -79,7 +79,7 @@ pub fn associated_data(encoded: &[u8]) -> &[u8] {
     &encoded[..NONCE_OFFSET]
 }
 
-fn ensure_within_limits(params: KdfParams) -> Result<(), VaultError> {
+pub fn ensure_within_limits(params: KdfParams) -> Result<(), VaultError> {
     let is_within_limits = params.memory_kib <= MAX_MEMORY_KIB
         && params.passes <= MAX_PASSES
         && params.lanes <= MAX_LANES;
