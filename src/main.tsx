@@ -1,4 +1,5 @@
 import { StrictMode } from "react";
+import { MotionConfig } from "motion/react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app";
 import { ProfileProvider } from "./features/profile/profile-provider";
@@ -10,10 +11,12 @@ applyStoredTheme();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider>
-      <ProfileProvider>
-        <App />
-      </ProfileProvider>
-    </ThemeProvider>
+    <MotionConfig reducedMotion="user">
+      <ThemeProvider>
+        <ProfileProvider>
+          <App />
+        </ProfileProvider>
+      </ThemeProvider>
+    </MotionConfig>
   </StrictMode>,
 );
