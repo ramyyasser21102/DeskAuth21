@@ -3,7 +3,7 @@
 //! This is a request, not a guarantee: macOS and Windows honour it for their own
 //! capture tools, other recorders may not, and Linux has no way to do it.
 
-use tauri::WebviewWindow;
+use tauri::{AppHandle, Manager, WebviewWindow};
 
 pub const fn is_supported() -> bool {
     cfg!(any(target_os = "macos", target_os = "windows"))
@@ -12,6 +12,13 @@ pub const fn is_supported() -> bool {
 pub fn apply(window: &WebviewWindow, enabled: bool) {
     if let Err(error) = window.set_content_protected(enabled && is_supported()) {
         eprintln!("could not change screen capture protection: {error}");
+    }
+}
+
+/// The main window and the quick panel both show codes, so both are protected together.
+pub fn apply_to_all_windows(app: &AppHandle, enabled: bool) {
+    for window in app.webview_windows().values() {
+        apply(window, enabled);
     }
 }
 

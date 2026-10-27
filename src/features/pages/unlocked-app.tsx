@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useOpenPageRequests } from "@/features/navigation/use-open-page-requests";
 import { TabBar } from "@/features/navigation/tab-bar";
 import type { PageId } from "@/features/navigation/pages";
 import { CaptureBanner } from "@/features/privacy/capture-banner";
@@ -20,6 +21,7 @@ export function UnlockedApp({ onLocked, onShowWelcome }: UnlockedAppProps) {
   useActivityReporter();
   const { codes } = useLiveCodes(onLocked);
   const [page, setPage] = useState<PageId>("codes");
+  useOpenPageRequests(setPage);
 
   return (
     <PrivacySettingsProvider>
