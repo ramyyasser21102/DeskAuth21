@@ -3,7 +3,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { listCodes, type CodeView } from "@/lib/api";
 import { CodesScreen } from "./codes-screen";
 
-vi.mock("@/lib/api", () => ({ listCodes: vi.fn(), lockVault: vi.fn(), copyCode: vi.fn(), importUri: vi.fn() }));
+vi.mock("@/lib/api", () => ({
+  listCodes: vi.fn(),
+  lockVault: vi.fn(),
+  copyCode: vi.fn(),
+  importUri: vi.fn(),
+  getSettings: vi.fn().mockResolvedValue({ auto_lock_minutes: 5 }),
+  setAutoLockMinutes: vi.fn(),
+  recordActivity: vi.fn().mockResolvedValue(undefined),
+}));
 
 const ACME: CodeView = { label: "Acme (a@b)", code: "123456", seconds_left: 10 };
 const IMPORT_BUTTON_LABEL = "Choose QR images";
