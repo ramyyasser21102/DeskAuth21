@@ -12,6 +12,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["node"],
+    "paths": { "@/*": ["./src/*"] },
 
     /* Linting */
     "strict": true,

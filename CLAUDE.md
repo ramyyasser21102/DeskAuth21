@@ -21,15 +21,23 @@ Pure domain logic is kept apart from Tauri/OS/UI adapters.
   `tray`, `commands`, `state`). Domain modules never import `tauri`. Time and
   randomness are passed in, not read inside pure functions.
 - `lib.rs` only wires modules together (builder, setup); no business logic.
-- Frontend, `src/`: organised by feature (`features/vault`, `features/codes`,
-  `features/import`), each with its own components, hooks and tests. Calls to
-  Rust go through one typed `src/lib/api.ts` layer; components never call
-  `invoke` directly.
+- Frontend, `src/`: React + TypeScript organised by feature (`features/vault`,
+  `features/codes`, `features/theme`, later `features/import`), each with its own
+  components, hooks and tests. Keep pure logic in plain `.ts` files (e.g.
+  `theme-preference.ts`) and keep components thin, with state in `use-*` hooks.
+  Calls to Rust go through one typed `src/lib/api.ts` layer; components never
+  call `invoke` directly. `src/components/ui/` holds generated shadcn files only.
 
 ## UI decisions
 
-- Component library: **shadcn/ui** (requires React + Tailwind CSS; the
-  vanilla-TS starter is migrated in its own branch).
+- Component library: **shadcn/ui** (radix base, `radix-vega` style) on React 19
+  and Tailwind CSS v4. Config is in `components.json`; the `@/` alias maps to `src/`.
+- Adding shadcn components: do **not** run `shadcn add` directly. This CLI
+  version resolves the utils import to a package named `cn` and tries to
+  `npm install cn`, which is an unrelated npm package. Instead run
+  `npx shadcn@latest add <name> --view` (dry run, writes nothing), save the
+  printed files under `src/components/ui/`, and change `from "cn"` to
+  `from "@/lib/utils"`. Install any new dependencies by hand with `npm install`.
 - Theme: **black and white only** (neutral grayscale tokens, no accent hues;
   destructive/error states may use the single shadcn destructive token).
 - Colour scheme follows the **system preference by default** (`prefers-color-scheme`),

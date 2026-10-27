@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 // Mirrors the limits in CLAUDE.md. Keep the two in sync.
@@ -26,6 +27,11 @@ export default tseslint.config(
   {
     files: ["src/**/*.{ts,tsx}"],
     languageOptions: { globals: globals.browser },
-    rules: { ...sizeAndComplexityLimits, ...namingAndClarityRules },
+    plugins: { "react-hooks": reactHooks },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      ...sizeAndComplexityLimits,
+      ...namingAndClarityRules,
+    },
   },
 );
