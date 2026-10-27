@@ -30,9 +30,11 @@ for its app, full names, and buttons for opening the app, the Settings and locki
 letters and press Enter to copy the first match; the arrow keys move through the list, Escape
 clears the search and then closes the panel, and clicking anywhere else closes it. Copying a code
 closes the panel, ready for you to paste. Codes follow the same hidden-until-revealed rule as the
-window, and the panel is kept out of screenshots like the window is. Right-click the icon for the
-menu. On Linux, tray icons cannot report clicks, so the icon still opens its menu there.
-`deskauth21 --show-panel` opens the panel as soon as the app starts.
+window, and the panel is kept out of screenshots like the window is. Right-click the icon for a
+short menu: Open DeskAuth21, Settings, Lock now (greyed out when there is nothing to lock),
+Launch at login and Quit. On Linux, tray icons cannot report clicks, so the icon's menu carries
+the accounts instead: every account, under a heading for its app, with full names, plus Open
+quick panel. `deskauth21 --show-panel` opens the panel as soon as the app starts.
 
 ## Privacy and its limits
 
@@ -42,8 +44,9 @@ menu. On Linux, tray icons cannot report clicks, so the icon still opens its men
   screen whenever it is off or unavailable.
 - **Hidden codes** (on by default): codes show as dots until you press the eye button, for 10
   seconds, and hide again if the window loses focus. Copying a code never needs it shown.
-- **Menu bar menu** lists account names only by default; clicking one copies its code. Turn on
-  "Show codes in the menu bar menu" to see the digits there.
+- **Tray menu on Linux** lists account names only by default; clicking one copies its code. Turn on
+  "Show codes in the tray menu" (Settings, Linux only) to see the digits there. On macOS and
+  Windows the panel follows "Hide codes until revealed" instead.
 
 - **Locking** also happens when the computer sleeps or the screen locks (on by default). The
   vault locks as soon as the computer wakes; the screen lock is noticed on macOS and Windows
