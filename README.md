@@ -69,6 +69,17 @@ the old file as `vault.da21.v1.bak`, and asks you to update DeskAuth21 on your o
 first, because older versions cannot open an upgraded vault. The exact layout is in
 [docs/vault-format.md](docs/vault-format.md).
 
+## Hardware keys (work in progress)
+
+The vault can be made to need a security key (a FIDO2 key such as a YubiKey) as well as the
+passphrase, so a copied vault file cannot be opened without the key. The key takes part in
+encrypting the vault: it is not just a check. A recovery key must exist first, and several keys
+can be registered so a lost one is an inconvenience. The format and the unlock logic are in
+place and tested; the Settings screens are still to come. Keys are used over USB on macOS and
+Linux (Linux needs permission to open the key's device, usually from your distribution's udev
+rules for security keys); on Windows ordinary programs cannot open these devices directly, so
+keys are reported as unsupported there for now.
+
 ## Changing the passphrase and the recovery key
 
 In Settings under Security (for vaults in the newer format) you can change the passphrase and

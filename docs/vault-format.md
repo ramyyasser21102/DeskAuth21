@@ -33,6 +33,9 @@ person has, so a way of unlocking can be added or changed without re-encrypting 
 |---|---|---|
 | 1 | passphrase | `memory_kib u32 | passes u32 | lanes u32 | salt[16] | nonce[24] | wrapped_vault_key[48]` |
 | 2 | recovery key | `nonce[24] | wrapped_vault_key[48]` |
+| 3 | hardware key | `credential_id_len u16 | credential_id | salt[32] | nonce[24] | wrapped_shared_secret[48] | label_len u8 | label` |
+| 4 | passphrase gate | the same body as kind 1, but it wraps the gate secret (below), not the vault key |
+| 5 | envelope | `nonce[24] | wrapped_vault_key[48]` |
 | other | not understood by this build | kept byte for byte when the vault is saved |
 
 For a passphrase slot the wrapping key is `Argon2id(passphrase, salt, memory, passes, lanes)`,
@@ -46,6 +49,26 @@ For a recovery slot the recovery key is 24 random words from the EFF large word 
 because the words are random and very long. The wrapped key is
 `XChaCha20-Poly1305(wrapping key, nonce, vault key)` with associated data
 `"DA21 slot" | 2 | nonce`.
+
+### Requiring a hardware key
+
+When a hardware key is required there is no kind 1 slot, so the passphrase alone cannot open the
+vault. Unlocking needs two secrets at once:
+
+- the **gate**, a random 32-byte secret wrapped by a kind 4 slot under a key made from the
+  passphrase exactly as for kind 1;
+- the **shared secret**, a random 32-byte secret that each registered key holds its own kind 3
+  wrapping of. A key unwraps it with the 32 bytes its FIDO2 `hmac-secret` feature returns for
+  its credential and the slot's salt: `HMAC-SHA256(key = "DA21 hardware key v1", message = those
+  bytes)` is the wrapping key.
+
+The kind 5 envelope holds the vault key wrapped under
+`HMAC-SHA256(key = gate, message = shared secret | "DA21 envelope v1")`. Because the gate and the
+shared secret are separate, changing the passphrase rewrites only the kind 4 slot and registering
+another key adds only a kind 3 slot; neither needs the other keys. A recovery key (kind 2) still
+wraps the vault key directly, and is required before a hardware key can be turned on. Opening the
+vault with it and then setting a new passphrase removes the hardware key requirement (the gate and
+shared secret are not known then), so it has to be set up again.
 
 ### Changing slots
 
