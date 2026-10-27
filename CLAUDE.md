@@ -44,6 +44,9 @@ Pure domain logic is kept apart from Tauri/OS/UI adapters.
   with an optional manual override of system / light / dark stored locally.
 - Font: **Montserrat**, bundled locally (e.g. `@fontsource-variable/montserrat`),
   never loaded from a CDN: this app is privacy-first and works offline.
+- Newer shadcn output styles Base UI attributes (`data-checked`, `data-open`, ...). This project
+  uses Radix, so `src/index.css` maps those variants onto Radix's `data-state`; keep the
+  generated files untouched and extend that mapping if a new component needs another state.
 - Generated shadcn files live in `src/components/ui/` and are excluded from lint;
   do not hand-edit them beyond theming tokens.
 

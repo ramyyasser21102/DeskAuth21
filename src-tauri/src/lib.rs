@@ -5,6 +5,7 @@ mod activity;
 mod auto_lock;
 mod auto_lock_policy;
 mod autostart;
+mod capture_protection;
 mod clipboard;
 mod clock;
 mod conflict_copies;
@@ -64,6 +65,9 @@ pub fn run() {
             commands::delete_account,
             commands::get_settings,
             commands::set_auto_lock_minutes,
+            commands::set_capture_protection,
+            commands::set_hide_codes,
+            commands::set_tray_shows_codes,
             commands::record_activity,
             commands::get_vault_folder,
             commands::choose_vault_folder,
@@ -80,7 +84,11 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     );
     let state = AppState::new(data_dir);
     state.replace_settings(settings_store::load_settings(&state.settings_path()));
+    let capture_protection_enabled = state.settings().capture_protection;
     app.manage(state);
+    if let Some(window) = app.get_webview_window("main") {
+        capture_protection::apply(&window, capture_protection_enabled);
+    }
     autostart::load_initial_state(app.handle());
     hotkey::register(app.handle());
     tray::create_tray(app.handle())?;

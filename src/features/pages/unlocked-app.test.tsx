@@ -15,7 +15,7 @@ vi.mock("@/lib/api", () => ({
     { id: "authy", name: "Authy" },
     { id: "other", name: "Other" },
   ]),
-  getSettings: vi.fn().mockResolvedValue({ auto_lock_minutes: 5 }),
+  getSettings: vi.fn().mockResolvedValue({ auto_lock_minutes: 5, capture_protection: true, hide_codes: true, tray_shows_codes: false, capture_protection_supported: true }),
   setAutoLockMinutes: vi.fn(),
   recordActivity: vi.fn().mockResolvedValue(undefined),
   getVaultFolder: vi.fn().mockResolvedValue("/data/DeskAuth21"),

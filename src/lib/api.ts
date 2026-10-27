@@ -76,11 +76,22 @@ export const importText = (text: string, vendor?: VendorId) =>
 export interface Settings {
   /** `null` means never lock automatically. */
   auto_lock_minutes: number | null;
+  /** Whether the window asks the system to stay out of screenshots and recordings. */
+  capture_protection: boolean;
+  /** Whether codes show as dots until revealed. */
+  hide_codes: boolean;
+  /** Whether the tray menu lists codes; off means labels only. */
+  tray_shows_codes: boolean;
+  /** False where the system has no way to block screen capture (Linux). */
+  capture_protection_supported: boolean;
 }
 
 export const getSettings = () => invoke<Settings>("get_settings");
 export const setAutoLockMinutes = (minutes: number | null) =>
   invoke<Settings>("set_auto_lock_minutes", { minutes });
+export const setCaptureProtection = (enabled: boolean) => invoke<Settings>("set_capture_protection", { enabled });
+export const setHideCodes = (hidden: boolean) => invoke<Settings>("set_hide_codes", { hidden });
+export const setTrayShowsCodes = (shown: boolean) => invoke<Settings>("set_tray_shows_codes", { shown });
 export const recordActivity = () => invoke<void>("record_activity");
 
 export type RelocationOutcome = "unchanged" | "moved" | "used_existing" | "selected";
