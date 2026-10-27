@@ -13,3 +13,5 @@ export const PAGE_TABS: readonly PageTab[] = [
   { id: "import", label: "Import", Icon: Download },
   { id: "settings", label: "Settings", Icon: Settings },
 ];
+
+export const isPageId = (value: unknown): value is PageId => PAGE_TABS.some((tab) => tab.id === value);

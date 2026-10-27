@@ -12,8 +12,17 @@ const STATUS_TEXT: Record<CopyState, string> = {
 };
 
 /** The code and its countdown; clicking copies it (and the backend clears it later). */
-export function CopyCodeButton({ view, isCodeHidden }: { view: CodeView; isCodeHidden: boolean }) {
-  const { copyState, copy } = useCopyCode(view.id);
+interface CopyCodeButtonProps {
+  view: CodeView;
+  isCodeHidden: boolean;
+  /** Runs once the code is on the clipboard. */
+  onCopied?: () => void;
+  /** Show long names in full, over two lines, instead of cutting them off. */
+  wrapLabel?: boolean;
+}
+
+export function CopyCodeButton({ view, isCodeHidden, onCopied, wrapLabel }: CopyCodeButtonProps) {
+  const { copyState, copy } = useCopyCode(view.id, onCopied);
   const hasStatus = copyState !== "idle";
   return (
     <>
@@ -23,7 +32,7 @@ export function CopyCodeButton({ view, isCodeHidden }: { view: CodeView; isCodeH
         aria-label={`Copy code for ${view.label}`}
         className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-md px-2 py-3 text-left outline-none transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 active:bg-muted"
       >
-        <AccountLabel issuer={view.issuer} name={view.name} />
+        <AccountLabel issuer={view.issuer} name={view.name} wrap={wrapLabel} />
         <span className="flex items-center gap-3 tabular-nums">
           {/* A new key per code replays the fade, so a changed code is noticed. */}
           <span key={view.code} className="animate-in fade-in text-xl font-semibold tracking-wide duration-300 sm:text-2xl sm:tracking-wider motion-reduce:animate-none">

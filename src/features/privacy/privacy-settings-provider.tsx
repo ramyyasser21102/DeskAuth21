@@ -14,9 +14,13 @@ export function PrivacySettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings | null>(null);
   useEffect(() => {
     let isActive = true;
-    void getSettings().then((loaded) => isActive && setSettings(loaded));
+    const load = () => void getSettings().then((loaded) => isActive && setSettings(loaded));
+    load();
+    // The quick panel's page stays alive while hidden, so it looks again whenever it is shown.
+    window.addEventListener("focus", load);
     return () => {
       isActive = false;
+      window.removeEventListener("focus", load);
     };
   }, []);
   const applySaved = useCallback((saved: Settings) => setSettings(saved), []);
