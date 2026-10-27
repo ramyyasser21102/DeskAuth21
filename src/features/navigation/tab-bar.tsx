@@ -1,3 +1,5 @@
+import { motion } from "motion/react";
+import { ENTER } from "@/lib/motion-tokens";
 import { cn } from "@/lib/utils";
 import { PAGE_TABS, type PageId } from "./pages";
 
@@ -12,7 +14,8 @@ export function TabBar({ current, onSelect }: TabBarProps) {
     <nav aria-label="Pages" className="fixed inset-x-0 bottom-0 border-t bg-background">
       <ul className="mx-auto flex max-w-md">
         {PAGE_TABS.map(({ id, label, Icon }) => (
-          <li key={id} className="flex-1">
+          <li key={id} className="relative flex-1">
+            {current === id && <motion.span layoutId="tab-indicator" aria-hidden className="absolute inset-x-6 top-0 h-0.5 bg-foreground" transition={ENTER} />}
             <button
               type="button"
               aria-current={current === id ? "page" : undefined}

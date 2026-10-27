@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Pencil } from "lucide-react";
+import { motion } from "motion/react";
 import { IconButton } from "@/components/icon-button";
 import type { CodeView } from "@/lib/api";
 import { AccountEditor } from "./account-editor";
 import { CopyCodeButton } from "./copy-code-button";
 import { usePrivacySettings } from "@/features/privacy/privacy-settings-provider";
 import { RevealButton } from "./reveal-button";
+import { ROW_MOTION } from "@/lib/motion-tokens";
 import { useFocusReturn } from "./use-focus-return";
 import { useReveal } from "./use-reveal";
 
@@ -17,7 +19,7 @@ export function CodeRow({ view }: { view: CodeView }) {
   // Until the settings load, hide: showing digits is the mistake that cannot be undone.
   const areCodesHidden = settings?.hide_codes ?? true;
   return (
-    <li className="flex items-center gap-1 border-b last:border-b-0">
+    <motion.li layout="position" className="flex items-center gap-1 border-b last:border-b-0" {...ROW_MOTION}>
       {isEditing ? (
         <div className="w-full">
           <AccountEditor view={view} onDone={() => setIsEditing(false)} />
@@ -31,6 +33,6 @@ export function CodeRow({ view }: { view: CodeView }) {
           </IconButton>
         </>
       )}
-    </li>
+    </motion.li>
   );
 }
