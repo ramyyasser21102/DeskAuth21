@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,9 +13,13 @@ export interface PassphraseFormProps {
   submitLabel: string;
   requiresConfirmation: boolean;
   onSubmit: (passphrase: string) => Promise<void>;
+  /** Extra fields, shown after the passphrase (for example a security key's PIN). */
+  children?: ReactNode;
+  /** Shown while the form is working, for steps that wait on the person (touching a key). */
+  busyMessage?: string;
 }
 
-export function PassphraseForm({ title, hint, submitLabel, requiresConfirmation, onSubmit }: PassphraseFormProps) {
+export function PassphraseForm({ title, hint, submitLabel, requiresConfirmation, onSubmit, children, busyMessage }: PassphraseFormProps) {
   const form = usePassphraseForm(requiresConfirmation, onSubmit);
   return (
     <Card>
@@ -30,6 +35,8 @@ export function PassphraseForm({ title, hint, submitLabel, requiresConfirmation,
             <PasswordField id="confirmation" label="Confirm passphrase" value={form.confirmation} onChange={form.setConfirmation} />
           )}
           {requiresConfirmation && <PassphraseGenerator onGenerated={(phrase) => { form.setPassphrase(phrase); form.setConfirmation(phrase); }} />}
+          {children}
+          {form.isSubmitting && busyMessage && <p role="status" className="text-sm font-medium">{busyMessage}</p>}
           {form.errorMessage && (
             <Alert variant="destructive">
               <AlertDescription>{form.errorMessage}</AlertDescription>

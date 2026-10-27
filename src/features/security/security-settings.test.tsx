@@ -6,6 +6,7 @@ import { SecuritySettings } from "./security-settings";
 vi.mock("@/lib/api", () => ({
   getVaultFormatVersion: vi.fn(),
   hasRecoveryKey: vi.fn(),
+  getHardwareKeyStatus: vi.fn().mockResolvedValue({ is_supported: true, is_required: false, keys: [] }),
   generateRecoveryKey: vi.fn(),
   assessPassphrase: vi.fn(),
   generatePassphrase: vi.fn(),

@@ -5,7 +5,7 @@ import { PASSPHRASE_TOO_SHORT_MESSAGE } from "./passphrase-rules";
 import { RecoveryUnlockForm } from "./recovery-unlock-form";
 import { UnlockScreen } from "./vault-screens";
 
-vi.mock("@/lib/api", () => ({ resetPassphraseWithRecoveryKey: vi.fn(), unlockVault: vi.fn(), assessPassphrase: vi.fn(), generatePassphrase: vi.fn(), createVault: vi.fn() }));
+vi.mock("@/lib/api", () => ({ unlockNeedsHardwareKey: vi.fn().mockResolvedValue(false), resetPassphraseWithRecoveryKey: vi.fn(), unlockVault: vi.fn(), assessPassphrase: vi.fn(), generatePassphrase: vi.fn(), createVault: vi.fn() }));
 
 const PHRASE = "alpha bravo charlie";
 const NEW_ONE = "a brand new passphrase";

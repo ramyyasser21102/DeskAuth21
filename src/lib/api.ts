@@ -56,7 +56,31 @@ export interface CodeView {
 
 export const getVaultStatus = () => invoke<VaultStatus>("vault_status");
 export const createVault = (passphrase: string) => invoke<void>("create_vault", { passphrase });
-export const unlockVault = (passphrase: string) => invoke<void>("unlock", { passphrase });
+/** `pin` is the security key's own PIN, only needed if the key has one. */
+export const unlockVault = (passphrase: string, pin?: string) => invoke<void>("unlock", { passphrase, pin: pin ?? null });
+/** Whether unlocking will ask for a hardware key; readable while the vault is locked. */
+export const unlockNeedsHardwareKey = () => invoke<boolean>("unlock_needs_hardware_key");
+
+export interface HardwareKeyEntry {
+  /** Hand this back to remove the key. */
+  id: string;
+  label: string;
+}
+
+export interface HardwareKeyStatus {
+  /** False where this system cannot talk to security keys. */
+  is_supported: boolean;
+  /** Whether unlocking needs a key as well as the passphrase. */
+  is_required: boolean;
+  keys: HardwareKeyEntry[];
+}
+
+export const getHardwareKeyStatus = () => invoke<HardwareKeyStatus>("hardware_key_status");
+export const enableHardwareKey = (currentPassphrase: string, pin: string | null, label: string) =>
+  invoke<void>("enable_hardware_key", { currentPassphrase, pin, label });
+export const addHardwareKey = (pin: string | null, label: string) => invoke<void>("add_hardware_key", { pin, label });
+export const removeHardwareKey = (id: string) => invoke<void>("remove_hardware_key", { id });
+export const disableHardwareKeys = (currentPassphrase: string) => invoke<void>("disable_hardware_keys", { currentPassphrase });
 export const lockVault = () => invoke<void>("lock");
 export const listCodes = () => invoke<CodeView[]>("list_codes");
 export interface AccountDetails {
