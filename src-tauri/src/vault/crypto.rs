@@ -46,3 +46,17 @@ pub fn decrypt(key: &Key, nonce: &[u8; NONCE_LEN], ciphertext: &[u8], associated
         .map(Zeroizing::new)
         .map_err(|_| VaultError::Decrypt)
 }
+
+const RECOVERY_CONTEXT: &[u8] = b"DA21 recovery key v1";
+
+/// The key a recovery phrase unwraps the vault key with. The phrase is random and very
+/// long, so a keyed hash is enough; no slow derivation is needed.
+pub fn recovery_key_encryption_key(normalized_phrase: &str) -> Key {
+    let mut mac = <hmac::Hmac<sha2::Sha256> as hmac::digest::KeyInit>::new_from_slice(RECOVERY_CONTEXT)
+        .expect("HMAC accepts keys of any length");
+    hmac::Mac::update(&mut mac, normalized_phrase.as_bytes());
+    let digest = hmac::Mac::finalize(mac).into_bytes();
+    let mut key = Zeroizing::new([0u8; KEY_LEN]);
+    key.copy_from_slice(&digest);
+    key
+}

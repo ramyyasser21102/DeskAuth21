@@ -69,6 +69,16 @@ the old file as `vault.da21.v1.bak`, and asks you to update DeskAuth21 on your o
 first, because older versions cannot open an upgraded vault. The exact layout is in
 [docs/vault-format.md](docs/vault-format.md).
 
+## Changing the passphrase and the recovery key
+
+In Settings under Security (for vaults in the newer format) you can change the passphrase and
+create a **recovery key**: 24 random words that open the vault if you forget the passphrase.
+Both ask for your current passphrase even though the vault is open, so someone at your unlocked
+computer cannot lock you out or mint a way into your vault. A recovery key is only saved after
+you have written it down and retyped three of its words, and it is shown once. If you forget
+the passphrase, choose "Forgot your passphrase?" on the unlock screen, enter the 24 words and
+set a new passphrase. With no passphrase and no recovery key, nothing can open the vault.
+
 ## Importing accounts
 
 Each account is tagged with the app it came from (Google Authenticator, Microsoft

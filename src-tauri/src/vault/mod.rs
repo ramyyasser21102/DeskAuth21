@@ -30,6 +30,10 @@ pub enum VaultError {
     BadParams,
     #[error("could not gather randomness from the OS")]
     Random,
+    #[error("upgrade the vault format first")]
+    NeedsUpgrade,
+    #[error("that recovery key does not open this vault")]
+    WrongRecoveryKey,
     #[error("this vault was upgraded on another computer; lock and unlock to continue")]
     NewerFormat,
     #[error("this vault file is in the older format; update the other computer or lock and unlock")]

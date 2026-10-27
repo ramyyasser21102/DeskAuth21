@@ -6,7 +6,7 @@ const WORD_COUNT: usize = 6;
 const SEPARATOR: &str = "-";
 
 /// Each line of the list is a five-dice roll, a tab, then the word.
-fn words() -> Vec<&'static str> {
+pub fn words() -> Vec<&'static str> {
     WORD_LIST.lines().filter_map(|line| line.split_once('\t').map(|(_, word)| word)).collect()
 }
 
@@ -22,15 +22,16 @@ pub fn index_below(limit: u32, mut next_random: impl FnMut() -> u32) -> u32 {
     }
 }
 
-pub fn passphrase_from(words: &[&str], mut next_random: impl FnMut() -> u32) -> String {
+pub fn phrase_from(words: &[&str], count: usize, separator: &str, mut next_random: impl FnMut() -> u32) -> String {
     let limit = u32::try_from(words.len()).expect("the word list is far smaller than u32::MAX");
-    let chosen: Vec<&str> = (0..WORD_COUNT).map(|_| words[index_below(limit, &mut next_random) as usize]).collect();
-    chosen.join(SEPARATOR)
+    let chosen: Vec<&str> = (0..count).map(|_| words[index_below(limit, &mut next_random) as usize]).collect();
+    chosen.join(separator)
 }
 
-pub fn generate_passphrase() -> Result<String, getrandom::Error> {
+/// `count` random words from the list, joined by `separator`, using OS randomness.
+pub fn random_words(count: usize, separator: &str) -> Result<String, getrandom::Error> {
     let mut failure = None;
-    let phrase = passphrase_from(&words(), || {
+    let phrase = phrase_from(&words(), count, separator, || {
         let mut bytes = [0u8; 4];
         if let Err(error) = getrandom::fill(&mut bytes) {
             failure = Some(error);
@@ -38,6 +39,10 @@ pub fn generate_passphrase() -> Result<String, getrandom::Error> {
         u32::from_le_bytes(bytes)
     });
     failure.map_or(Ok(phrase), Err)
+}
+
+pub fn generate_passphrase() -> Result<String, getrandom::Error> {
+    random_words(WORD_COUNT, SEPARATOR)
 }
 
 #[cfg(test)]

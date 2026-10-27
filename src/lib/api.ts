@@ -88,6 +88,17 @@ export const importText = (text: string, vendor?: VendorId) =>
 export const getVaultFormatVersion = () => invoke<number>("vault_format_version");
 export const upgradeVaultFormat = () => invoke<void>("upgrade_vault_format");
 
+export const changePassphrase = (current: string, newPassphrase: string) =>
+  invoke<void>("change_passphrase", { current, newPassphrase });
+export const hasRecoveryKey = () => invoke<boolean>("has_recovery_key");
+/** Makes the 24 words without saving them; nothing changes until `saveRecoveryKey`. */
+export const generateRecoveryKey = () => invoke<string>("generate_recovery_key");
+export const saveRecoveryKey = (phrase: string, currentPassphrase: string) =>
+  invoke<void>("save_recovery_key", { phrase, currentPassphrase });
+/** Opens the vault with the recovery key and sets a new passphrase. */
+export const resetPassphraseWithRecoveryKey = (phrase: string, newPassphrase: string) =>
+  invoke<void>("reset_passphrase_with_recovery_key", { phrase, newPassphrase });
+
 export interface Settings {
   /** `null` means never lock automatically. */
   auto_lock_minutes: number | null;

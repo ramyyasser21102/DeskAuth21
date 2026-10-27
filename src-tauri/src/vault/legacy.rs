@@ -8,6 +8,7 @@ use super::{KdfParams, VaultError};
 use crate::record::{parse_vault_data, VaultData};
 use zeroize::Zeroizing;
 
+#[derive(Clone)]
 pub struct LegacyKeys {
     /// What the passphrase turned into. An upgrade reuses it to wrap the new vault key.
     pub key: Key,

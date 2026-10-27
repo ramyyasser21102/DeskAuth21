@@ -26,6 +26,7 @@ mod otp;
 mod passphrase;
 mod passphrase_generator;
 mod passphrase_strength;
+mod recovery_key;
 mod record;
 mod screen_lock;
 mod secret;
@@ -42,6 +43,7 @@ mod tray_model;
 mod vault;
 mod vendor;
 mod vault_actions;
+mod vault_security;
 mod vault_location;
 mod vault_relocation;
 mod window;
@@ -54,31 +56,20 @@ use tauri::Manager;
 /// Every function the window may call.
 fn command_handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'static {
     tauri::generate_handler![
-            commands::vault_status,
-            commands::create_vault,
-            commands::unlock,
-            commands::lock,
-            commands::vault_format_version,
-            commands::upgrade_vault_format,
-            commands::import_text,
-            commands::list_vendors,
-            commands::list_codes,
-            commands::copy_code,
-            commands::rename_account,
-            commands::delete_account,
-            commands::get_settings,
-            commands::set_auto_lock_minutes,
-            commands::set_capture_protection,
-            commands::set_hide_codes,
-            commands::set_tray_shows_codes,
-            commands::assess_passphrase,
-            commands::generate_passphrase,
-            commands::set_lock_on_sleep,
-            commands::set_clipboard_clear_seconds,
-            commands::record_activity,
-            commands::get_vault_folder,
-            commands::choose_vault_folder,
-        ]
+        // The vault and its protection.
+        commands::vault_status, commands::create_vault, commands::unlock, commands::lock,
+        commands::vault_format_version, commands::upgrade_vault_format, commands::change_passphrase,
+        commands::has_recovery_key, commands::generate_recovery_key, commands::save_recovery_key,
+        commands::reset_passphrase_with_recovery_key, commands::assess_passphrase, commands::generate_passphrase,
+        // Accounts and codes.
+        commands::import_text, commands::list_vendors, commands::list_codes, commands::copy_code,
+        commands::rename_account, commands::delete_account,
+        // Settings and where the vault lives.
+        commands::get_settings, commands::set_auto_lock_minutes, commands::set_capture_protection,
+        commands::set_hide_codes, commands::set_tray_shows_codes, commands::set_lock_on_sleep,
+        commands::set_clipboard_clear_seconds, commands::record_activity, commands::get_vault_folder,
+        commands::choose_vault_folder,
+    ]
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

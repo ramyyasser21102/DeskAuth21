@@ -54,6 +54,9 @@ pub fn sync_from_disk(path: &Path, vault: &mut VaultState) -> DiskSyncOutcome {
     let Some(disk_data) = vault.session().ok().and_then(|session| session.unseal(&file_bytes).ok()) else {
         return DiskSyncOutcome::Unreadable;
     };
+    // The file opened with our key, so whoever wrote it holds the vault key and its slots
+    // (passphrase, recovery key) are the newest; saving must not put older ones back.
+    vault.adopt_slots_from(&file_bytes);
     merge_disk_data(path, vault, &disk_data, seen)
 }
 

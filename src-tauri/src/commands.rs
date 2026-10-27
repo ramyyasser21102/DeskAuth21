@@ -14,6 +14,7 @@ use crate::state::{AppState, VaultStatus};
 use crate::tray::refresh_tray;
 use crate::vault::KdfParams;
 use crate::vault_actions::{self, ImportSummary};
+use crate::vault_security;
 use crate::vault_location::{self, RelocationOutcome};
 use crate::vendor::{vendor_catalog, Vendor, VendorInfo};
 use tauri::{AppHandle, State, WebviewWindow};
@@ -43,12 +44,41 @@ pub async fn unlock(passphrase: String, state: State<'_, AppState>, app: AppHand
 /// 1 for a vault made before unlock slots, 2 for the current format.
 #[tauri::command]
 pub fn vault_format_version(state: State<AppState>) -> Result<u8, CommandError> {
-    vault_actions::vault_format_version(&state)
+    vault_security::vault_format_version(&state)
 }
 
 #[tauri::command]
 pub fn upgrade_vault_format(state: State<AppState>) -> Result<(), CommandError> {
-    vault_actions::upgrade_vault_format(&state)
+    vault_security::upgrade_vault_format(&state)
+}
+
+// Async so the slow key derivation runs off the main thread.
+#[tauri::command]
+pub async fn change_passphrase(current: String, new_passphrase: String, state: State<'_, AppState>) -> Result<(), CommandError> {
+    vault_security::change_passphrase(&state, &current, &new_passphrase, KdfParams::DEFAULT)
+}
+
+#[tauri::command]
+pub fn has_recovery_key(state: State<AppState>) -> Result<bool, CommandError> {
+    vault_security::has_recovery_key(&state)
+}
+
+/// Makes the words without saving them; `save_recovery_key` does that once they are written down.
+#[tauri::command]
+pub fn generate_recovery_key(state: State<AppState>) -> Result<String, CommandError> {
+    vault_security::generate_recovery_key(&state)
+}
+
+#[tauri::command]
+pub async fn save_recovery_key(phrase: String, current_passphrase: String, state: State<'_, AppState>) -> Result<(), CommandError> {
+    vault_security::save_recovery_key(&state, &phrase, &current_passphrase)
+}
+
+#[tauri::command]
+pub async fn reset_passphrase_with_recovery_key(phrase: String, new_passphrase: String, state: State<'_, AppState>, app: AppHandle) -> Result<(), CommandError> {
+    vault_security::reset_passphrase_with_recovery_key(&state, &phrase, &new_passphrase, KdfParams::DEFAULT)?;
+    refresh_tray(&app);
+    Ok(())
 }
 
 #[tauri::command]

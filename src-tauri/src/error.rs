@@ -27,6 +27,8 @@ pub enum CommandError {
     Import(#[from] ImportError),
     #[error(transparent)]
     Vault(#[from] VaultError),
+    #[error(transparent)]
+    RecoveryKey(#[from] crate::recovery_key::RecoveryKeyError),
     #[error("could not access the vault file: {0}")]
     Storage(#[from] std::io::Error),
 }

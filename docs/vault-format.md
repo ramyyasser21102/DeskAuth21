@@ -32,12 +32,27 @@ person has, so a way of unlocking can be added or changed without re-encrypting 
 | kind | meaning | body |
 |---|---|---|
 | 1 | passphrase | `memory_kib u32 | passes u32 | lanes u32 | salt[16] | nonce[24] | wrapped_vault_key[48]` |
+| 2 | recovery key | `nonce[24] | wrapped_vault_key[48]` |
 | other | not understood by this build | kept byte for byte when the vault is saved |
 
 For a passphrase slot the wrapping key is `Argon2id(passphrase, salt, memory, passes, lanes)`,
 and the wrapped key is `XChaCha20-Poly1305(wrapping key, nonce, vault key)` with associated
 data `"DA21 slot" | kind | memory | passes | lanes | salt | nonce`, so changing the recorded
 cost breaks the slot.
+
+For a recovery slot the recovery key is 24 random words from the EFF large word list (about
+310 bits), written separated by single spaces in lower case. The wrapping key is
+`HMAC-SHA256(key = "DA21 recovery key v1", message = those words)`; no slow derivation is needed
+because the words are random and very long. The wrapped key is
+`XChaCha20-Poly1305(wrapping key, nonce, vault key)` with associated data
+`"DA21 slot" | 2 | nonce`.
+
+### Changing slots
+
+Changing the passphrase, or adding or replacing the recovery key, rewrites slots and leaves the
+vault key (and so the data) alone. Both require the current passphrase, even while the vault is
+open. The recovery key opens the vault without the passphrase and then sets a new passphrase
+slot.
 
 ### Limits a reader enforces
 
@@ -55,6 +70,11 @@ it is never mistaken for a conflicted copy and merged), and if saving fails the 
 it was.
 
 ## Sharing a vault between computers
+
+Slots are not merged; the newest file's slots win. Whenever a computer reads a changed vault
+file that opens with its own vault key, it adopts that file's slots before it next saves, so a
+passphrase or recovery key changed on one computer is not undone when another saves a change of
+its own. Conflicted copies are merged for their accounts only; their slots are ignored.
 
 A computer that opens a version 1 file and later finds a version 2 file in the same place, or
 the other way round, refuses to merge or overwrite it and asks the person to lock and unlock
