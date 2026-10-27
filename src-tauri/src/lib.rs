@@ -8,6 +8,7 @@ mod autostart;
 mod clipboard;
 mod clock;
 mod conflict_copies;
+mod data_dir_override;
 mod codes;
 mod commands;
 mod disk_sync;
@@ -73,7 +74,11 @@ pub fn run() {
 }
 
 fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let state = AppState::new(app.path().app_data_dir()?);
+    let data_dir = data_dir_override::resolve_app_data_dir(
+        app.path().app_data_dir()?,
+        std::env::var_os(data_dir_override::DATA_DIR_VARIABLE),
+    );
+    let state = AppState::new(data_dir);
     state.replace_settings(settings_store::load_settings(&state.settings_path()));
     app.manage(state);
     autostart::load_initial_state(app.handle());

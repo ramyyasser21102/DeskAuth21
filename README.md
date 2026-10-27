@@ -72,6 +72,22 @@ vault are never touched.
 Limits for now: speed depends on how quickly your sync service delivers the file, and all
 computers must use the same passphrase.
 
+### Trying sync on one computer
+
+Build the app once, then run two copies with different data folders. (Two `tauri dev` runs
+would fight over the dev server port, so use the built binary.)
+
+```sh
+npm run tauri build -- --no-bundle
+DESKAUTH21_DATA_DIR=/tmp/deskauth-a src-tauri/target/release/deskauth21 &
+DESKAUTH21_DATA_DIR=/tmp/deskauth-b src-tauri/target/release/deskauth21 &
+```
+
+In each, create a vault with the same passphrase, open Settings and choose the same folder as
+the vault location (the second can use "Already have a vault in a synced folder?" on its first
+screen). Add, rename or delete an account in one and watch it appear in the other. Each copy
+has its own tray icon, so tell them apart by their windows.
+
 ## Installing a build
 
 Installers for macOS, Windows and Linux are attached to the
