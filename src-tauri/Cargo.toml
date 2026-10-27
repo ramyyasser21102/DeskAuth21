@@ -50,3 +50,7 @@ cognitive_complexity = "warn"
 too_many_arguments = "warn"
 excessive_nesting = "warn"
 many_single_char_names = "warn"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-autostart = "2.7.0"
+tauri-plugin-global-shortcut = "2.4.1"

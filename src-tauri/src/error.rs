@@ -12,6 +12,8 @@ pub enum CommandError {
     VaultAlreadyExists,
     #[error("no account at position {0}")]
     AccountNotFound(usize),
+    #[error("could not change the launch-at-login setting: {0}")]
+    Autostart(String),
     #[error("clipboard unavailable: {0}")]
     Clipboard(String),
     #[error("passphrase must be at least {0} characters")]

@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "deskauth21",
+  "productName": "DeskAuth21",
   "version": "0.1.0",
   "identifier": "com.deskauth21.app",
   "build": {
@@ -13,9 +13,10 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "deskauth21",
-        "width": 800,
-        "height": 600
+        "title": "DeskAuth21",
+        "width": 440,
+        "height": 680,
+        "visible": false
       }
     ],
     "security": {

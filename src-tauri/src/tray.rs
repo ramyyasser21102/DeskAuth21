@@ -1,18 +1,21 @@
 //! The menu-bar / system-tray icon and its live-updating menu.
 
 use crate::clock::current_unix_seconds;
+use crate::autostart;
 use crate::clipboard::copy_code_for_account;
 use crate::codes::{build_code_views, tray_menu_text, CodeView};
 use crate::copy_policy::{copy_item_id, parse_copy_item_id};
 use crate::state::{AppState, VaultStatus};
+use crate::window::show_main_window;
 use std::time::Duration;
-use tauri::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem};
+use std::sync::atomic::Ordering;
+use tauri::menu::{CheckMenuItem, Menu, MenuEvent, MenuItem, PredefinedMenuItem};
 use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Manager, Wry};
 
 const TRAY_ID: &str = "main";
-const MAIN_WINDOW_LABEL: &str = "main";
 const MENU_ID_STATUS: &str = "status";
+const MENU_ID_AUTOSTART: &str = "autostart";
 const MENU_ID_SHOW: &str = "show";
 const MENU_ID_QUIT: &str = "quit";
 const QUIT_ACCELERATOR: &str = "CmdOrCtrl+Q";
@@ -22,6 +25,7 @@ const REFRESH_INTERVAL: Duration = Duration::from_secs(1);
 struct TraySnapshot {
     status: VaultStatus,
     code_views: Vec<CodeView>,
+    is_autostart_enabled: bool,
 }
 
 pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
@@ -60,6 +64,7 @@ fn take_snapshot(app: &AppHandle) -> TraySnapshot {
     TraySnapshot {
         status: state.status_of(&vault),
         code_views: build_code_views(vault.accounts(), current_unix_seconds()),
+        is_autostart_enabled: state.autostart_enabled.load(Ordering::Relaxed),
     }
 }
 
@@ -78,7 +83,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let menu = Menu::new(app)?;
     append_placeholder(app, &menu, &snapshot)?;
     append_account_items(app, &menu, &snapshot)?;
-    append_footer(app, &menu)?;
+    append_footer(app, &menu, snapshot.is_autostart_enabled)?;
     Ok(menu)
 }
 
@@ -98,8 +103,10 @@ fn append_account_items(app: &AppHandle, menu: &Menu<Wry>, snapshot: &TraySnapsh
     Ok(())
 }
 
-fn append_footer(app: &AppHandle, menu: &Menu<Wry>) -> tauri::Result<()> {
+fn append_footer(app: &AppHandle, menu: &Menu<Wry>, is_autostart_enabled: bool) -> tauri::Result<()> {
     menu.append(&PredefinedMenuItem::separator(app)?)?;
+    let launch_at_login = CheckMenuItem::with_id(app, MENU_ID_AUTOSTART, "Launch at login", true, is_autostart_enabled, None::<&str>)?;
+    menu.append(&launch_at_login)?;
     menu.append(&MenuItem::with_id(app, MENU_ID_SHOW, "Open DeskAuth21", true, None::<&str>)?)?;
     menu.append(&MenuItem::with_id(app, MENU_ID_QUIT, "Quit", true, Some(QUIT_ACCELERATOR))?)
 }
@@ -108,6 +115,7 @@ fn handle_menu_event(app: &AppHandle, event: MenuEvent) {
     match event.id.as_ref() {
         MENU_ID_QUIT => app.exit(EXIT_SUCCESS),
         MENU_ID_SHOW => show_main_window(app),
+        MENU_ID_AUTOSTART => toggle_autostart_from_menu(app),
         item_id => copy_from_menu_item(app, item_id),
     }
 }
@@ -121,13 +129,11 @@ fn copy_from_menu_item(app: &AppHandle, item_id: &str) {
     }
 }
 
-fn show_main_window(app: &AppHandle) {
-    let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) else {
-        return;
-    };
-    // Showing can only fail if the window is being destroyed, when there is nothing to show.
-    let _ = window.show();
-    let _ = window.set_focus();
+fn toggle_autostart_from_menu(app: &AppHandle) {
+    if let Err(error) = autostart::toggle(app) {
+        eprintln!("{error}");
+    }
+    refresh_tray(app);
 }
 
 #[cfg(test)]
