@@ -12,7 +12,7 @@ Early development. Currently working:
 - Passphrase-encrypted vault (Argon2id + XChaCha20-Poly1305) with lock/unlock
 - Tray menu with live codes
 
-Planned: encrypted vault, clipboard copy with auto-clear, import UI with QR scanning,
+Planned: clipboard copy with auto-clear, import UI with QR scanning,
 end-to-end encrypted sync, autostart, global hotkey, CLI.
 
 ## Development
