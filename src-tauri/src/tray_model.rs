@@ -1,15 +1,13 @@
 //! What the tray menu should contain, decided without touching the OS. Pure.
 //!
-//! Replacing an open menu closes it, so the live tray only rebuilds when the
-//! *structure* changes and otherwise updates item text in place.
+//! On macOS and Windows a click opens the quick panel and the menu is a short list of actions.
+//! On Linux tray icons cannot report clicks, so the menu also lists every account, grouped by
+//! the app it came from. Replacing an open menu closes it, so the live tray only rebuilds when
+//! the *structure* changes and otherwise updates item text in place.
 
 use crate::codes::{split_code_in_half, CodeView};
 use crate::state::VaultStatus;
-
-/// A long menu is unreadable; the rest are one click away in the window.
-pub const MAX_TRAY_ACCOUNTS: usize = 8;
-const MAX_LABEL_CHARS: usize = 26;
-const ELLIPSIS: char = '…';
+use crate::vendor::Vendor;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TrayRow {
@@ -17,13 +15,31 @@ pub struct TrayRow {
     pub text: String,
 }
 
+/// A heading for an app, or one of its accounts.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TrayEntry {
+    Header(String),
+    Account(TrayRow),
+}
+
+/// What the menu is built for, beyond the accounts themselves.
+#[derive(Debug, Clone, Copy)]
+pub struct TrayOptions {
+    pub is_autostart_enabled: bool,
+    /// Show each account's code in the menu (otherwise the name only; a click still copies it).
+    pub shows_codes: bool,
+    /// List the accounts in the menu. Only where the icon cannot open the quick panel.
+    pub lists_accounts: bool,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TrayModel {
     pub placeholder: Option<&'static str>,
     pub countdown_text: Option<String>,
-    pub rows: Vec<TrayRow>,
-    pub hidden_accounts: usize,
+    pub entries: Vec<TrayEntry>,
+    pub is_unlocked: bool,
     pub is_autostart_enabled: bool,
+    pub offers_panel: bool,
 }
 
 /// Everything that decides which items exist and in what order. While it stays
@@ -32,22 +48,10 @@ pub struct TrayModel {
 pub struct MenuStructure {
     placeholder: Option<&'static str>,
     has_countdown: bool,
-    row_ids: Vec<String>,
-    hidden_accounts: usize,
+    entry_keys: Vec<String>,
+    is_unlocked: bool,
     is_autostart_enabled: bool,
-}
-
-/// Cuts a label to `max_chars` characters (not bytes), ending in an ellipsis.
-pub fn truncate_label(label: &str, max_chars: usize) -> String {
-    if label.chars().count() <= max_chars {
-        return label.to_string();
-    }
-    let kept: String = label.chars().take(max_chars.saturating_sub(1)).collect();
-    format!("{}{ELLIPSIS}", kept.trim_end())
-}
-
-pub fn more_accounts_text(hidden_accounts: usize) -> String {
-    format!("…and {hidden_accounts} more — open DeskAuth21")
+    offers_panel: bool,
 }
 
 pub fn placeholder_text(status: VaultStatus, has_no_accounts: bool) -> Option<&'static str> {
@@ -61,28 +65,51 @@ pub fn placeholder_text(status: VaultStatus, has_no_accounts: bool) -> Option<&'
 
 /// Codes that share a period expire together, so one countdown for the soonest
 /// expiry replaces a "(17s)" on every row.
-fn countdown_text(views: &[CodeView], shows_codes: bool) -> Option<String> {
-    if !shows_codes {
-        return None;
-    }
+fn countdown_text(views: &[CodeView]) -> Option<String> {
     let soonest = views.iter().map(|view| view.seconds_left).min()?;
     Some(format!("Codes refresh in {soonest}s"))
 }
 
-/// With codes hidden the row is just the label; clicking it still copies the code.
+/// The full name, never cut off. With codes hidden the row is just the name; a click still copies the code.
 fn row_for(view: &CodeView, shows_codes: bool) -> TrayRow {
-    let label = truncate_label(&view.label, MAX_LABEL_CHARS);
-    let text = if shows_codes { format!("{label}   {}", split_code_in_half(&view.code)) } else { label };
+    let text = if shows_codes { format!("{}   {}", view.label, split_code_in_half(&view.code)) } else { view.label.clone() };
     TrayRow { account_id: view.id.clone(), text }
 }
 
-pub fn build_tray_model(status: VaultStatus, views: &[CodeView], is_autostart_enabled: bool, shows_codes: bool) -> TrayModel {
+/// Apps A to Z with "Other" last, accounts A to Z inside each, like the window and the panel.
+fn group_by_vendor(views: &[CodeView]) -> Vec<(Vendor, Vec<&CodeView>)> {
+    let mut groups: Vec<(Vendor, Vec<&CodeView>)> = Vec::new();
+    for view in views {
+        match groups.iter_mut().find(|(vendor, _)| *vendor == view.vendor) {
+            Some((_, members)) => members.push(view),
+            None => groups.push((view.vendor, vec![view])),
+        }
+    }
+    for (_, members) in &mut groups {
+        members.sort_by_key(|view| view.label.to_lowercase());
+    }
+    groups.sort_by_key(|(vendor, _)| (*vendor == Vendor::Other, vendor.display_name().to_lowercase()));
+    groups
+}
+
+fn entries_for(views: &[CodeView], shows_codes: bool) -> Vec<TrayEntry> {
+    let mut entries = Vec::new();
+    for (vendor, members) in group_by_vendor(views) {
+        entries.push(TrayEntry::Header(format!("{} ({})", vendor.display_name(), members.len())));
+        entries.extend(members.into_iter().map(|view| TrayEntry::Account(row_for(view, shows_codes))));
+    }
+    entries
+}
+
+pub fn build_tray_model(status: VaultStatus, views: &[CodeView], options: TrayOptions) -> TrayModel {
+    let lists = options.lists_accounts;
     TrayModel {
-        placeholder: placeholder_text(status, views.is_empty()),
-        countdown_text: countdown_text(views, shows_codes),
-        rows: views.iter().take(MAX_TRAY_ACCOUNTS).map(|view| row_for(view, shows_codes)).collect(),
-        hidden_accounts: views.len().saturating_sub(MAX_TRAY_ACCOUNTS),
-        is_autostart_enabled,
+        placeholder: if lists { placeholder_text(status, views.is_empty()) } else { None },
+        countdown_text: if lists && options.shows_codes { countdown_text(views) } else { None },
+        entries: if lists { entries_for(views, options.shows_codes) } else { Vec::new() },
+        is_unlocked: status == VaultStatus::Unlocked,
+        is_autostart_enabled: options.is_autostart_enabled,
+        offers_panel: lists,
     }
 }
 
@@ -91,10 +118,26 @@ impl TrayModel {
         MenuStructure {
             placeholder: self.placeholder,
             has_countdown: self.countdown_text.is_some(),
-            row_ids: self.rows.iter().map(|row| row.account_id.clone()).collect(),
-            hidden_accounts: self.hidden_accounts,
+            entry_keys: self.entries.iter().map(entry_key).collect(),
+            is_unlocked: self.is_unlocked,
             is_autostart_enabled: self.is_autostart_enabled,
+            offers_panel: self.offers_panel,
         }
+    }
+
+    /// The accounts in menu order, which is the order of the live items.
+    pub fn account_rows(&self) -> impl Iterator<Item = &TrayRow> {
+        self.entries.iter().filter_map(|entry| match entry {
+            TrayEntry::Account(row) => Some(row),
+            TrayEntry::Header(_) => None,
+        })
+    }
+}
+
+fn entry_key(entry: &TrayEntry) -> String {
+    match entry {
+        TrayEntry::Header(text) => format!("header:{text}"),
+        TrayEntry::Account(row) => format!("account:{}", row.account_id),
     }
 }
 
