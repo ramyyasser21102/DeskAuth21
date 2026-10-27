@@ -76,8 +76,33 @@ describe("account editor: deleting", () => {
   it("can back out of a delete", () => {
     openEditor();
     fireEvent.click(screen.getByRole("button", { name: "Delete…" }));
-    fireEvent.click(screen.getByRole("button", { name: "Keep it" }));
+    fireEvent.click(screen.getByRole("button", { name: "Keep account" }));
     expect(screen.getByLabelText("Service")).toBeTruthy();
     expect(deleteAccount).not.toHaveBeenCalled();
+  });
+});
+
+describe("account editor: keyboard", () => {
+  it("focuses the safe choice and backs out on Escape without deleting", () => {
+    openEditor();
+    fireEvent.click(screen.getByRole("button", { name: "Delete…" }));
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Keep account" }));
+    fireEvent.keyDown(screen.getByRole("button", { name: "Keep account" }), { key: "Escape" });
+    expect(screen.getByLabelText("Service")).toBeTruthy();
+    expect(deleteAccount).not.toHaveBeenCalled();
+  });
+
+  it("opens with focus in the first field and returns it to the pencil when closed", () => {
+    openEditor();
+    expect(document.activeElement).toBe(screen.getByLabelText("Service"));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Edit Acme (a@b)" }));
+  });
+
+  it("closes the editor on Escape without saving", () => {
+    openEditor();
+    fireEvent.keyDown(screen.getByLabelText("Service"), { key: "Escape" });
+    expect(screen.queryByLabelText("Service")).toBeNull();
+    expect(renameAccount).not.toHaveBeenCalled();
   });
 });

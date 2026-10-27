@@ -19,9 +19,9 @@ export function LabelsForm({ view, editor, onCancel }: LabelsFormProps) {
     void editor.save();
   };
   return (
-    <form className="flex flex-col gap-3 py-3" onSubmit={handleSubmit}>
+    <form className="flex flex-col gap-3 py-3" onSubmit={handleSubmit} onKeyDown={(event) => event.key === "Escape" && onCancel()}>
       <Label htmlFor={`issuer-${view.id}`}>Service</Label>
-      <Input id={`issuer-${view.id}`} value={editor.issuer} onChange={(event) => editor.setIssuer(event.target.value)} />
+      <Input id={`issuer-${view.id}`} autoFocus value={editor.issuer} onChange={(event) => editor.setIssuer(event.target.value)} />
       <Label htmlFor={`name-${view.id}`}>Account name</Label>
       <Input id={`name-${view.id}`} value={editor.name} onChange={(event) => editor.setName(event.target.value)} />
       <Label htmlFor={`vendor-${view.id}`}>App</Label>
