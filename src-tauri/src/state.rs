@@ -5,6 +5,7 @@ use crate::otp::Account;
 use crate::vault::Session;
 use serde::Serialize;
 use std::path::PathBuf;
+use std::sync::atomic::AtomicBool;
 use std::sync::{Mutex, MutexGuard, PoisonError};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -68,12 +69,14 @@ impl VaultState {
 
 pub struct AppState {
     pub vault_path: PathBuf,
+    /// Cached launch-at-login setting; see `autostart`.
+    pub autostart_enabled: AtomicBool,
     vault: Mutex<VaultState>,
 }
 
 impl AppState {
     pub fn new(vault_path: PathBuf) -> Self {
-        Self { vault_path, vault: Mutex::default() }
+        Self { vault_path, autostart_enabled: AtomicBool::new(false), vault: Mutex::default() }
     }
 
     /// A poisoned lock still guards consistent data (every update is a single

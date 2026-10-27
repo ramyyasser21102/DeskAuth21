@@ -8,12 +8,15 @@ menu bar (macOS/Linux) or system tray (Windows). Built with Tauri 2 (Rust + Type
 Early development. Currently working:
 
 - TOTP generation (RFC 6238; SHA1/SHA256/SHA512, 6 or 8 digits)
-- Import from `otpauth://` URIs and Google Authenticator `otpauth-migration://` exports
 - Passphrase-encrypted vault (Argon2id + XChaCha20-Poly1305) with lock/unlock
-- Tray menu with live codes
+- Import from Google Authenticator exports: QR images, pasted screenshots or links
+- Tray menu with live codes; click a code to copy it (cleared after 30 seconds)
+- Closing the window keeps the app running in the tray
+- Global hotkey `Cmd/Ctrl+Shift+A` shows or hides the window
+- "Launch at login" toggle in the tray menu (starts hidden in the tray)
 
-Planned: clipboard copy with auto-clear, import UI with QR scanning,
-end-to-end encrypted sync, autostart, global hotkey, CLI.
+Planned: biometric/keychain unlock, auto-lock, code search, CLI, end-to-end
+encrypted sync.
 
 ## Development
 
