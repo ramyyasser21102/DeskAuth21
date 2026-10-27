@@ -5,7 +5,7 @@ import { CodeRow } from "./code-row";
 
 vi.mock("@/lib/api", () => ({ copyCode: vi.fn() }));
 
-const VIEW: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", vendor: "other", code: "123456", seconds_left: 12 };
+const VIEW: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", vendor: "other", code: "123456", seconds_left: 12, period_seconds: 30 };
 const renderRow = () => render(<ul><CodeRow view={VIEW} /></ul>);
 
 afterEach(() => {
@@ -18,7 +18,7 @@ describe("CodeRow", () => {
     renderRow();
     expect(screen.getByText("Acme (a@b)")).toBeTruthy();
     expect(screen.getByText("123456")).toBeTruthy();
-    expect(screen.getByText("12s")).toBeTruthy();
+    expect(screen.getByRole("img", { name: "12 seconds left" })).toBeTruthy();
   });
 
   it("asks the backend to copy this account and confirms", async () => {

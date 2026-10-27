@@ -23,7 +23,7 @@ vi.mock("@/lib/api", () => ({
 }));
 
 const account = (id: string, vendor: VendorId): CodeView => ({
-  id, label: id, issuer: id, name: id, vendor, code: "123456", seconds_left: 10,
+  id, label: id, issuer: id, name: id, vendor, code: "123456", seconds_left: 10, period_seconds: 30,
 });
 
 afterEach(() => {

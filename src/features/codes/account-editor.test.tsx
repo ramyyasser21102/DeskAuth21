@@ -11,7 +11,7 @@ vi.mock("@/lib/api", () => ({
   getVendors: vi.fn().mockResolvedValue([{ id: "other", name: "Other" }]),
 }));
 
-const VIEW: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", vendor: "other", code: "123456", seconds_left: 12 };
+const VIEW: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", vendor: "other", code: "123456", seconds_left: 12, period_seconds: 30 };
 
 afterEach(() => {
   cleanup();

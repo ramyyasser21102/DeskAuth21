@@ -20,7 +20,7 @@ export function UnlockedApp({ onLocked, onShowWelcome }: UnlockedAppProps) {
 
   return (
     <>
-      <div className="pb-20">
+      <div key={page} className="animate-in fade-in slide-in-from-bottom-2 pb-20 duration-200 motion-reduce:animate-none">
         {page === "codes" && <CodesPage codes={codes} onGoToImport={() => setPage("import")} />}
         {page === "import" && <ImportPage />}
         {page === "settings" && <SettingsPage onVaultChanged={onLocked} onShowWelcome={onShowWelcome} />}
