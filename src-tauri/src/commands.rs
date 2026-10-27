@@ -4,6 +4,8 @@ use crate::account_changes::AccountDetails;
 use crate::clipboard;
 use crate::codes::CodeView;
 use crate::capture_protection;
+use crate::copy_policy::is_allowed_clear_seconds;
+use crate::locking::lock_and_clean_up;
 use crate::settings::SettingsView;
 use crate::error::CommandError;
 use crate::state::{AppState, VaultStatus};
@@ -37,9 +39,8 @@ pub async fn unlock(passphrase: String, state: State<'_, AppState>, app: AppHand
 }
 
 #[tauri::command]
-pub fn lock(state: State<AppState>, app: AppHandle) {
-    vault_actions::lock_vault(&state);
-    refresh_tray(&app);
+pub fn lock(app: AppHandle) {
+    lock_and_clean_up(&app);
 }
 
 #[tauri::command]
@@ -94,6 +95,19 @@ pub fn set_capture_protection(enabled: bool, state: State<AppState>, window: Web
 #[tauri::command]
 pub fn set_hide_codes(hidden: bool, state: State<AppState>) -> Result<SettingsView, CommandError> {
     Ok(vault_actions::update_settings(&state, |settings| settings.hide_codes = hidden)?.into())
+}
+
+#[tauri::command]
+pub fn set_lock_on_sleep(enabled: bool, state: State<AppState>) -> Result<SettingsView, CommandError> {
+    Ok(vault_actions::update_settings(&state, |settings| settings.lock_on_sleep = enabled)?.into())
+}
+
+#[tauri::command]
+pub fn set_clipboard_clear_seconds(seconds: u32, state: State<AppState>) -> Result<SettingsView, CommandError> {
+    if !is_allowed_clear_seconds(seconds) {
+        return Err(CommandError::InvalidSetting(format!("clearing the clipboard after {seconds} seconds")));
+    }
+    Ok(vault_actions::update_settings(&state, |settings| settings.clipboard_clear_seconds = seconds)?.into())
 }
 
 /// The tray menu is rebuilt by its own refresh loop, so only the setting changes here.

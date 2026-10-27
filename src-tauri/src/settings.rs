@@ -1,6 +1,7 @@
 //! User preferences kept in plain JSON next to the vault. Nothing secret lives here.
 
 use crate::auto_lock_policy::{is_allowed_minutes, timeout_from_minutes, DEFAULT_AUTO_LOCK_MINUTES};
+use crate::copy_policy::{is_allowed_clear_seconds, DEFAULT_CLIPBOARD_CLEAR_SECONDS};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -19,6 +20,10 @@ pub struct Settings {
     pub hide_codes: bool,
     /// List codes in the tray menu; off means labels only, and a click still copies.
     pub tray_shows_codes: bool,
+    /// Lock the vault when the computer sleeps or the screen locks.
+    pub lock_on_sleep: bool,
+    /// How long a copied code stays on the clipboard.
+    pub clipboard_clear_seconds: u32,
 }
 
 impl Default for Settings {
@@ -29,6 +34,8 @@ impl Default for Settings {
             capture_protection: true,
             hide_codes: true,
             tray_shows_codes: false,
+            lock_on_sleep: true,
+            clipboard_clear_seconds: DEFAULT_CLIPBOARD_CLEAR_SECONDS,
         }
     }
 }
@@ -64,6 +71,9 @@ pub fn parse_settings(json: &str) -> Settings {
     };
     if !is_allowed_minutes(settings.auto_lock_minutes) {
         settings.auto_lock_minutes = Settings::default().auto_lock_minutes;
+    }
+    if !is_allowed_clear_seconds(settings.clipboard_clear_seconds) {
+        settings.clipboard_clear_seconds = DEFAULT_CLIPBOARD_CLEAR_SECONDS;
     }
     settings
 }
@@ -106,6 +116,23 @@ mod tests {
         assert!(defaults.capture_protection && defaults.hide_codes && !defaults.tray_shows_codes);
         let from_an_old_file = parse_settings(r#"{"auto_lock_minutes":15,"vault_folder":"/sync"}"#);
         assert!(from_an_old_file.capture_protection && from_an_old_file.hide_codes && !from_an_old_file.tray_shows_codes);
+    }
+
+    #[test]
+    fn locking_and_clipboard_defaults_are_careful_and_fill_in_old_files() {
+        let defaults = Settings::default();
+        assert!(defaults.lock_on_sleep);
+        assert_eq!(defaults.clipboard_clear_seconds, 15);
+        let from_an_old_file = parse_settings(r#"{"hide_codes":false}"#);
+        assert!(from_an_old_file.lock_on_sleep);
+        assert_eq!(from_an_old_file.clipboard_clear_seconds, 15);
+    }
+
+    #[test]
+    fn an_out_of_range_clipboard_time_falls_back_without_losing_other_choices() {
+        let parsed = parse_settings(r#"{"clipboard_clear_seconds":9999,"lock_on_sleep":false}"#);
+        assert_eq!(parsed.clipboard_clear_seconds, 15);
+        assert!(!parsed.lock_on_sleep);
     }
 
     #[test]

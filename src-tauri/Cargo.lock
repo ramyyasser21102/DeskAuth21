@@ -778,6 +778,7 @@ dependencies = [
  "base32",
  "base64 0.23.1",
  "chacha20poly1305",
+ "core-foundation",
  "csv",
  "getrandom 0.4.3",
  "hmac",
@@ -793,6 +794,7 @@ dependencies = [
  "tauri-plugin-global-shortcut",
  "thiserror 2.0.21",
  "urlencoding",
+ "windows-sys 0.61.2",
  "zeroize",
 ]
 

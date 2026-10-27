@@ -4,7 +4,16 @@
 use std::time::Duration;
 
 /// Long enough to paste into a login form, short enough that a code does not linger.
-pub const CLIPBOARD_CLEAR_DELAY: Duration = Duration::from_secs(30);
+pub const DEFAULT_CLIPBOARD_CLEAR_SECONDS: u32 = 15;
+pub const ALLOWED_CLIPBOARD_CLEAR_SECONDS: [u32; 4] = [10, 15, 30, 60];
+
+pub fn is_allowed_clear_seconds(seconds: u32) -> bool {
+    ALLOWED_CLIPBOARD_CLEAR_SECONDS.contains(&seconds)
+}
+
+pub fn clear_delay(seconds: u32) -> Duration {
+    Duration::from_secs(u64::from(seconds))
+}
 
 const COPY_ITEM_ID_PREFIX: &str = "copy:";
 
@@ -47,6 +56,15 @@ mod tests {
         assert!(should_clear_clipboard(Some("123456"), "123456", true));
         assert!(!should_clear_clipboard(Some("something else"), "123456", true));
         assert!(!should_clear_clipboard(None, "123456", true));
+    }
+
+    #[test]
+    fn only_the_offered_clear_times_are_allowed() {
+        assert!(is_allowed_clear_seconds(DEFAULT_CLIPBOARD_CLEAR_SECONDS));
+        assert!([10, 15, 30, 60].into_iter().all(is_allowed_clear_seconds));
+        assert!(!is_allowed_clear_seconds(0));
+        assert!(!is_allowed_clear_seconds(45));
+        assert_eq!(clear_delay(15), Duration::from_secs(15));
     }
 
     #[test]

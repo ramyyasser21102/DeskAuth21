@@ -6,6 +6,7 @@ mod auto_lock;
 mod auto_lock_policy;
 mod autostart;
 mod capture_protection;
+mod copy_registry;
 mod clipboard;
 mod clock;
 mod conflict_copies;
@@ -19,15 +20,19 @@ mod error;
 mod hotkey;
 mod import;
 mod launch_options;
+mod lock_triggers;
+mod locking;
 mod otp;
 mod passphrase;
 mod record;
+mod screen_lock;
 mod secret;
 mod merge;
 mod persistence;
 mod settings;
 mod settings_store;
 mod state;
+mod system_lock_watcher;
 #[cfg(test)]
 mod test_support;
 mod tray;
@@ -44,15 +49,9 @@ use launch_options::should_start_hidden;
 use state::AppState;
 use tauri::Manager;
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
-    tauri::Builder::default()
-        .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(autostart::plugin())
-        .plugin(hotkey::plugin())
-        .on_window_event(window::keep_running_in_tray)
-        .invoke_handler(tauri::generate_handler![
+/// Every function the window may call.
+fn command_handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'static {
+    tauri::generate_handler![
             commands::vault_status,
             commands::create_vault,
             commands::unlock,
@@ -68,13 +67,34 @@ pub fn run() {
             commands::set_capture_protection,
             commands::set_hide_codes,
             commands::set_tray_shows_codes,
+            commands::set_lock_on_sleep,
+            commands::set_clipboard_clear_seconds,
             commands::record_activity,
             commands::get_vault_folder,
             commands::choose_vault_folder,
-        ])
+        ]
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(autostart::plugin())
+        .plugin(hotkey::plugin())
+        .on_window_event(window::keep_running_in_tray)
+        .invoke_handler(command_handler())
         .setup(setup_app)
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(clear_clipboard_on_exit);
+}
+
+/// A copied code must not outlive the app on the clipboard.
+fn clear_clipboard_on_exit(app: &tauri::AppHandle, event: tauri::RunEvent) {
+    if matches!(event, tauri::RunEvent::Exit) {
+        clipboard::clear_copied_code(app);
+    }
 }
 
 fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -94,6 +114,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     tray::create_tray(app.handle())?;
     tray::spawn_refresh_loop(app.handle().clone());
     auto_lock::spawn_loop(app.handle().clone());
+    system_lock_watcher::spawn_loop(app.handle().clone());
     disk_watch::spawn_loop(app.handle().clone());
     if !should_start_hidden(std::env::args()) {
         window::show_main_window(app.handle());
