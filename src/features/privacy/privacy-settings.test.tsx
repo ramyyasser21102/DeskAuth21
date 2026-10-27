@@ -1,11 +1,11 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getSettings, setCaptureProtection, setHideCodes, setTrayShowsCodes } from "@/lib/api";
+import { getSettings, setCaptureProtection, setClipboardClearSeconds, setHideCodes, setLockOnSleep, setTrayShowsCodes } from "@/lib/api";
 import { DEFAULT_SETTINGS } from "@/test-support/settings-fixture";
 import { PrivacySettings } from "./privacy-settings";
 import { PrivacySettingsProvider } from "./privacy-settings-provider";
 
-vi.mock("@/lib/api", () => ({ getSettings: vi.fn(), setCaptureProtection: vi.fn(), setHideCodes: vi.fn(), setTrayShowsCodes: vi.fn() }));
+vi.mock("@/lib/api", () => ({ getSettings: vi.fn(), setCaptureProtection: vi.fn(), setHideCodes: vi.fn(), setTrayShowsCodes: vi.fn(), setLockOnSleep: vi.fn(), setClipboardClearSeconds: vi.fn() }));
 
 async function renderSettings(settings = DEFAULT_SETTINGS) {
   vi.mocked(getSettings).mockResolvedValue(settings);
@@ -80,5 +80,25 @@ describe("PrivacySettings other choices", () => {
     await renderSettings();
     fireEvent.click(screen.getByRole("switch", { name: "Hide codes until revealed" }));
     expect(await screen.findByText("could not save settings")).toBeTruthy();
+  });
+});
+
+describe("PrivacySettings locking and clipboard", () => {
+  it("shows lock on sleep as on by default and saves turning it off", async () => {
+    vi.mocked(setLockOnSleep).mockResolvedValue({ ...DEFAULT_SETTINGS, lock_on_sleep: false });
+    await renderSettings();
+    const lockSwitch = screen.getByRole("switch", { name: "Lock when the computer sleeps or the screen locks" });
+    expect(lockSwitch.getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(lockSwitch);
+    await waitFor(() => expect(setLockOnSleep).toHaveBeenCalledWith(false));
+  });
+
+  it("marks the saved clipboard time and saves a new choice", async () => {
+    vi.mocked(setClipboardClearSeconds).mockResolvedValue({ ...DEFAULT_SETTINGS, clipboard_clear_seconds: 60 });
+    await renderSettings();
+    expect(screen.getByRole("button", { name: "15 s" }).getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: "60 s" }));
+    await waitFor(() => expect(setClipboardClearSeconds).toHaveBeenCalledWith(60));
+    expect(await screen.findByText(/after 60 seconds/)).toBeTruthy();
   });
 });

@@ -6,5 +6,7 @@ export const DEFAULT_SETTINGS: Settings = {
   capture_protection: true,
   hide_codes: true,
   tray_shows_codes: false,
+  lock_on_sleep: true,
+  clipboard_clear_seconds: 15,
   capture_protection_supported: true,
 };

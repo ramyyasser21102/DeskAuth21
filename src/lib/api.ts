@@ -82,6 +82,10 @@ export interface Settings {
   hide_codes: boolean;
   /** Whether the tray menu lists codes; off means labels only. */
   tray_shows_codes: boolean;
+  /** Whether the vault locks when the computer sleeps or the screen locks. */
+  lock_on_sleep: boolean;
+  /** How long a copied code stays on the clipboard. */
+  clipboard_clear_seconds: number;
   /** False where the system has no way to block screen capture (Linux). */
   capture_protection_supported: boolean;
 }
@@ -92,6 +96,8 @@ export const setAutoLockMinutes = (minutes: number | null) =>
 export const setCaptureProtection = (enabled: boolean) => invoke<Settings>("set_capture_protection", { enabled });
 export const setHideCodes = (hidden: boolean) => invoke<Settings>("set_hide_codes", { hidden });
 export const setTrayShowsCodes = (shown: boolean) => invoke<Settings>("set_tray_shows_codes", { shown });
+export const setLockOnSleep = (enabled: boolean) => invoke<Settings>("set_lock_on_sleep", { enabled });
+export const setClipboardClearSeconds = (seconds: number) => invoke<Settings>("set_clipboard_clear_seconds", { seconds });
 export const recordActivity = () => invoke<void>("record_activity");
 
 export type RelocationOutcome = "unchanged" | "moved" | "used_existing" | "selected";
