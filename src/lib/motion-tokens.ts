@@ -33,3 +33,27 @@ export const ROW_MOTION = {
   animate: { opacity: 1, y: 0, transition: ENTER },
   exit: { opacity: 0, transition: EXIT },
 } as const;
+
+const STAGGER_SECONDS = 0.05;
+const TAP_SCALE = 0.98;
+
+/** A parent that reveals its `REVEAL_ITEM` children one after another. */
+export const REVEAL_GROUP = {
+  hidden: {},
+  show: { transition: { staggerChildren: STAGGER_SECONDS } },
+} as const;
+
+export const REVEAL_ITEM = {
+  hidden: { opacity: 0, y: PAGE_RISE_PIXELS },
+  show: { opacity: 1, y: 0, transition: ENTER },
+} as const;
+
+/** A press sinks the control a hair; it is never a bounce. */
+export const TAP_MOTION = { scale: TAP_SCALE, transition: { duration: DURATION.quick } } as const;
+
+/** A small swap, such as a number ticking over or a status replacing a ring. */
+export const SWAP_MOTION = {
+  initial: { opacity: 0, y: ROW_RISE_PIXELS },
+  animate: { opacity: 1, y: 0, transition: { duration: DURATION.quick, ease: EASE_OUT_CURVE } },
+  exit: { opacity: 0, transition: { duration: DURATION.quick, ease: EASE_IN_CURVE } },
+} as const;
