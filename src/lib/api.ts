@@ -84,6 +84,10 @@ export interface ImportSummary {
 export const importText = (text: string, vendor?: VendorId) =>
   invoke<ImportSummary>("import_text", { text, vendor: vendor ?? null });
 
+/** 1 for a vault made before unlock slots, 2 for the current format. */
+export const getVaultFormatVersion = () => invoke<number>("vault_format_version");
+export const upgradeVaultFormat = () => invoke<void>("upgrade_vault_format");
+
 export interface Settings {
   /** `null` means never lock automatically. */
   auto_lock_minutes: number | null;
