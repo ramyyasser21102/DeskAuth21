@@ -68,6 +68,17 @@ pub fn replace_and_save(path: &Path, vault: &mut VaultState, new_data: VaultData
     saved
 }
 
+/// Copies the vault file beside itself under a name that ends in `suffix`. The name
+/// does not end in `.da21`, so the sync code never mistakes the copy for a conflicted
+/// vault and merges it.
+pub fn write_backup_copy(path: &Path, suffix: &str) -> Result<PathBuf, CommandError> {
+    let mut backup_name = path.as_os_str().to_os_string();
+    backup_name.push(suffix);
+    let backup_path = PathBuf::from(backup_name);
+    write_atomically(&backup_path, &read_vault_file(path)?)?;
+    Ok(backup_path)
+}
+
 /// Write to a private temp file, flush it to disk, then rename, so a crash mid-save
 /// never leaves a truncated vault. The temp name is random and created exclusively, so
 /// a file or link planted in a shared folder at a guessable name cannot redirect the write.

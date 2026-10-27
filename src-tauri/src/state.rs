@@ -94,6 +94,11 @@ impl VaultState {
         self.data = data;
     }
 
+    /// Swaps in a session for the same unlocked vault and hands back the one it replaced.
+    pub fn replace_session(&mut self, session: Session) -> Option<Session> {
+        self.session.replace(session)
+    }
+
     /// Dropping the old state zeroizes the derived key and every account secret.
     pub fn relock(&mut self) {
         *self = Self::default();
