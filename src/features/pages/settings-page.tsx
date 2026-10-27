@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SecuritySettings } from "@/features/security/security-settings";
 import { PrivacySettings } from "@/features/privacy/privacy-settings";
 import { ProfileSetting } from "@/features/profile/profile-setting";
 import { ThemeToggle } from "@/features/theme/theme-toggle";
@@ -30,6 +31,7 @@ export function SettingsPage({ onVaultChanged, onShowWelcome }: SettingsPageProp
           <ThemeToggle />
         </div>
         <PrivacySettings />
+        <SecuritySettings />
         <AutoLockSetting />
         <VaultFolderSetting onVaultChanged={onVaultChanged} />
         <Button variant="outline" onClick={onShowWelcome}>Show welcome page</Button>
