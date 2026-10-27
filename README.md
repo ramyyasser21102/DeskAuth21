@@ -9,17 +9,18 @@ Early development. Currently working:
 
 - TOTP generation (RFC 6238; SHA1/SHA256/SHA512, 6 or 8 digits)
 - Import from `otpauth://` URIs and Google Authenticator `otpauth-migration://` exports
-- Tray menu with live codes (in-memory only)
+- Passphrase-encrypted vault (Argon2id + XChaCha20-Poly1305) with lock/unlock
+- Tray menu with live codes
 
-Planned: encrypted vault, clipboard copy with auto-clear, import UI with QR scanning,
+Planned: clipboard copy with auto-clear, import UI with QR scanning,
 end-to-end encrypted sync, autostart, global hotkey, CLI.
 
 ## Development
 
 ```sh
 npm install
-npm run tauri dev      # run the app
-cargo test --manifest-path src-tauri/Cargo.toml   # Rust unit tests
+npm run tauri dev   # run the app
+npm run check       # eslint, clippy (-D warnings), Rust tests, vitest, tsc
 ```
 
 ## Workflow
