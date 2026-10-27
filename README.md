@@ -15,11 +15,29 @@ Early development. Currently working:
 - Global hotkey `Cmd/Ctrl+Shift+A` shows or hides the window
 - "Launch at login" toggle in the tray menu (starts hidden in the tray)
 - Auto-lock after 1, 5, 15 or 30 minutes without activity, or never (default 5)
+- Screen capture protection, hidden codes and an optional codes-free tray menu (see below)
 - Rename and delete accounts (a delete asks for confirmation and warns about losing access)
 - Sync between computers by keeping the vault in a synced folder (see below)
 
 Planned: biometric/keychain unlock, lock on sleep/screen lock, code search, CLI, changing the
 passphrase, a self-hosted relay for faster sync.
+
+## Privacy and its limits
+
+- **Screen capture protection** (macOS and Windows, on by default): the window asks the system
+  to stay out of screenshots, recordings and screen sharing. It is a request: the system's own
+  tools honour it, other recorders may not, and Linux has no way to do it. A banner stays on
+  screen whenever it is off or unavailable.
+- **Hidden codes** (on by default): codes show as dots until you press the eye button, for 10
+  seconds, and hide again if the window loses focus. Copying a code never needs it shown.
+- **Menu bar menu** lists account names only by default; clicking one copies its code. Turn on
+  "Show codes in the menu bar menu" to see the digits there.
+
+All three are in Settings under Privacy.
+
+What this cannot do: nothing in an authenticator can protect codes from malware already
+running on your computer. Builds are not code-signed, so other programs on your computer
+can attach to the app, and macOS and Windows warn the first time you open it.
 
 ## Importing accounts
 

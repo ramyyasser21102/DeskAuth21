@@ -17,5 +17,6 @@ export const SECURITY_POINTS: readonly WelcomePoint[] = [
   { title: "Your passphrase is never saved", detail: "Only you can open the vault, so a forgotten passphrase cannot be recovered." },
   { title: "No accounts, no servers, no tracking", detail: "DeskAuth21 makes no network calls and works fully offline." },
   { title: "Sync shares only an encrypted file", detail: "Your sync service never sees your accounts." },
+  { title: "Hides your codes from screens", detail: "Codes show as dots until you reveal them, and the window asks the system to stay out of screenshots and screen sharing. That is a request the system may not honour, and nothing can protect codes from malware already running on your computer." },
   { title: "Locks itself", detail: "After a few idle minutes, and copied codes are cleared from the clipboard after 30 seconds." },
 ];
