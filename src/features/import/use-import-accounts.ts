@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
-import { importUri, type ImportSummary } from "@/lib/api";
+import { importText, type ImportSummary } from "@/lib/api";
 import { combineSummaries, describeImportOutcome } from "./import-result";
-import { readQrTextFromImage } from "./qr-decoder";
+import { readImportText } from "./read-import-text";
 
 export interface ImportOutcome {
   isError: boolean;
@@ -10,13 +10,13 @@ export interface ImportOutcome {
 
 const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
-/** Imports each image in turn, collecting what was added and which images failed. */
-async function importImages(files: readonly File[]) {
+/** Imports each file in turn (a QR image or an export file), collecting what was added and which failed. */
+async function importFiles(files: readonly File[]) {
   const summaries: ImportSummary[] = [];
   const failures: string[] = [];
   for (const file of files) {
     try {
-      summaries.push(await importUri(await readQrTextFromImage(file)));
+      summaries.push(await importText(await readImportText(file)));
     } catch (error) {
       failures.push(`${file.name || "pasted image"} (${errorText(error)})`);
     }
@@ -28,9 +28,9 @@ export function useImportAccounts() {
   const [outcome, setOutcome] = useState<ImportOutcome | null>(null);
   const [isBusy, setIsBusy] = useState(false);
 
-  const importFromImages = useCallback(async (files: File[]) => {
+  const importFromFiles = useCallback(async (files: File[]) => {
     setIsBusy(true);
-    const { summary, failures } = await importImages(files);
+    const { summary, failures } = await importFiles(files);
     setOutcome({ isError: failures.length > 0, message: describeImportOutcome(summary, failures) });
     setIsBusy(false);
   }, []);
@@ -38,7 +38,7 @@ export function useImportAccounts() {
   const importFromLink = useCallback(async (link: string) => {
     setIsBusy(true);
     try {
-      const summary = await importUri(link.trim());
+      const summary = await importText(link.trim());
       setOutcome({ isError: false, message: describeImportOutcome(summary, []) });
     } catch (error) {
       setOutcome({ isError: true, message: errorText(error) });
@@ -47,5 +47,5 @@ export function useImportAccounts() {
     }
   }, []);
 
-  return { outcome, isBusy, importFromImages, importFromLink };
+  return { outcome, isBusy, importFromFiles, importFromLink };
 }

@@ -1,9 +1,10 @@
 use super::*;
-use crate::account_changes::AccountLabels;
+use crate::account_changes::AccountDetails;
 use crate::state::AppState;
 use crate::test_support::{device, device_with_account, remove_all, temp_directory, ACME_URI, GLOBEX_URI, PASSPHRASE};
 use crate::vault_actions::{current_codes_now, delete_stored_account, import_accounts, rename_stored_account, unlock_vault};
 use crate::vault_location::change_vault_folder;
+use crate::vendor::Vendor;
 use std::path::PathBuf;
 
 /// Two unlocked devices sharing one vault file, as a sync service would leave them.
@@ -29,7 +30,7 @@ fn labels(state: &AppState) -> Vec<String> {
 #[test]
 fn a_change_made_on_another_device_appears_without_unlocking_again() {
     let (first, second, _, dirs) = two_devices_sharing_a_vault();
-    import_accounts(&first, GLOBEX_URI).unwrap();
+    import_accounts(&first, GLOBEX_URI, None).unwrap();
     assert_eq!(sync(&second), DiskSyncOutcome::Updated);
     assert_eq!(labels(&second), vec!["Acme (a@b)", "Globex (c@d)"]);
     remove_all(&dirs);
@@ -38,7 +39,7 @@ fn a_change_made_on_another_device_appears_without_unlocking_again() {
 #[test]
 fn our_own_saves_are_not_mistaken_for_remote_changes() {
     let (first, _, _, dirs) = two_devices_sharing_a_vault();
-    import_accounts(&first, GLOBEX_URI).unwrap();
+    import_accounts(&first, GLOBEX_URI, None).unwrap();
     assert_eq!(sync(&first), DiskSyncOutcome::Unchanged);
     remove_all(&dirs);
 }
@@ -55,8 +56,8 @@ fn importing_on_a_stale_device_keeps_both_devices_additions() {
     let (first, second, _, dirs) = two_devices_sharing_a_vault();
     // The second device has not noticed anything yet, but the first one adds an account.
     let third_uri = "otpauth://totp/Initech:e@f?secret=ONSWG4TFOQ======&issuer=Initech";
-    import_accounts(&first, GLOBEX_URI).unwrap();
-    import_accounts(&second, third_uri).unwrap();
+    import_accounts(&first, GLOBEX_URI, None).unwrap();
+    import_accounts(&second, third_uri, None).unwrap();
     assert_eq!(sync(&first), DiskSyncOutcome::Updated);
     assert_eq!(labels(&first), vec!["Acme (a@b)", "Globex (c@d)", "Initech (e@f)"]);
     assert_eq!(labels(&second).len(), 3);
@@ -68,7 +69,7 @@ fn accounts_missing_from_a_restored_older_copy_are_written_back() {
     let (first, _, shared, dirs) = two_devices_sharing_a_vault();
     let vault_file = shared.join("vault.da21");
     let older_copy = std::fs::read(&vault_file).unwrap();
-    import_accounts(&first, GLOBEX_URI).unwrap();
+    import_accounts(&first, GLOBEX_URI, None).unwrap();
     // A sync conflict puts the older file back.
     std::fs::write(&vault_file, older_copy).unwrap();
     assert_eq!(sync(&first), DiskSyncOutcome::Updated);
@@ -86,7 +87,7 @@ fn a_different_vault_in_the_file_is_never_overwritten() {
     let vault_file = shared.join("vault.da21");
     std::fs::write(&vault_file, &stranger_bytes).unwrap();
     assert_eq!(sync(&first), DiskSyncOutcome::Unreadable);
-    assert!(matches!(import_accounts(&first, ACME_URI), Err(crate::error::CommandError::VaultChangedElsewhere)));
+    assert!(matches!(import_accounts(&first, ACME_URI, None), Err(crate::error::CommandError::VaultChangedElsewhere)));
     assert_eq!(std::fs::read(&vault_file).unwrap(), stranger_bytes);
     remove_all(&[dirs, vec![stranger_dir]].concat());
 }
@@ -117,7 +118,7 @@ fn a_delete_on_one_device_removes_the_account_on_the_other() {
 #[test]
 fn a_rename_on_one_device_appears_on_the_other() {
     let (first, second, _, dirs) = two_devices_sharing_a_vault();
-    rename_stored_account(&first, &first_id(&first), &AccountLabels { issuer: "Work".into(), name: "me@work.com".into() }).unwrap();
+    rename_stored_account(&first, &first_id(&first), &AccountDetails { issuer: "Work".into(), name: "me@work.com".into(), vendor: Vendor::Other }).unwrap();
     assert_eq!(sync(&second), DiskSyncOutcome::Updated);
     assert_eq!(labels(&second), vec!["Work (me@work.com)"]);
     remove_all(&dirs);
@@ -140,7 +141,7 @@ fn a_rename_and_a_delete_made_apart_end_the_same_on_both_devices() {
     let (first, second, _, dirs) = two_devices_sharing_a_vault();
     let id = first_id(&first);
     // Both act on the same account before either has seen the other's change.
-    rename_stored_account(&second, &id, &AccountLabels { issuer: "Work".into(), name: "renamed".into() }).unwrap();
+    rename_stored_account(&second, &id, &AccountDetails { issuer: "Work".into(), name: "renamed".into(), vendor: Vendor::Other }).unwrap();
     delete_stored_account(&first, &id).unwrap();
     sync(&second);
     sync(&first);
@@ -154,7 +155,7 @@ fn the_folder_sync_picks_up_a_conflicted_copy_and_reports_an_update() {
     let (first, second, shared, dirs) = two_devices_sharing_a_vault();
     let main = shared.join("vault.da21");
     let older = std::fs::read(&main).unwrap();
-    import_accounts(&first, GLOBEX_URI).unwrap();
+    import_accounts(&first, GLOBEX_URI, None).unwrap();
     std::fs::write(shared.join("vault (conflicted copy).da21"), std::fs::read(&main).unwrap()).unwrap();
     std::fs::write(&main, older).unwrap();
     let outcome = sync_vault_folder(&second.vault_path(), &mut second.vault_guard());

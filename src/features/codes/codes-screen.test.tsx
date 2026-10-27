@@ -7,7 +7,7 @@ vi.mock("@/lib/api", () => ({
   listCodes: vi.fn(),
   lockVault: vi.fn(),
   copyCode: vi.fn(),
-  importUri: vi.fn(),
+  importText: vi.fn(),
   getSettings: vi.fn().mockResolvedValue({ auto_lock_minutes: 5 }),
   setAutoLockMinutes: vi.fn(),
   recordActivity: vi.fn().mockResolvedValue(undefined),
@@ -15,8 +15,8 @@ vi.mock("@/lib/api", () => ({
   chooseVaultFolder: vi.fn(),
 }));
 
-const ACME: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", code: "123456", seconds_left: 10 };
-const IMPORT_BUTTON_LABEL = "Choose QR images";
+const ACME: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", vendor: "other", code: "123456", seconds_left: 10 };
+const IMPORT_BUTTON_LABEL = "Choose files…";
 const POLL_WAIT_MS = 3000;
 
 afterEach(() => {

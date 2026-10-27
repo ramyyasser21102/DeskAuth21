@@ -4,8 +4,10 @@
 
 use super::protobuf::{Field, Reader};
 use super::query::query_param;
-use super::ImportError;
+use super::{ImportBatch, ImportError};
 use crate::otp::{Account, Algorithm};
+use crate::record::NewAccount;
+use crate::vendor::Vendor;
 use base64::Engine;
 
 const PAYLOAD_FIELD_OTP_PARAMETERS: u64 = 1;
@@ -36,7 +38,9 @@ struct RawOtpParameters {
     otp_type_code: u64,
 }
 
-pub fn parse_migration_query(query: &str) -> Result<Vec<Account>, ImportError> {
+/// Entries that cannot be imported (counter-based HOTP, or unreadable) are counted
+/// rather than failing the whole export.
+pub fn parse_migration_query(query: &str) -> Result<ImportBatch, ImportError> {
     let encoded = query_param(query, "data").ok_or(ImportError::BadUri)?;
     // A raw '+' in a query string may arrive as a space.
     let bytes = base64::engine::general_purpose::STANDARD
@@ -45,15 +49,16 @@ pub fn parse_migration_query(query: &str) -> Result<Vec<Account>, ImportError> {
     parse_migration_payload(&bytes)
 }
 
-fn parse_migration_payload(bytes: &[u8]) -> Result<Vec<Account>, ImportError> {
+fn parse_migration_payload(bytes: &[u8]) -> Result<ImportBatch, ImportError> {
     let mut reader = Reader::new(bytes);
-    let mut accounts = Vec::new();
+    let mut batch = ImportBatch::default();
     while let Some((number, field)) = reader.next_field()? {
         if let (PAYLOAD_FIELD_OTP_PARAMETERS, Field::Bytes(entry)) = (number, field) {
-            accounts.push(account_from_parameters(read_otp_parameters(entry)?)?);
+            let account = read_otp_parameters(entry).and_then(account_from_parameters);
+            batch.add(account.map(|account| NewAccount { account, vendor: Vendor::GoogleAuthenticator }));
         }
     }
-    Ok(accounts)
+    Ok(batch)
 }
 
 fn read_otp_parameters(bytes: &[u8]) -> Result<RawOtpParameters, ImportError> {
@@ -152,12 +157,14 @@ mod tests {
     }
 
     #[test]
-    fn imports_every_entry_in_the_payload() {
+    fn imports_every_entry_in_the_payload_tagged_as_google_authenticator() {
         let query = query_for(&[entry("a@b", "Acme", 2), entry("c@d", "Other", 2)]);
-        let accounts = parse_migration_query(&query).unwrap();
-        assert_eq!(accounts.len(), 2);
-        assert_eq!((accounts[0].issuer.as_str(), accounts[0].name.as_str()), ("Acme", "a@b"));
-        assert_eq!(accounts[1].secret, SEED);
+        let batch = parse_migration_query(&query).unwrap();
+        assert_eq!(batch.accounts.len(), 2);
+        let first = &batch.accounts[0];
+        assert_eq!((first.account.issuer.as_str(), first.account.name.as_str()), ("Acme", "a@b"));
+        assert_eq!(first.vendor, Vendor::GoogleAuthenticator);
+        assert_eq!(batch.accounts[1].account.secret, SEED);
     }
 
     #[test]
@@ -168,9 +175,10 @@ mod tests {
     }
 
     #[test]
-    fn rejects_hotp_entries() {
-        let query = query_for(&[entry("counter", "Acme", 1)]);
-        assert_eq!(parse_migration_query(&query), Err(ImportError::HotpUnsupported("counter".into())));
+    fn counts_hotp_entries_as_unsupported_without_losing_the_rest() {
+        let query = query_for(&[entry("counter", "Acme", 1), entry("c@d", "Other", 2)]);
+        let batch = parse_migration_query(&query).unwrap();
+        assert_eq!((batch.accounts.len(), batch.skipped_unsupported), (1, 1));
     }
 
     #[test]

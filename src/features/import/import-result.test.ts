@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { combineSummaries, describeImportOutcome, EMPTY_SUMMARY } from "./import-result";
 
-const summary = (added: number, skipped_duplicates: number) => ({ added, skipped_duplicates });
+const summary = (added: number, skipped_duplicates: number, skipped_unsupported = 0) => ({ added, skipped_duplicates, skipped_unsupported });
 
 describe("combineSummaries", () => {
   it("adds up several imports", () => {
@@ -27,6 +27,15 @@ describe("describeImportOutcome", () => {
     );
     expect(describeImportOutcome(EMPTY_SUMMARY, ["a.png (no QR code found)"])).toBe(
       "Could not import a.png (no QR code found).",
+    );
+  });
+
+  it("reports entries that could not be imported, alone or with a success", () => {
+    expect(describeImportOutcome(summary(2, 0, 1), [])).toBe(
+      "Added 2 accounts. 1 entry could not be imported (counter-based, Steam or unreadable).",
+    );
+    expect(describeImportOutcome(summary(0, 0, 3), [])).toBe(
+      "3 entries could not be imported (counter-based, Steam or unreadable).",
     );
   });
 

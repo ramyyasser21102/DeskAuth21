@@ -1,11 +1,11 @@
 //! What the user can do with the vault. No Tauri types, so it is unit-testable.
 
-use crate::account_changes::{add_accounts, delete_account, rename_account, AccountLabels, ChangeError};
+use crate::account_changes::{add_accounts, delete_account, rename_account, AccountDetails, ChangeError};
 use crate::clock::{current_unix_millis, current_unix_seconds};
 use crate::auto_lock_policy::{is_allowed_minutes, should_auto_lock};
 use crate::codes::{build_code_views, CodeView};
 use crate::error::CommandError;
-use crate::import::import_uri;
+use crate::import::import_text;
 use crate::passphrase::validate_new_passphrase;
 use crate::disk_sync::{sync_vault_folder, DiskSyncOutcome};
 use crate::persistence::{fingerprint, read_vault_file, replace_and_save, save_vault};
@@ -14,6 +14,7 @@ use crate::settings_store::save_settings;
 use crate::record::VaultData;
 use crate::state::{AppState, VaultState};
 use crate::vault::{KdfParams, Session};
+use crate::vendor::Vendor;
 use std::path::Path;
 use std::time::Instant;
 
@@ -53,6 +54,8 @@ pub fn lock_vault(state: &AppState) {
 pub struct ImportSummary {
     pub added: usize,
     pub skipped_duplicates: usize,
+    /// Entries left out because they are unsupported (HOTP, Steam) or unreadable.
+    pub skipped_unsupported: usize,
 }
 
 /// Runs a change to the unlocked vault. It first merges in anything another
@@ -73,21 +76,24 @@ fn with_synced_vault<T>(
     Ok(result)
 }
 
-/// Imports accounts from a URI, skipping any whose secret the vault already holds.
-pub fn import_accounts(state: &AppState, uri: &str) -> Result<ImportSummary, CommandError> {
-    let imported = import_uri(uri)?;
+/// Imports accounts from a link or the contents of an export file, skipping any
+/// whose secret the vault already holds. `vendor` tags accounts whose format does
+/// not say where they came from; `None` means "other".
+pub fn import_accounts(state: &AppState, text: &str, vendor: Option<Vendor>) -> Result<ImportSummary, CommandError> {
+    let batch = import_text(text, vendor.unwrap_or_default())?;
+    let skipped_unsupported = batch.skipped_unsupported;
     with_synced_vault(state, |vault, path| {
-        let (updated, report) = add_accounts(vault.data(), imported, current_unix_millis());
+        let (updated, report) = add_accounts(vault.data(), batch.accounts, current_unix_millis());
         if report.added > 0 {
             replace_and_save(path, vault, updated)?;
         }
-        Ok(ImportSummary { added: report.added, skipped_duplicates: report.skipped_duplicates })
+        Ok(ImportSummary { added: report.added, skipped_duplicates: report.skipped_duplicates, skipped_unsupported })
     })
 }
 
-pub fn rename_stored_account(state: &AppState, account_id: &str, labels: &AccountLabels) -> Result<(), CommandError> {
+pub fn rename_stored_account(state: &AppState, account_id: &str, details: &AccountDetails) -> Result<(), CommandError> {
     with_synced_vault(state, |vault, path| {
-        let updated = rename_account(vault.data(), account_id, labels, current_unix_millis())?;
+        let updated = rename_account(vault.data(), account_id, details, current_unix_millis())?;
         replace_and_save(path, vault, updated)
     })
 }

@@ -1,6 +1,7 @@
 //! Pure presentation of one-time codes for the window and the tray.
 
 use crate::record::AccountRecord;
+use crate::vendor::Vendor;
 use serde::Serialize;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -10,6 +11,7 @@ pub struct CodeView {
     pub label: String,
     pub issuer: String,
     pub name: String,
+    pub vendor: Vendor,
     pub code: String,
     pub seconds_left: u64,
 }
@@ -22,6 +24,7 @@ pub fn build_code_views(records: &[AccountRecord], unix_seconds: u64) -> Vec<Cod
             label: record.account.display_label(),
             issuer: record.account.issuer.clone(),
             name: record.account.name.clone(),
+            vendor: record.vendor,
             code: record.account.code_at(unix_seconds),
             seconds_left: record.account.seconds_until_next_code(unix_seconds),
         })
