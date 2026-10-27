@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Pencil } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/icon-button";
 import type { CodeView } from "@/lib/api";
 import { AccountEditor } from "./account-editor";
 import { CopyCodeButton } from "./copy-code-button";
+import { useFocusReturn } from "./use-focus-return";
 
 export function CodeRow({ view }: { view: CodeView }) {
   const [isEditing, setIsEditing] = useState(false);
+  const editButtonRef = useFocusReturn<HTMLButtonElement>(isEditing);
   return (
     <li className="flex items-center gap-1 border-b last:border-b-0">
       {isEditing ? (
@@ -16,9 +18,9 @@ export function CodeRow({ view }: { view: CodeView }) {
       ) : (
         <>
           <CopyCodeButton view={view} />
-          <Button type="button" size="icon-sm" variant="ghost" aria-label={`Edit ${view.label}`} onClick={() => setIsEditing(true)}>
+          <IconButton ref={editButtonRef} label={`Edit ${view.label}`} variant="ghost" onClick={() => setIsEditing(true)}>
             <Pencil />
-          </Button>
+          </IconButton>
         </>
       )}
     </li>

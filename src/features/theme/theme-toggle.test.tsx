@@ -28,7 +28,7 @@ describe("ThemeToggle", () => {
   it("defaults to following a dark system", () => {
     stubSystemTheme(true);
     renderToggle();
-    expect(screen.getByLabelText("System theme").getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByLabelText("Use system theme").getAttribute("aria-pressed")).toBe("true");
     expect(document.documentElement.classList.contains("dark")).toBe(true);
   });
 
@@ -41,7 +41,7 @@ describe("ThemeToggle", () => {
   it("lets the user override the system and remembers it", () => {
     stubSystemTheme(false);
     renderToggle();
-    fireEvent.click(screen.getByLabelText("Dark theme"));
+    fireEvent.click(screen.getByLabelText("Use dark theme"));
     expect(document.documentElement.classList.contains("dark")).toBe(true);
     expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark");
   });
