@@ -40,7 +40,7 @@ be copied without opening the window.
   seconds, and hide again if the window loses focus. Copying a code never needs it shown.
 - **Tray menu on Linux** lists account names only by default; clicking one copies its code. Turn on
   "Show codes in the tray menu" (Settings, Linux only) to see the digits there. On macOS and
-  Windows the panel follows "Hide codes until revealed" instead.
+  Windows the tray menu lists no accounts; codes are only in the window.
 
 - **Locking** also happens when the computer sleeps or the screen locks (on by default). The
   vault locks as soon as the computer wakes; the screen lock is noticed on macOS and Windows
@@ -214,3 +214,9 @@ npm run check       # eslint, clippy (-D warnings), Rust tests, vitest, tsc
 ## Workflow
 
 Changes land via short-lived feature branches and pull requests into `main`.
+
+## License and security
+
+DeskAuth21 is released under the [MIT license](LICENSE); bundled third-party material is listed in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). To report a vulnerability, follow
+[SECURITY.md](SECURITY.md).
