@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { setCaptureProtection, setHideCodes, setTrayShowsCodes, type Settings } from "@/lib/api";
+import { setCaptureProtection, setClipboardClearSeconds, setHideCodes, setLockOnSleep, setTrayShowsCodes, type Settings } from "@/lib/api";
 import { usePrivacySettings } from "./privacy-settings-provider";
 
 /** Saves a privacy choice and shares the result, or keeps a message saying why it failed. */
@@ -21,5 +21,7 @@ export function usePrivacyActions() {
     chooseCaptureProtection: (enabled: boolean) => save(() => setCaptureProtection(enabled)),
     chooseHiddenCodes: (hidden: boolean) => save(() => setHideCodes(hidden)),
     chooseTrayCodes: (shown: boolean) => save(() => setTrayShowsCodes(shown)),
+    chooseLockOnSleep: (enabled: boolean) => save(() => setLockOnSleep(enabled)),
+    chooseClipboardSeconds: (seconds: number) => save(() => setClipboardClearSeconds(seconds)),
   };
 }
