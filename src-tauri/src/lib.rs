@@ -30,8 +30,6 @@ use launch_options::should_start_hidden;
 use state::AppState;
 use tauri::Manager;
 
-const VAULT_FILE_NAME: &str = "vault.da21";
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -58,8 +56,7 @@ pub fn run() {
 }
 
 fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let vault_path = app.path().app_data_dir()?.join(VAULT_FILE_NAME);
-    let state = AppState::new(vault_path);
+    let state = AppState::new(app.path().app_data_dir()?);
     state.replace_settings(settings_store::load_settings(&state.settings_path()));
     app.manage(state);
     autostart::load_initial_state(app.handle());

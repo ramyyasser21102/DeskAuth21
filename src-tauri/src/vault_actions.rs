@@ -16,13 +16,14 @@ use std::time::Instant;
 
 pub fn create_new_vault(state: &AppState, passphrase: &str, kdf_params: KdfParams) -> Result<(), CommandError> {
     validate_new_passphrase(passphrase)?;
-    if state.vault_path.exists() {
+    let vault_path = state.vault_path();
+    if vault_path.exists() {
         return Err(CommandError::VaultAlreadyExists);
     }
     let session = Session::create(passphrase, kdf_params)?;
     let mut vault = state.vault_guard();
     vault.unlock(session, Vec::new());
-    let saved = save_vault(&state.vault_path, &vault);
+    let saved = save_vault(&vault_path, &vault);
     if saved.is_err() {
         vault.relock();
     }
@@ -31,7 +32,7 @@ pub fn create_new_vault(state: &AppState, passphrase: &str, kdf_params: KdfParam
 }
 
 pub fn unlock_vault(state: &AppState, passphrase: &str) -> Result<(), CommandError> {
-    let file_bytes = read_vault_file(&state.vault_path)?;
+    let file_bytes = read_vault_file(&state.vault_path())?;
     let (session, accounts) = Session::open(&file_bytes, passphrase)?;
     state.vault_guard().unlock(session, accounts);
     state.record_activity();
@@ -57,7 +58,7 @@ pub fn import_accounts(state: &AppState, uri: &str) -> Result<ImportSummary, Com
     let (new_accounts, skipped_duplicates) = split_new_accounts(vault.accounts(), imported);
     let added = new_accounts.len();
     if added > 0 {
-        append_and_save(&state.vault_path, &mut vault, new_accounts)?;
+        append_and_save(&state.vault_path(), &mut vault, new_accounts)?;
     }
     state.record_activity();
     Ok(ImportSummary { added, skipped_duplicates })
