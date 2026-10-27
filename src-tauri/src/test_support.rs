@@ -38,3 +38,54 @@ pub fn remove_all(directories: &[PathBuf]) {
         let _ = std::fs::remove_dir_all(directory);
     }
 }
+
+/// A stand-in for a security key: it derives secrets from its own master secret, can be
+/// unplugged, counts how often it was used, and refuses credentials another key made.
+pub struct FakeKey {
+    id: u8,
+    master_secret: [u8; 32],
+    pub is_plugged_in: std::cell::Cell<bool>,
+    pub registrations: std::cell::Cell<u32>,
+    pub derivations: std::cell::Cell<u32>,
+    required_pin: Option<String>,
+}
+
+impl FakeKey {
+    pub fn new(id: u8) -> Self {
+        Self { id, master_secret: [id; 32], is_plugged_in: std::cell::Cell::new(true), registrations: std::cell::Cell::new(0), derivations: std::cell::Cell::new(0), required_pin: None }
+    }
+
+    pub fn with_pin(id: u8, pin: &str) -> Self {
+        Self { required_pin: Some(pin.to_string()), ..Self::new(id) }
+    }
+
+    fn check(&self, pin: Option<&str>) -> Result<(), crate::key_device::KeyError> {
+        use crate::key_device::KeyError;
+        if !self.is_plugged_in.get() {
+            return Err(KeyError::NoKey);
+        }
+        match (&self.required_pin, pin) {
+            (Some(required), Some(given)) if required == given => Ok(()),
+            (Some(_), _) => Err(KeyError::PinProblem),
+            (None, _) => Ok(()),
+        }
+    }
+}
+
+impl crate::key_device::KeyDevice for FakeKey {
+    fn register(&self, pin: Option<&str>) -> Result<Vec<u8>, crate::key_device::KeyError> {
+        self.check(pin)?;
+        self.registrations.set(self.registrations.get() + 1);
+        Ok([&[self.id][..], &self.registrations.get().to_be_bytes()].concat())
+    }
+
+    fn derive_secret(&self, credential_id: &[u8], salt: &[u8; 32], pin: Option<&str>) -> Result<[u8; 32], crate::key_device::KeyError> {
+        use sha2::{Digest, Sha256};
+        self.check(pin)?;
+        if credential_id.first() != Some(&self.id) {
+            return Err(crate::key_device::KeyError::NotThisKey);
+        }
+        self.derivations.set(self.derivations.get() + 1);
+        Ok(Sha256::new().chain_update(self.master_secret).chain_update(credential_id).chain_update(salt).finalize().into())
+    }
+}

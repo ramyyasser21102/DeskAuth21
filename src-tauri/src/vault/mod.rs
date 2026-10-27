@@ -7,15 +7,19 @@
 //! The plaintext is the JSON-serialised vault contents.
 
 mod crypto;
+mod hardware_ops;
+mod hardware_slots;
 mod header;
 mod layout;
 mod legacy;
+mod passphrase_slot;
 mod session;
 mod slot;
 mod slotted;
 #[cfg(test)]
 mod tests;
 
+pub use hardware_ops::{file_requires_hardware_key, HardwareKeyInfo};
 pub use session::Session;
 
 #[derive(Debug, thiserror::Error)]
@@ -30,6 +34,20 @@ pub enum VaultError {
     BadParams,
     #[error("could not gather randomness from the OS")]
     Random,
+    #[error(transparent)]
+    Key(#[from] crate::key_device::KeyError),
+    #[error("create a recovery key first, so losing the hardware key cannot lock you out")]
+    NeedsRecoveryKey,
+    #[error("a hardware key is already required for this vault")]
+    HardwareKeyAlreadyOn,
+    #[error("this vault does not require a hardware key")]
+    HardwareKeyNotOn,
+    #[error("lock and unlock the vault, then try again")]
+    LockAndUnlockFirst,
+    #[error("a vault needs at least one hardware key; turn the requirement off instead")]
+    LastHardwareKey,
+    #[error("that hardware key is not registered for this vault")]
+    UnknownHardwareKey,
     #[error("upgrade the vault format first")]
     NeedsUpgrade,
     #[error("that recovery key does not open this vault")]

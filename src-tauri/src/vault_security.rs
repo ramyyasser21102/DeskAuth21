@@ -2,11 +2,12 @@
 //! No Tauri types, so it is unit-testable.
 
 use crate::error::CommandError;
+use crate::key_device::KeyRegistration;
 use crate::passphrase::validate_new_passphrase;
 use crate::persistence::{fingerprint, read_vault_file, save_vault, write_backup_copy};
 use crate::recovery_key;
 use crate::state::{AppState, VaultState};
-use crate::vault::{KdfParams, Session};
+use crate::vault::{file_requires_hardware_key, HardwareKeyInfo, KdfParams, Session};
 use crate::vault_actions::with_synced_vault;
 use std::path::Path;
 
@@ -95,9 +96,62 @@ pub fn reset_passphrase_with_recovery_key(state: &AppState, phrase: &str, new_pa
     saved
 }
 
+/// Whether unlocking will need a hardware key as well as the passphrase, read from the
+/// vault file's header, so the window can ask for it before the passphrase is checked.
+pub fn unlock_needs_hardware_key(state: &AppState) -> Result<bool, CommandError> {
+    Ok(file_requires_hardware_key(&read_vault_file(&state.vault_path())?))
+}
+
+pub fn hardware_keys(state: &AppState) -> Result<(bool, Vec<HardwareKeyInfo>), CommandError> {
+    let vault = state.vault_guard();
+    let session = vault.session()?;
+    Ok((session.requires_hardware_key(), session.hardware_keys()))
+}
+
+/// Changes a copy of the session while the key is waited for, with no lock held: the key can
+/// take half a minute to be touched and the rest of the app must keep running meanwhile.
+fn change_session_then_save(state: &AppState, change: impl FnOnce(&mut Session) -> Result<(), crate::vault::VaultError>) -> Result<(), CommandError> {
+    let mut updated = state.vault_guard().session()?.clone();
+    change(&mut updated)?;
+    with_synced_vault(state, |vault, path| swap_session_and_save(vault, path, updated))
+}
+
+/// Makes the vault need `device` together with the passphrase. Needs a recovery key first.
+pub fn enable_hardware_key(state: &AppState, key: &KeyRegistration<'_>, current_passphrase: &str) -> Result<(), CommandError> {
+    change_session_then_save(state, |session| session.enable_hardware_key(key, current_passphrase, KdfParams::DEFAULT))
+}
+
+pub fn add_hardware_key(state: &AppState, key: &KeyRegistration<'_>) -> Result<(), CommandError> {
+    change_session_then_save(state, |session| session.add_hardware_key(key))
+}
+
+/// `credential_id_hex` is the id the window was given by `hardware_keys`.
+pub fn remove_hardware_key(state: &AppState, credential_id_hex: &str) -> Result<(), CommandError> {
+    let credential_id = from_hex(credential_id_hex).ok_or(crate::vault::VaultError::UnknownHardwareKey)?;
+    change_session_then_save(state, |session| session.remove_hardware_key(&credential_id))
+}
+
+/// Goes back to the passphrase alone opening the vault. Needs the current passphrase.
+pub fn disable_hardware_keys(state: &AppState, current_passphrase: &str) -> Result<(), CommandError> {
+    change_session_then_save(state, |session| session.disable_hardware_keys(current_passphrase, KdfParams::DEFAULT))
+}
+
+pub fn to_hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+pub fn from_hex(text: &str) -> Option<Vec<u8>> {
+    if !text.len().is_multiple_of(2) || !text.is_ascii() {
+        return None;
+    }
+    (0..text.len()).step_by(2).map(|start| u8::from_str_radix(&text[start..start + 2], 16).ok()).collect()
+}
+
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod passphrase_tests;
 #[cfg(test)]
 mod recovery_tests;
+#[cfg(test)]
+mod hardware_tests;
