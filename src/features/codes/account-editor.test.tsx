@@ -4,7 +4,12 @@ import { deleteAccount, renameAccount, type CodeView } from "@/lib/api";
 import { EMPTY_NAME_MESSAGE } from "./account-rules";
 import { CodeRow } from "./code-row";
 
-vi.mock("@/lib/api", () => ({ copyCode: vi.fn(), renameAccount: vi.fn(), deleteAccount: vi.fn() }));
+vi.mock("@/lib/api", () => ({
+  copyCode: vi.fn(),
+  renameAccount: vi.fn(),
+  deleteAccount: vi.fn(),
+  getVendors: vi.fn().mockResolvedValue([{ id: "other", name: "Other" }]),
+}));
 
 const VIEW: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", vendor: "other", code: "123456", seconds_left: 12 };
 

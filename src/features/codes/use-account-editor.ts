@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { deleteAccount, renameAccount, type CodeView } from "@/lib/api";
+import { deleteAccount, renameAccount, type CodeView, type VendorId } from "@/lib/api";
 import { findNameProblem } from "./account-rules";
 
 export type EditorStep = "editing" | "confirming-delete";
@@ -8,6 +8,7 @@ export type EditorStep = "editing" | "confirming-delete";
 export function useAccountEditor(view: CodeView, onDone: () => void) {
   const [issuer, setIssuer] = useState(view.issuer);
   const [name, setName] = useState(view.name);
+  const [vendor, setVendor] = useState<VendorId>(view.vendor);
   const [step, setStep] = useState<EditorStep>("editing");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -27,12 +28,12 @@ export function useAccountEditor(view: CodeView, onDone: () => void) {
   const save = async () => {
     const problem = findNameProblem(name);
     if (problem) return setErrorMessage(problem);
-    await run(() => renameAccount(view.id, { issuer, name, vendor: view.vendor }));
+    await run(() => renameAccount(view.id, { issuer, name, vendor }));
   };
 
   const confirmDelete = () => run(() => deleteAccount(view.id));
   const askToDelete = () => setStep("confirming-delete");
   const cancelDelete = () => setStep("editing");
 
-  return { issuer, setIssuer, name, setName, step, errorMessage, isBusy, save, askToDelete, cancelDelete, confirmDelete };
+  return { issuer, setIssuer, name, setName, vendor, setVendor, step, errorMessage, isBusy, save, askToDelete, cancelDelete, confirmDelete };
 }

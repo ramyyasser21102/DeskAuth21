@@ -2,6 +2,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { VendorSelect } from "@/features/vendors/vendor-select";
 import type { CodeView } from "@/lib/api";
 import type { useAccountEditor } from "./use-account-editor";
 
@@ -23,6 +24,8 @@ export function LabelsForm({ view, editor, onCancel }: LabelsFormProps) {
       <Input id={`issuer-${view.id}`} value={editor.issuer} onChange={(event) => editor.setIssuer(event.target.value)} />
       <Label htmlFor={`name-${view.id}`}>Account name</Label>
       <Input id={`name-${view.id}`} value={editor.name} onChange={(event) => editor.setName(event.target.value)} />
+      <Label htmlFor={`vendor-${view.id}`}>App</Label>
+      <VendorSelect id={`vendor-${view.id}`} value={editor.vendor} onChange={editor.setVendor} />
       {editor.errorMessage && (
         <Alert variant="destructive">
           <AlertDescription>{editor.errorMessage}</AlertDescription>

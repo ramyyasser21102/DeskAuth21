@@ -1,14 +1,14 @@
+import type { VendorId } from "@/lib/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FilePicker } from "./file-picker";
 import { ImportLinkForm } from "./import-link-form";
 import { usePasteImages } from "./use-paste-images";
 import { useImportAccounts } from "./use-import-accounts";
 
-const PASTE_HINT =
-  "Choose QR code images (for Google Authenticator: Transfer accounts, then Export), or an export file from Aegis, 2FAS or Bitwarden. You can also paste a screenshot or an otpauth link.";
+const PASTE_HINT = "Choose QR images or an export file, paste a screenshot, or paste an otpauth:// link.";
 
-export function ImportPanel() {
-  const { outcome, isBusy, importFromFiles, importFromLink } = useImportAccounts();
+export function ImportPanel({ vendor }: { vendor: VendorId }) {
+  const { outcome, isBusy, importFromFiles, importFromLink } = useImportAccounts(vendor);
   usePasteImages(importFromFiles);
 
   return (
