@@ -143,6 +143,8 @@ export interface Settings {
   clipboard_clear_seconds: number;
   /** False where the system has no way to block screen capture (Linux). */
   capture_protection_supported: boolean;
+  /** True where the tray menu lists the accounts (Linux), so "show codes in the menu" applies. */
+  tray_menu_lists_accounts: boolean;
 }
 
 export const getSettings = () => invoke<Settings>("get_settings");

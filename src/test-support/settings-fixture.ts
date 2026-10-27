@@ -9,4 +9,5 @@ export const DEFAULT_SETTINGS: Settings = {
   lock_on_sleep: true,
   clipboard_clear_seconds: 15,
   capture_protection_supported: true,
+  tray_menu_lists_accounts: false,
 };

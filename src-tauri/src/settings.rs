@@ -53,11 +53,17 @@ pub struct SettingsView {
     #[serde(flatten)]
     pub settings: Settings,
     pub capture_protection_supported: bool,
+    /// Whether the tray menu lists the accounts (Linux), so the setting for showing codes there applies.
+    pub tray_menu_lists_accounts: bool,
 }
 
 impl From<Settings> for SettingsView {
     fn from(settings: Settings) -> Self {
-        Self { settings, capture_protection_supported: crate::capture_protection::is_supported() }
+        Self {
+            settings,
+            capture_protection_supported: crate::capture_protection::is_supported(),
+            tray_menu_lists_accounts: crate::tray::LISTS_ACCOUNTS_IN_MENU,
+        }
     }
 }
 
@@ -146,6 +152,7 @@ mod tests {
         let json = serde_json::to_value(SettingsView::from(Settings::default())).unwrap();
         assert_eq!(json["hide_codes"], true);
         assert!(json["capture_protection_supported"].is_boolean());
+        assert!(json["tray_menu_lists_accounts"].is_boolean());
     }
 
     #[test]

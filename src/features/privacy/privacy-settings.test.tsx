@@ -68,9 +68,9 @@ describe("PrivacySettings other choices", () => {
   it("saves hidden codes and tray codes", async () => {
     vi.mocked(setHideCodes).mockResolvedValue({ ...DEFAULT_SETTINGS, hide_codes: false });
     vi.mocked(setTrayShowsCodes).mockResolvedValue({ ...DEFAULT_SETTINGS, tray_shows_codes: true });
-    await renderSettings();
+    await renderSettings({ ...DEFAULT_SETTINGS, tray_menu_lists_accounts: true });
     fireEvent.click(screen.getByRole("switch", { name: "Hide codes until revealed" }));
-    fireEvent.click(screen.getByRole("switch", { name: "Show codes in the menu bar menu" }));
+    fireEvent.click(screen.getByRole("switch", { name: "Show codes in the tray menu" }));
     await waitFor(() => expect(setHideCodes).toHaveBeenCalledWith(false));
     await waitFor(() => expect(setTrayShowsCodes).toHaveBeenCalledWith(true));
   });
@@ -100,5 +100,15 @@ describe("PrivacySettings locking and clipboard", () => {
     fireEvent.click(screen.getByRole("button", { name: "60 s" }));
     await waitFor(() => expect(setClipboardClearSeconds).toHaveBeenCalledWith(60));
     expect(await screen.findByText(/after 60 seconds/)).toBeTruthy();
+  });
+});
+
+describe("PrivacySettings tray switch", () => {
+  it("is offered only where the tray menu lists the accounts", async () => {
+    await renderSettings();
+    expect(screen.queryByRole("switch", { name: "Show codes in the tray menu" })).toBeNull();
+    cleanup();
+    await renderSettings({ ...DEFAULT_SETTINGS, tray_menu_lists_accounts: true });
+    expect(screen.getByRole("switch", { name: "Show codes in the tray menu" })).toBeTruthy();
   });
 });
