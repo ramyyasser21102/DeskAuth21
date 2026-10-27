@@ -18,11 +18,11 @@ export function TabBar({ current, onSelect }: TabBarProps) {
               aria-current={current === id ? "page" : undefined}
               onClick={() => onSelect(id)}
               className={cn(
-                "flex w-full flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors hover:text-foreground",
+                "group flex w-full flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors hover:text-foreground",
                 current === id ? "text-foreground" : "text-muted-foreground",
               )}
             >
-              <Icon className="size-5" />
+              <Icon className="size-5 transition-transform group-hover:-translate-y-0.5" />
               {label}
             </button>
           </li>
