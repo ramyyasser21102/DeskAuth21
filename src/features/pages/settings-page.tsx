@@ -30,7 +30,7 @@ export function SettingsPage({ onVaultChanged, onShowWelcome }: SettingsPageProp
         </div>
         <AutoLockSetting />
         <VaultFolderSetting onVaultChanged={onVaultChanged} />
-        <Button variant="outline" onClick={onShowWelcome}>About DeskAuth21</Button>
+        <Button variant="outline" onClick={onShowWelcome}>Show welcome page</Button>
         <Button variant="outline" onClick={handleLock}>Lock now</Button>
       </CardContent>
     </Card>

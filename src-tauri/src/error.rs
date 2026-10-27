@@ -7,7 +7,7 @@ use serde::{Serialize, Serializer};
 
 #[derive(Debug, thiserror::Error)]
 pub enum CommandError {
-    #[error("vault is locked")]
+    #[error("the vault is locked; unlock it and try again")]
     VaultLocked,
     #[error("a vault already exists")]
     VaultAlreadyExists,
@@ -21,7 +21,7 @@ pub enum CommandError {
     Autostart(String),
     #[error("clipboard unavailable: {0}")]
     Clipboard(String),
-    #[error("passphrase must be at least {0} characters")]
+    #[error("the passphrase must be at least {0} characters; add a few more")]
     PassphraseTooShort(usize),
     #[error(transparent)]
     Import(#[from] ImportError),

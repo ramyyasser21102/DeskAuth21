@@ -13,14 +13,14 @@ interface DeleteConfirmationProps {
 
 export function DeleteConfirmation({ accountLabel, isBusy, onConfirm, onCancel }: DeleteConfirmationProps) {
   return (
-    <div className="flex flex-col gap-3 py-3">
+    <div className="flex flex-col gap-3 py-3" onKeyDown={(event) => event.key === "Escape" && onCancel()}>
       <p className="text-sm font-medium">Delete {accountLabel}?</p>
       <Alert variant="destructive">
         <AlertDescription>{DELETE_WARNING}</AlertDescription>
       </Alert>
       <div className="flex gap-2">
         <Button type="button" variant="destructive" disabled={isBusy} onClick={onConfirm}>Delete account</Button>
-        <Button type="button" variant="outline" disabled={isBusy} onClick={onCancel}>Keep it</Button>
+        <Button type="button" variant="outline" autoFocus disabled={isBusy} onClick={onCancel}>Keep account</Button>
       </div>
     </div>
   );

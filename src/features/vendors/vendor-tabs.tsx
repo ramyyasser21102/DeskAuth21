@@ -14,7 +14,7 @@ interface VendorTabsProps {
 
 const chipClass = (isSelected: boolean) =>
   cn(
-    "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+    "rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
     isSelected ? "border-primary bg-primary text-primary-foreground" : "hover:bg-accent",
   );
 
@@ -23,7 +23,7 @@ export function VendorTabs({ counts, total, selected, onSelect }: VendorTabsProp
   const vendors = useVendors();
   if (counts.length < MIN_VENDORS_TO_SHOW_TABS) return null;
   return (
-    <div role="group" aria-label="Filter by app" className="flex gap-2 overflow-x-auto pb-1">
+    <div role="group" aria-label="Filter by app" className="flex flex-wrap gap-2">
       <button type="button" aria-pressed={selected === "all"} className={chipClass(selected === "all")} onClick={() => onSelect("all")}>
         All ({total})
       </button>

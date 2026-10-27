@@ -31,7 +31,7 @@ function ScreenFor({ status, onChange, onShowWelcome }: ScreenProps) {
 function AppHeader() {
   const { profile } = useProfile();
   return (
-    <header className="flex items-center justify-between">
+    <header className="mx-auto flex w-full max-w-md items-center justify-between">
       <div className="flex items-center gap-2">
         <AppLogo className="size-7" />
         <span className="text-lg font-semibold tracking-tight">DeskAuth21</span>
@@ -50,10 +50,10 @@ export function App() {
   };
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col gap-6 px-4 py-6">
+    <div className="flex min-h-screen flex-col gap-6 px-4 py-6">
       <AppHeader />
-      <main>
-        {isWelcomeOpen && <WelcomePage onContinue={closeWelcome} continueLabel="Continue" />}
+      <main className="mx-auto w-full max-w-md">
+        {isWelcomeOpen && <WelcomePage onContinue={closeWelcome} continueLabel="Start using DeskAuth21" />}
         {/* Hidden, not unmounted, so reopening the welcome page keeps your place. */}
         <div hidden={isWelcomeOpen}>
           <ScreenFor status={status} onChange={refreshStatus} onShowWelcome={() => setIsWelcomeOpen(true)} />

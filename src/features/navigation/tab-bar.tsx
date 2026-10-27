@@ -9,7 +9,7 @@ interface TabBarProps {
 /** Fixed to the bottom edge so the three pages are always one tap away. */
 export function TabBar({ current, onSelect }: TabBarProps) {
   return (
-    <nav aria-label="Pages" className="fixed inset-x-0 bottom-0 border-t bg-background/95 backdrop-blur">
+    <nav aria-label="Pages" className="fixed inset-x-0 bottom-0 border-t bg-background">
       <ul className="mx-auto flex max-w-md">
         {PAGE_TABS.map(({ id, label, Icon }) => (
           <li key={id} className="flex-1">

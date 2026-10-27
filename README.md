@@ -49,8 +49,8 @@ syncs. Only the encrypted file is shared, so the sync service never sees your ac
 
 1. On the first computer, open **Vault location** and **Choose folder...**, picking a
    synced folder. Your vault is moved there.
-2. On each other computer, install DeskAuth21 and choose **Already have a vault in a
-   synced folder?**, pick the same folder, then unlock with the **same passphrase**.
+2. On each other computer, install DeskAuth21 and choose **Open a vault from a
+   synced folder**, pick the same folder, then unlock with the **same passphrase**.
 
 While unlocked, the app checks the file every second. Accounts added on one computer
 show up on the others as soon as the sync service delivers the file, and the app merges
@@ -84,7 +84,7 @@ DESKAUTH21_DATA_DIR=/tmp/deskauth-b src-tauri/target/release/deskauth21 &
 ```
 
 In each, create a vault with the same passphrase, open Settings and choose the same folder as
-the vault location (the second can use "Already have a vault in a synced folder?" on its first
+the vault location (the second can use "Open a vault from a synced folder" on its first
 screen). Add, rename or delete an account in one and watch it appear in the other. Each copy
 has its own tray icon, so tell them apart by their windows.
 

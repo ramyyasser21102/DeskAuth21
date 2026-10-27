@@ -5,7 +5,7 @@ import { ImportLinkForm } from "./import-link-form";
 import { usePasteImages } from "./use-paste-images";
 import { useImportAccounts } from "./use-import-accounts";
 
-const PASTE_HINT = "Choose QR images or an export file, paste a screenshot, or paste an otpauth:// link.";
+const PASTE_HINT = "You can also paste a screenshot anywhere on this page.";
 
 export function ImportPanel({ vendor }: { vendor: VendorId }) {
   const { outcome, isBusy, importFromFiles, importFromLink } = useImportAccounts(vendor);

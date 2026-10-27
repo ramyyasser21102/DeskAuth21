@@ -29,5 +29,5 @@ export default defineConfig({
     watch: { ignored: ["**/src-tauri/**"] },
   },
 
-  test: { environment: "jsdom", globals: false },
+  test: { environment: "jsdom", globals: false, setupFiles: ["./src/test-support/dom-polyfills.ts"] },
 });
