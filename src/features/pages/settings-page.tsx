@@ -1,14 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProfileSetting } from "@/features/profile/profile-setting";
+import { ThemeToggle } from "@/features/theme/theme-toggle";
 import { AutoLockSetting } from "@/features/settings/auto-lock-setting";
 import { VaultFolderSetting } from "@/features/sync/vault-folder-setting";
 import { lockVault } from "@/lib/api";
 
 interface SettingsPageProps {
   onVaultChanged: () => void;
+  onShowWelcome: () => void;
 }
 
-export function SettingsPage({ onVaultChanged }: SettingsPageProps) {
+export function SettingsPage({ onVaultChanged, onShowWelcome }: SettingsPageProps) {
   const handleLock = async () => {
     await lockVault();
     onVaultChanged();
@@ -17,11 +20,17 @@ export function SettingsPage({ onVaultChanged }: SettingsPageProps) {
     <Card>
       <CardHeader>
         <CardTitle>Settings</CardTitle>
-        <CardDescription>How DeskAuth21 locks and where it keeps your vault.</CardDescription>
+        <CardDescription>You, how it looks, how it locks and where it keeps your vault.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
+        <ProfileSetting />
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">Appearance</span>
+          <ThemeToggle />
+        </div>
         <AutoLockSetting />
         <VaultFolderSetting onVaultChanged={onVaultChanged} />
+        <Button variant="outline" onClick={onShowWelcome}>About DeskAuth21</Button>
         <Button variant="outline" onClick={handleLock}>Lock now</Button>
       </CardContent>
     </Card>
