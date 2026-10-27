@@ -1,5 +1,6 @@
 mod import;
 mod otp;
+mod vault;
 
 use otp::Account;
 use std::sync::Mutex;
