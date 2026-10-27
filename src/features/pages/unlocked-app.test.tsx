@@ -23,7 +23,7 @@ vi.mock("@/lib/api", () => ({
 }));
 
 const account = (id: string, vendor: VendorId): CodeView => ({
-  id, label: id, issuer: id, name: id, vendor, code: "123456", seconds_left: 10, period_seconds: 30,
+  id, label: id, issuer: id, name: "me", vendor, code: "123456", seconds_left: 10, period_seconds: 30,
 });
 
 afterEach(() => {
@@ -58,7 +58,7 @@ describe("UnlockedApp pages", () => {
     renderApp(onShowWelcome);
     await screen.findByText("Your codes");
     openTab("Settings");
-    fireEvent.click(screen.getByRole("button", { name: "About DeskAuth21" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show welcome page" }));
     expect(onShowWelcome).toHaveBeenCalledOnce();
   });
 

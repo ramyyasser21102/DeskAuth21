@@ -1,5 +1,6 @@
 import type { CodeView } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { AccountLabel } from "./account-label";
 import { CountdownRing } from "./countdown-ring";
 import { useCopyCode, type CopyState } from "./use-copy-code";
 
@@ -19,12 +20,12 @@ export function CopyCodeButton({ view }: { view: CodeView }) {
         type="button"
         onClick={copy}
         aria-label={`Copy code for ${view.label}`}
-        className="flex min-w-0 flex-1 items-center justify-between gap-4 rounded-md px-2 py-3 text-left outline-none transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 active:bg-muted"
+        className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded-md px-2 py-3 text-left outline-none transition-colors hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 active:bg-muted"
       >
-        <span className="truncate text-sm">{view.label}</span>
+        <AccountLabel issuer={view.issuer} name={view.name} />
         <span className="flex items-center gap-3 tabular-nums">
           {/* A new key per code replays the fade, so a changed code is noticed. */}
-          <span key={view.code} className="animate-in fade-in text-2xl font-semibold tracking-wider duration-500 motion-reduce:animate-none">
+          <span key={view.code} className="animate-in fade-in text-xl font-semibold tracking-wide duration-300 sm:text-2xl sm:tracking-wider motion-reduce:animate-none">
             {view.code}
           </span>
           {hasStatus ? (

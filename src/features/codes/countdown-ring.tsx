@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { dashOffsetFor, fractionRemaining, isExpiringSoon } from "./countdown";
 
-const RING_SIZE = 28;
+const RING_SIZE = 36;
 const STROKE_WIDTH = 3;
 const HALF = 2;
 const RING_CENTRE = RING_SIZE / HALF;
@@ -42,7 +42,7 @@ export function CountdownRing({ secondsLeft, periodSeconds }: CountdownRingProps
           className="stroke-foreground transition-[stroke-dashoffset] duration-1000 ease-linear motion-reduce:transition-none"
         />
       </svg>
-      <span aria-hidden="true" className="absolute text-[10px] font-medium tabular-nums">{secondsLeft}</span>
+      <span aria-hidden="true" className="absolute text-xs font-medium tabular-nums">{secondsLeft}</span>
     </span>
   );
 }

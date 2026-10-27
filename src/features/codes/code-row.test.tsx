@@ -16,7 +16,8 @@ afterEach(() => {
 describe("CodeRow", () => {
   it("shows the label, code and countdown", () => {
     renderRow();
-    expect(screen.getByText("Acme (a@b)")).toBeTruthy();
+    expect(screen.getByText("Acme")).toBeTruthy();
+    expect(screen.getByText("a@b")).toBeTruthy();
     expect(screen.getByText("123456")).toBeTruthy();
     expect(screen.getByRole("img", { name: "12 seconds left" })).toBeTruthy();
   });
