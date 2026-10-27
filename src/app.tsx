@@ -1,4 +1,4 @@
-import { CodesScreen } from "@/features/codes/codes-screen";
+import { UnlockedApp } from "@/features/pages/unlocked-app";
 import { ThemeToggle } from "@/features/theme/theme-toggle";
 import { CreateVaultScreen, UnlockScreen } from "@/features/vault/vault-screens";
 import type { VaultStatus } from "@/lib/api";
@@ -11,7 +11,7 @@ function ScreenFor({ status, onChange }: { status: VaultStatus | null; onChange:
     case "locked":
       return <UnlockScreen onUnlocked={onChange} />;
     case "unlocked":
-      return <CodesScreen onLocked={onChange} />;
+      return <UnlockedApp onLocked={onChange} />;
     case null:
       return null;
   }
