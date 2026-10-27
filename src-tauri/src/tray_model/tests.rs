@@ -6,6 +6,7 @@ fn view(id: &str, label: &str, code: &str, seconds_left: u64) -> CodeView {
         label: label.into(),
         issuer: String::new(),
         name: label.into(),
+        vendor: crate::vendor::Vendor::Other,
         code: code.into(),
         seconds_left,
     }

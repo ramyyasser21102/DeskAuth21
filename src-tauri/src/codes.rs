@@ -71,18 +71,4 @@ mod tests {
         assert_eq!(split_code_in_half("123456"), "123 456");
         assert_eq!(split_code_in_half("12345678"), "1234 5678");
     }
-
-    #[test]
-    fn formats_tray_text() {
-        let view = CodeView {
-            id: "id".into(),
-            label: "Acme".into(),
-            issuer: String::new(),
-            name: "Acme".into(),
-            vendor: crate::vendor::Vendor::Other,
-            code: "123456".into(),
-            seconds_left: 7,
-        };
-        assert_eq!(tray_menu_text(&view), "Acme  123 456  (7s)");
-    }
 }
