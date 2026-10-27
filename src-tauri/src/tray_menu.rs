@@ -92,7 +92,7 @@ fn append_footer(app: &AppHandle, menu: &Menu<Wry>, model: &TrayModel) -> tauri:
     if model.placeholder.is_some() || !model.entries.is_empty() {
         menu.append(&PredefinedMenuItem::separator(app)?)?;
     }
-    menu.append(&MenuItem::with_id(app, MENU_ID_SHOW, "Open DeskAuth21", true, None::<&str>)?)?;
+    menu.append(&MenuItem::with_id(app, MENU_ID_SHOW, "Open DA21", true, None::<&str>)?)?;
     menu.append(&MenuItem::with_id(app, MENU_ID_SETTINGS, "Settings", true, None::<&str>)?)?;
     menu.append(&MenuItem::with_id(app, MENU_ID_LOCK, "Lock now", model.is_unlocked, None::<&str>)?)?;
     menu.append(&PredefinedMenuItem::separator(app)?)?;

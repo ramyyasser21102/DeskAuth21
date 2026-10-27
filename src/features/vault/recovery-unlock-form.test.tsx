@@ -55,6 +55,6 @@ describe("UnlockScreen recovery path", () => {
     fireEvent.click(screen.getByRole("button", { name: "Forgot your passphrase? Use your recovery key" }));
     expect(screen.getByText("Use your recovery key")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Back to unlock" }));
-    expect(screen.getByText("Unlock DeskAuth21")).toBeTruthy();
+    expect(screen.getByText("Unlock DA21")).toBeTruthy();
   });
 });

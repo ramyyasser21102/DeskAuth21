@@ -43,7 +43,7 @@ export function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
   if (isUsingRecoveryKey) return <RecoveryUnlockForm onUnlocked={onUnlocked} onBack={() => setIsUsingRecoveryKey(false)} />;
   return (
     <div className="flex flex-col gap-4">
-      <PassphraseForm title="Unlock DeskAuth21" submitLabel="Unlock" requiresConfirmation={false} onSubmit={handleSubmit}
+      <PassphraseForm title="Unlock DA21" submitLabel="Unlock" requiresConfirmation={false} onSubmit={handleSubmit}
         hint={needsKey ? KEY_HINT : undefined} busyMessage={needsKey ? TOUCH_MESSAGE : undefined}>
         {needsKey && <PasswordField id="key-pin" label="Key PIN (only if your key has one)" value={keyPin} onChange={setKeyPin} />}
       </PassphraseForm>

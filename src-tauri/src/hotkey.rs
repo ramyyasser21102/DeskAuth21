@@ -32,7 +32,7 @@ pub fn register_all(app: &AppHandle, shortcuts: &ShortcutSettings) -> Result<(),
     Ok(())
 }
 
-/// A refusal must not stop DeskAuth21 starting; the person can pick another in Settings.
+/// A refusal must not stop DA21 starting; the person can pick another in Settings.
 pub fn apply(app: &AppHandle) {
     let shortcuts = app.state::<AppState>().settings().shortcuts;
     if let Err(error) = register_all(app, &shortcuts) {

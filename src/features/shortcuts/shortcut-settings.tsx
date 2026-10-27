@@ -3,7 +3,7 @@ import { setShortcut, type ShortcutAction } from "@/lib/api";
 import { usePrivacySettings } from "@/features/privacy/privacy-settings-provider";
 import { ShortcutField } from "./shortcut-field";
 
-const TOGGLE_DESCRIPTION = "Works from any app. Shows DeskAuth21, or hides it when it is already in front.";
+const TOGGLE_DESCRIPTION = "Works from any app. Shows DA21, or hides it when it is already in front.";
 const LOCK_DESCRIPTION = "Locks the vault right away from any app and clears the clipboard.";
 const NO_SHORTCUT_NOTE = "Some desktops, such as Wayland on Linux, do not let apps listen for shortcuts.";
 
