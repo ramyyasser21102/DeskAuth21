@@ -172,13 +172,13 @@ mod tests {
     #[test]
     fn the_vault_defaults_to_the_app_data_directory() {
         let data_dir = Path::new("/data");
-        assert_eq!(resolve_vault_path(data_dir, None), Path::new("/data/vault.da21"));
+        assert_eq!(resolve_vault_path(data_dir, None), data_dir.join("vault.da21"));
     }
 
     #[test]
     fn a_chosen_folder_replaces_the_app_data_directory() {
         let data_dir = Path::new("/data");
-        assert_eq!(resolve_vault_path(data_dir, Some("/sync/Auth")), Path::new("/sync/Auth/vault.da21"));
+        assert_eq!(resolve_vault_path(data_dir, Some("/sync/Auth")), Path::new("/sync/Auth").join("vault.da21"));
     }
 
     #[test]

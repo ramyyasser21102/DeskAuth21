@@ -52,6 +52,37 @@ vault are never touched.
 Limits for now: speed depends on how quickly your sync service delivers the file, and all
 computers must use the same passphrase.
 
+## Installing a build
+
+Installers for macOS, Windows and Linux are attached to the
+[Releases](https://github.com/ramyyasser21102/DeskAuth21/releases) page. They are **unsigned**
+(there are no Apple or Microsoft developer certificates yet), so each system warns the
+first time:
+
+- **macOS**: open the `.dmg` and drag DeskAuth21 to Applications. The first time, right-click
+  the app and choose **Open**, or run `xattr -dr com.apple.quarantine /Applications/DeskAuth21.app`.
+- **Windows**: SmartScreen shows "Windows protected your PC". Choose **More info**, then
+  **Run anyway**.
+- **Linux**: make the `.AppImage` executable (`chmod +x`) and run it, or install the `.deb`.
+  The tray icon needs AppIndicator support; GNOME needs the "AppIndicator and
+  KStatusNotifierItem Support" extension. Global hotkeys generally do not work under Wayland,
+  so use the tray menu there.
+
+To build it yourself: `npm ci && npm run tauri build`; the installers land in
+`src-tauri/target/release/bundle/`.
+
+### Publishing a release (maintainers)
+
+Pushing a version tag builds all three installers in GitHub Actions and attaches them to a
+**draft** release, so nothing is public until you publish it:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Every pull request is also checked on macOS, Windows and Linux (lint, clippy, tests).
+
 ## Development
 
 ```sh
