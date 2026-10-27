@@ -10,11 +10,14 @@ use std::time::Duration;
 pub struct Settings {
     /// `None` means never lock automatically.
     pub auto_lock_minutes: Option<u32>,
+    /// Folder holding the vault file; `None` means the app's own data directory.
+    /// Point it at an iCloud/Dropbox/Syncthing folder to sync between devices.
+    pub vault_folder: Option<String>,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { auto_lock_minutes: Some(DEFAULT_AUTO_LOCK_MINUTES) }
+        Self { auto_lock_minutes: Some(DEFAULT_AUTO_LOCK_MINUTES), vault_folder: None }
     }
 }
 
@@ -25,12 +28,17 @@ impl Settings {
 }
 
 /// A damaged or hand-edited file must never stop the app, or silently disable
-/// locking, so anything unreadable or out of range falls back to the defaults.
+/// locking. An unreadable file gives the defaults; an out-of-range auto-lock
+/// falls back to the default value but keeps the other settings, so a bad
+/// timeout cannot make the app lose track of where the vault is.
 pub fn parse_settings(json: &str) -> Settings {
-    serde_json::from_str::<Settings>(json)
-        .ok()
-        .filter(|settings| is_allowed_minutes(settings.auto_lock_minutes))
-        .unwrap_or_default()
+    let Ok(mut settings) = serde_json::from_str::<Settings>(json) else {
+        return Settings::default();
+    };
+    if !is_allowed_minutes(settings.auto_lock_minutes) {
+        settings.auto_lock_minutes = Settings::default().auto_lock_minutes;
+    }
+    settings
 }
 
 #[cfg(test)]
@@ -45,7 +53,7 @@ mod tests {
     #[test]
     fn round_trips_including_never() {
         for minutes in [Some(1), Some(30), None] {
-            let settings = Settings { auto_lock_minutes: minutes };
+            let settings = Settings { auto_lock_minutes: minutes, vault_folder: None };
             let json = serde_json::to_string(&settings).unwrap();
             assert_eq!(parse_settings(&json), settings);
         }
@@ -63,5 +71,12 @@ mod tests {
         assert_eq!(parse_settings(""), Settings::default());
         assert_eq!(parse_settings(r#"{"auto_lock_minutes":0}"#), Settings::default());
         assert_eq!(parse_settings(r#"{"auto_lock_minutes":7}"#), Settings::default());
+    }
+
+    #[test]
+    fn a_bad_timeout_does_not_make_the_app_forget_the_vault_folder() {
+        let parsed = parse_settings(r#"{"auto_lock_minutes":7,"vault_folder":"/sync/DeskAuth"}"#);
+        assert_eq!(parsed.auto_lock_minutes, Some(5));
+        assert_eq!(parsed.vault_folder.as_deref(), Some("/sync/DeskAuth"));
     }
 }

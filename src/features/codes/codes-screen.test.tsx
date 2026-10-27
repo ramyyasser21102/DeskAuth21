@@ -11,6 +11,8 @@ vi.mock("@/lib/api", () => ({
   getSettings: vi.fn().mockResolvedValue({ auto_lock_minutes: 5 }),
   setAutoLockMinutes: vi.fn(),
   recordActivity: vi.fn().mockResolvedValue(undefined),
+  getVaultFolder: vi.fn().mockResolvedValue("/data/DeskAuth21"),
+  chooseVaultFolder: vi.fn(),
 }));
 
 const ACME: CodeView = { label: "Acme (a@b)", code: "123456", seconds_left: 10 };

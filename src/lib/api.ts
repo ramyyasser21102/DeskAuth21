@@ -33,3 +33,9 @@ export const getSettings = () => invoke<Settings>("get_settings");
 export const setAutoLockMinutes = (minutes: number | null) =>
   invoke<Settings>("set_auto_lock_minutes", { minutes });
 export const recordActivity = () => invoke<void>("record_activity");
+
+export type RelocationOutcome = "unchanged" | "moved" | "used_existing" | "selected";
+
+export const getVaultFolder = () => invoke<string>("get_vault_folder");
+/** `null` means the user cancelled the folder picker. */
+export const chooseVaultFolder = () => invoke<RelocationOutcome | null>("choose_vault_folder");

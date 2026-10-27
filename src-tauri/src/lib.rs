@@ -9,6 +9,8 @@ mod clock;
 mod codes;
 mod commands;
 mod dedupe;
+mod disk_sync;
+mod disk_watch;
 mod copy_policy;
 mod error;
 mod hotkey;
@@ -20,9 +22,13 @@ mod persistence;
 mod settings;
 mod settings_store;
 mod state;
+#[cfg(test)]
+mod test_support;
 mod tray;
 mod vault;
 mod vault_actions;
+mod vault_location;
+mod vault_relocation;
 mod window;
 mod window_visibility;
 
@@ -30,13 +36,12 @@ use launch_options::should_start_hidden;
 use state::AppState;
 use tauri::Manager;
 
-const VAULT_FILE_NAME: &str = "vault.da21";
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(autostart::plugin())
         .plugin(hotkey::plugin())
         .on_window_event(window::keep_running_in_tray)
@@ -51,6 +56,8 @@ pub fn run() {
             commands::get_settings,
             commands::set_auto_lock_minutes,
             commands::record_activity,
+            commands::get_vault_folder,
+            commands::choose_vault_folder,
         ])
         .setup(setup_app)
         .run(tauri::generate_context!())
@@ -58,8 +65,7 @@ pub fn run() {
 }
 
 fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-    let vault_path = app.path().app_data_dir()?.join(VAULT_FILE_NAME);
-    let state = AppState::new(vault_path);
+    let state = AppState::new(app.path().app_data_dir()?);
     state.replace_settings(settings_store::load_settings(&state.settings_path()));
     app.manage(state);
     autostart::load_initial_state(app.handle());
@@ -67,6 +73,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     tray::create_tray(app.handle())?;
     tray::spawn_refresh_loop(app.handle().clone());
     auto_lock::spawn_loop(app.handle().clone());
+    disk_watch::spawn_loop(app.handle().clone());
     if !should_start_hidden(std::env::args()) {
         window::show_main_window(app.handle());
     }

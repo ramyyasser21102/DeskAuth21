@@ -28,7 +28,7 @@ mod tests {
     #[test]
     fn saved_settings_load_back() {
         let path = temp_path("roundtrip");
-        let settings = Settings { auto_lock_minutes: Some(15) };
+        let settings = Settings { auto_lock_minutes: Some(15), vault_folder: Some("/sync".into()) };
         save_settings(&path, &settings).unwrap();
         assert_eq!(load_settings(&path), settings);
         // Best effort: a leftover temp directory must not fail the test.

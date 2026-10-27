@@ -1,3 +1,4 @@
+import { UseExistingVaultButton } from "@/features/sync/use-existing-vault-button";
 import { createVault, unlockVault } from "@/lib/api";
 import { PassphraseForm } from "./passphrase-form";
 
@@ -10,13 +11,16 @@ export function CreateVaultScreen({ onCreated }: { onCreated: () => void }) {
     onCreated();
   };
   return (
-    <PassphraseForm
-      title="Create your vault"
-      hint={CREATE_VAULT_HINT}
-      submitLabel="Create vault"
-      requiresConfirmation
-      onSubmit={handleSubmit}
-    />
+    <div className="flex flex-col gap-4">
+      <PassphraseForm
+        title="Create your vault"
+        hint={CREATE_VAULT_HINT}
+        submitLabel="Create vault"
+        requiresConfirmation
+        onSubmit={handleSubmit}
+      />
+      <UseExistingVaultButton onChosen={onCreated} />
+    </div>
   );
 }
 

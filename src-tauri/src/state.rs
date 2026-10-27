@@ -6,12 +6,19 @@ use crate::otp::Account;
 use crate::settings::Settings;
 use crate::vault::Session;
 use serde::Serialize;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 use std::sync::{Mutex, MutexGuard, PoisonError};
 use std::time::Instant;
 
 const SETTINGS_FILE_NAME: &str = "settings.json";
+pub const VAULT_FILE_NAME: &str = "vault.da21";
+
+/// The vault lives in the chosen folder, or in the app's data directory by default.
+pub fn resolve_vault_path(app_data_dir: &Path, vault_folder: Option<&str>) -> PathBuf {
+    let folder = vault_folder.map_or_else(|| app_data_dir.to_path_buf(), PathBuf::from);
+    folder.join(VAULT_FILE_NAME)
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -35,6 +42,9 @@ pub fn determine_vault_status(is_unlocked: bool, vault_file_exists: bool) -> Vau
 pub struct VaultState {
     session: Option<Session>,
     accounts: Vec<Account>,
+    /// Identifies the vault file contents we last read or wrote, so a change made
+    /// by another device can be told apart from our own saves.
+    disk_fingerprint: Option<u64>,
 }
 
 impl VaultState {
@@ -48,6 +58,14 @@ impl VaultState {
 
     pub fn accounts(&self) -> &[Account] {
         &self.accounts
+    }
+
+    pub fn disk_fingerprint(&self) -> Option<u64> {
+        self.disk_fingerprint
+    }
+
+    pub fn set_disk_fingerprint(&mut self, fingerprint: Option<u64>) {
+        self.disk_fingerprint = fingerprint;
     }
 
     pub fn unlock(&mut self, session: Session, accounts: Vec<Account>) {
@@ -73,7 +91,8 @@ impl VaultState {
 }
 
 pub struct AppState {
-    pub vault_path: PathBuf,
+    /// Fixed, so the settings file (which says where the vault is) can always be found.
+    app_data_dir: PathBuf,
     /// Cached launch-at-login setting; see `autostart`.
     pub autostart_enabled: AtomicBool,
     pub activity: ActivityClock,
@@ -82,9 +101,9 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(vault_path: PathBuf) -> Self {
+    pub fn new(app_data_dir: PathBuf) -> Self {
         Self {
-            vault_path,
+            app_data_dir,
             autostart_enabled: AtomicBool::new(false),
             activity: ActivityClock::new(Instant::now()),
             settings: Mutex::default(),
@@ -99,7 +118,16 @@ impl AppState {
     }
 
     pub fn settings_path(&self) -> PathBuf {
-        self.vault_path.with_file_name(SETTINGS_FILE_NAME)
+        self.app_data_dir.join(SETTINGS_FILE_NAME)
+    }
+
+    /// Where the vault would be if `folder` were chosen.
+    pub fn vault_path_in(&self, folder: &str) -> PathBuf {
+        resolve_vault_path(&self.app_data_dir, Some(folder))
+    }
+
+    pub fn vault_path(&self) -> PathBuf {
+        resolve_vault_path(&self.app_data_dir, self.settings().vault_folder.as_deref())
     }
 
     pub fn settings(&self) -> Settings {
@@ -116,7 +144,7 @@ impl AppState {
     }
 
     pub fn status_of(&self, vault: &VaultState) -> VaultStatus {
-        determine_vault_status(vault.is_unlocked(), self.vault_path.exists())
+        determine_vault_status(vault.is_unlocked(), self.vault_path().exists())
     }
 }
 
@@ -129,6 +157,18 @@ mod tests {
         assert_eq!(determine_vault_status(true, true), VaultStatus::Unlocked);
         assert_eq!(determine_vault_status(false, true), VaultStatus::Locked);
         assert_eq!(determine_vault_status(false, false), VaultStatus::Uninitialized);
+    }
+
+    #[test]
+    fn the_vault_defaults_to_the_app_data_directory() {
+        let data_dir = Path::new("/data");
+        assert_eq!(resolve_vault_path(data_dir, None), Path::new("/data/vault.da21"));
+    }
+
+    #[test]
+    fn a_chosen_folder_replaces_the_app_data_directory() {
+        let data_dir = Path::new("/data");
+        assert_eq!(resolve_vault_path(data_dir, Some("/sync/Auth")), Path::new("/sync/Auth/vault.da21"));
     }
 
     #[test]

@@ -65,6 +65,20 @@ fn reseal_uses_a_fresh_nonce_and_still_opens() {
 }
 
 #[test]
+fn unseal_reads_a_newer_copy_with_the_same_key_without_the_passphrase() {
+    let session = Session::create("pw", FAST_PARAMS).unwrap();
+    let newer = session.seal(&sample_accounts()).unwrap();
+    assert_eq!(session.unseal(&newer).unwrap(), sample_accounts());
+}
+
+#[test]
+fn unseal_refuses_a_vault_made_with_a_different_salt_even_if_the_passphrase_matches() {
+    let ours = Session::create("same passphrase", FAST_PARAMS).unwrap();
+    let theirs = sealed_vault("same passphrase");
+    assert!(matches!(ours.unseal(&theirs), Err(VaultError::Decrypt)));
+}
+
+#[test]
 fn rejects_garbage_input() {
     assert!(matches!(Session::open(b"nope", "pw"), Err(VaultError::BadFormat)));
 }

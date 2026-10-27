@@ -12,7 +12,7 @@ static NEXT_DIRECTORY_ID: AtomicU32 = AtomicU32::new(0);
 fn state_in_temp_directory() -> (AppState, PathBuf) {
     let id = NEXT_DIRECTORY_ID.fetch_add(1, Ordering::SeqCst);
     let directory = std::env::temp_dir().join(format!("deskauth21-test-{}-{id}", std::process::id()));
-    (AppState::new(directory.join("vault.da21")), directory)
+    (AppState::new(directory.clone()), directory)
 }
 
 fn unlocked_state() -> (AppState, PathBuf) {
@@ -82,12 +82,16 @@ fn importing_the_same_export_twice_adds_nothing_new() {
     remove(directory);
 }
 
+fn auto_lock_settings(minutes: Option<u32>) -> Settings {
+    Settings { auto_lock_minutes: minutes, ..Settings::default() }
+}
+
 const MINUTE: std::time::Duration = std::time::Duration::from_secs(60);
 
 #[test]
 fn locks_after_the_idle_timeout_but_not_before() {
     let (state, directory) = unlocked_state();
-    state.replace_settings(Settings { auto_lock_minutes: Some(5) });
+    state.replace_settings(auto_lock_settings(Some(5)));
     let start = std::time::Instant::now();
     state.activity.touch(start);
     assert!(!lock_if_idle(&state, start + 4 * MINUTE));
@@ -100,7 +104,7 @@ fn locks_after_the_idle_timeout_but_not_before() {
 #[test]
 fn activity_pushes_the_deadline_back() {
     let (state, directory) = unlocked_state();
-    state.replace_settings(Settings { auto_lock_minutes: Some(5) });
+    state.replace_settings(auto_lock_settings(Some(5)));
     let start = std::time::Instant::now();
     state.activity.touch(start);
     state.activity.touch(start + 4 * MINUTE);
@@ -114,9 +118,9 @@ fn never_locks_when_auto_lock_is_off_or_the_vault_is_already_locked() {
     let (state, directory) = unlocked_state();
     let start = std::time::Instant::now();
     state.activity.touch(start);
-    state.replace_settings(Settings { auto_lock_minutes: None });
+    state.replace_settings(auto_lock_settings(None));
     assert!(!lock_if_idle(&state, start + 600 * MINUTE));
-    state.replace_settings(Settings { auto_lock_minutes: Some(1) });
+    state.replace_settings(auto_lock_settings(Some(1)));
     lock_vault(&state);
     assert!(!lock_if_idle(&state, start + 600 * MINUTE));
     remove(directory);
@@ -149,7 +153,8 @@ fn looks_up_a_single_code_by_position() {
 #[test]
 fn a_failed_save_rolls_the_import_back() {
     let (_state, directory) = unlocked_state();
-    let blocked = AppState::new(directory.join("vault.da21").join("cannot-create-under-a-file"));
+    // The vault file is a regular file, so nothing can be created "inside" it.
+    let blocked = AppState::new(directory.join("vault.da21"));
     blocked.vault_guard().unlock(Session::create(PASSPHRASE, FAST_KDF).unwrap(), Vec::new());
     assert!(import_accounts(&blocked, ACCOUNT_URI).is_err());
     assert!(blocked.vault_guard().accounts().is_empty());

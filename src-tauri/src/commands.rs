@@ -8,7 +8,9 @@ use crate::state::{AppState, VaultStatus};
 use crate::tray::refresh_tray;
 use crate::vault::KdfParams;
 use crate::vault_actions::{self, ImportSummary};
+use crate::vault_location::{self, RelocationOutcome};
 use tauri::{AppHandle, State};
+use tauri_plugin_dialog::DialogExt;
 
 #[tauri::command]
 pub fn vault_status(state: State<AppState>) -> VaultStatus {
@@ -69,4 +71,24 @@ pub fn set_auto_lock_minutes(minutes: Option<u32>, state: State<AppState>) -> Re
 #[tauri::command]
 pub fn record_activity(state: State<AppState>) {
     state.record_activity();
+}
+
+/// The folder the vault is in, for display.
+#[tauri::command]
+pub fn get_vault_folder(state: State<AppState>) -> String {
+    let vault_path = state.vault_path();
+    vault_path.parent().unwrap_or(&vault_path).display().to_string()
+}
+
+/// Asks the user for a folder (a synced one, to share the vault between devices)
+/// and switches to it. `None` means they cancelled.
+#[tauri::command]
+pub async fn choose_vault_folder(state: State<'_, AppState>, app: AppHandle) -> Result<Option<RelocationOutcome>, CommandError> {
+    let Some(picked) = app.dialog().file().blocking_pick_folder() else {
+        return Ok(None);
+    };
+    let folder = picked.into_path().map_err(|error| CommandError::InvalidSetting(error.to_string()))?;
+    let outcome = vault_location::change_vault_folder(&state, &folder)?;
+    refresh_tray(&app);
+    Ok(Some(outcome))
 }

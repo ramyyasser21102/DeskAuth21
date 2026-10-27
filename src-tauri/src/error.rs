@@ -12,6 +12,8 @@ pub enum CommandError {
     VaultAlreadyExists,
     #[error("no account at position {0}")]
     AccountNotFound(usize),
+    #[error("the vault file was replaced by a different vault, possibly on another device; nothing was overwritten, so lock and unlock to reload")]
+    VaultChangedElsewhere,
     #[error("{0} is not an allowed setting")]
     InvalidSetting(String),
     #[error("could not change the launch-at-login setting: {0}")]

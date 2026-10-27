@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImportPanel } from "@/features/import/import-panel";
-import { AutoLockSetting } from "@/features/settings/auto-lock-setting";
+import { SettingsSection } from "@/features/settings/settings-section";
 import { useActivityReporter } from "@/features/settings/use-activity-reporter";
 import { CodeRow } from "./code-row";
 import { CodesFooter } from "./codes-footer";
@@ -28,7 +28,7 @@ export function CodesScreen({ onLocked }: { onLocked: () => void }) {
           ))}
         </ul>
         {isImportOpen && <ImportPanel />}
-        <AutoLockSetting />
+        <SettingsSection onVaultChanged={onLocked} />
       </CardContent>
       <CodesFooter isImportOpen={isImportOpen} onToggleImport={toggleImport} onLocked={onLocked} />
     </Card>

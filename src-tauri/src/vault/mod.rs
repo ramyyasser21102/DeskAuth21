@@ -74,6 +74,14 @@ impl Session {
         Ok([encoded_header.as_slice(), &ciphertext].concat())
     }
 
+    /// Decrypt another copy of this vault with the key already held, without
+    /// re-deriving it. Fails if the file was made with a different key.
+    pub fn unseal(&self, file: &[u8]) -> Result<Vec<Account>, VaultError> {
+        let header = Header::decode(file)?;
+        let plaintext = decrypt_payload(&self.key, &header, file)?;
+        Ok(serde_json::from_slice(&plaintext)?)
+    }
+
     /// Decrypt a vault file, returning the live session and its accounts.
     pub fn open(bytes: &[u8], passphrase: &str) -> Result<(Self, Vec<Account>), VaultError> {
         let header = Header::decode(bytes)?;
