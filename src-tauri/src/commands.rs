@@ -14,6 +14,7 @@ use crate::state::{AppState, VaultStatus};
 use crate::tray::refresh_tray;
 use crate::vault::KdfParams;
 use crate::vault_actions::{self, ImportSummary};
+use crate::usb_key;
 use crate::vault_security;
 use crate::vault_location::{self, RelocationOutcome};
 use crate::vendor::{vendor_catalog, Vendor, VendorInfo};
@@ -35,8 +36,8 @@ pub async fn create_vault(passphrase: String, state: State<'_, AppState>, app: A
 }
 
 #[tauri::command]
-pub async fn unlock(passphrase: String, state: State<'_, AppState>, app: AppHandle) -> Result<(), CommandError> {
-    vault_actions::unlock_vault(&state, &passphrase)?;
+pub async fn unlock(passphrase: String, pin: Option<String>, state: State<'_, AppState>, app: AppHandle) -> Result<(), CommandError> {
+    vault_actions::unlock_vault_with_key(&state, &passphrase, usb_key::platform_device().as_ref(), pin.as_deref())?;
     refresh_tray(&app);
     Ok(())
 }

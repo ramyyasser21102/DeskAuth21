@@ -1,14 +1,15 @@
 use super::*;
 use crate::vault::crypto::{derive_key, random_key};
 use crate::vault::header::SALT_LEN;
-use crate::vault::slot::{PassphraseSlot, Slot};
+use crate::vault::passphrase_slot::{KeyCost, PassphraseSlot};
+use crate::vault::slot::{Slot, KIND_PASSPHRASE};
 
 const SALT: [u8; SALT_LEN] = [5; SALT_LEN];
 
 fn wrapped_with(passphrase: &str) -> (PassphraseSlot, crate::vault::crypto::Key) {
     let vault_key = random_key().unwrap();
     let kek = derive_key(passphrase, &SALT, FAST_PARAMS).unwrap();
-    (PassphraseSlot::wrap(&vault_key, &kek, SALT, FAST_PARAMS).unwrap(), vault_key)
+    (PassphraseSlot::wrap(KIND_PASSPHRASE, &vault_key, &kek, KeyCost { salt: SALT, params: FAST_PARAMS }).unwrap(), vault_key)
 }
 
 #[test]

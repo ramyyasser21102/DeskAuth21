@@ -6,6 +6,9 @@ use crate::auto_lock_policy::{is_allowed_minutes, should_auto_lock};
 use crate::codes::{build_code_views, CodeView};
 use crate::error::CommandError;
 use crate::import::import_text;
+use crate::key_device::KeyDevice;
+#[cfg(test)]
+use crate::key_device::NoKeySupport;
 use crate::passphrase::validate_new_passphrase;
 use crate::disk_sync::{sync_vault_folder, DiskSyncOutcome};
 use crate::persistence::{fingerprint, read_vault_file, replace_and_save, save_vault};
@@ -35,9 +38,16 @@ pub fn create_new_vault(state: &AppState, passphrase: &str, kdf_params: KdfParam
     saved
 }
 
+#[cfg(test)]
 pub fn unlock_vault(state: &AppState, passphrase: &str) -> Result<(), CommandError> {
+    unlock_vault_with_key(state, passphrase, &NoKeySupport, None)
+}
+
+/// Unlocks with the passphrase and, if the vault requires one, a hardware key. The key is
+/// waited for before the vault is touched, so a slow touch never blocks the rest of the app.
+pub fn unlock_vault_with_key(state: &AppState, passphrase: &str, device: &dyn KeyDevice, pin: Option<&str>) -> Result<(), CommandError> {
     let file_bytes = read_vault_file(&state.vault_path())?;
-    let (session, data) = Session::open(&file_bytes, passphrase)?;
+    let (session, data) = Session::open_with_key(&file_bytes, passphrase, device, pin)?;
     let mut vault = state.vault_guard();
     vault.unlock(session, data);
     vault.set_disk_fingerprint(Some(fingerprint(&file_bytes)));

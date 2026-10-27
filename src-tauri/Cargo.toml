@@ -62,3 +62,9 @@ core-foundation = "0.10"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61", features = ["Win32_System_StationsAndDesktops"] }
+
+# Talks to security keys over USB. Windows is left out: it does not let ordinary programs
+# open these devices directly, so keys are reported as unsupported there for now.
+[target.'cfg(not(any(windows, target_os = "android", target_os = "ios")))'.dependencies]
+ctap-hid-fido2 = "3.6.0"
+

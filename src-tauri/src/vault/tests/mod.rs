@@ -1,5 +1,7 @@
 //! Shared test helpers for the vault formats.
 
+mod hardware;
+mod hardware_slots;
 mod layout;
 mod legacy;
 mod session;

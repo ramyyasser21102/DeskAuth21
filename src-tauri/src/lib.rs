@@ -13,12 +13,14 @@ mod conflict_copies;
 mod data_dir_override;
 mod codes;
 mod commands;
+mod commands_hardware;
 mod disk_sync;
 mod disk_watch;
 mod copy_policy;
 mod error;
 mod hotkey;
 mod import;
+mod key_device;
 mod launch_options;
 mod lock_triggers;
 mod locking;
@@ -39,6 +41,7 @@ mod system_lock_watcher;
 #[cfg(test)]
 mod test_support;
 mod tray;
+mod usb_key;
 mod tray_model;
 mod vault;
 mod vendor;
@@ -61,6 +64,8 @@ fn command_handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'sta
         commands::vault_format_version, commands::upgrade_vault_format, commands::change_passphrase,
         commands::has_recovery_key, commands::generate_recovery_key, commands::save_recovery_key,
         commands::reset_passphrase_with_recovery_key, commands::assess_passphrase, commands::generate_passphrase,
+        commands_hardware::unlock_needs_hardware_key, commands_hardware::hardware_key_status, commands_hardware::enable_hardware_key,
+        commands_hardware::add_hardware_key, commands_hardware::remove_hardware_key, commands_hardware::disable_hardware_keys,
         // Accounts and codes.
         commands::import_text, commands::list_vendors, commands::list_codes, commands::copy_code,
         commands::rename_account, commands::delete_account,

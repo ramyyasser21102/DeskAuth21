@@ -3,9 +3,13 @@
 //! until the person upgrades them.
 
 use super::layout::{file_version, VERSION_1, VERSION_2};
+use super::hardware_ops::HardwareKeyInfo;
 use super::legacy::LegacyKeys;
 use super::slotted::SlottedKeys;
 use super::{KdfParams, VaultError};
+use crate::key_device::{KeyDevice, KeyRegistration};
+#[cfg(test)]
+use crate::key_device::NoKeySupport;
 use crate::record::VaultData;
 
 #[derive(Clone)]
@@ -25,10 +29,17 @@ impl Session {
         Ok(Self { keys: Keys::Slotted(SlottedKeys::create(passphrase, params)?) })
     }
 
+    /// For a vault that needs no hardware key; one that does fails with "not supported".
+    #[cfg(test)]
     pub fn open(bytes: &[u8], passphrase: &str) -> Result<(Self, VaultData), VaultError> {
+        Self::open_with_key(bytes, passphrase, &NoKeySupport, None)
+    }
+
+    /// Opens with the passphrase and, if the vault requires one, a hardware key.
+    pub fn open_with_key(bytes: &[u8], passphrase: &str, device: &dyn KeyDevice, pin: Option<&str>) -> Result<(Self, VaultData), VaultError> {
         match file_version(bytes) {
             Some(VERSION_1) => LegacyKeys::open(bytes, passphrase).map(|(keys, data)| (Self { keys: Keys::Legacy(keys) }, data)),
-            Some(VERSION_2) => SlottedKeys::open(bytes, passphrase).map(|(keys, data)| (Self { keys: Keys::Slotted(keys) }, data)),
+            Some(VERSION_2) => SlottedKeys::open(bytes, passphrase, device, pin).map(|(keys, data)| (Self { keys: Keys::Slotted(keys) }, data)),
             _ => Err(VaultError::BadFormat),
         }
     }
@@ -70,6 +81,33 @@ impl Session {
             Keys::Slotted(keys) => keys.adopt_slots_from(file),
             Keys::Legacy(_) => Ok(()),
         }
+    }
+
+    pub fn enable_hardware_key(&mut self, key: &KeyRegistration<'_>, current_passphrase: &str, params: KdfParams) -> Result<(), VaultError> {
+        self.slotted_mut()?.enable_hardware_key(key, current_passphrase, params)
+    }
+
+    pub fn add_hardware_key(&mut self, key: &KeyRegistration<'_>) -> Result<(), VaultError> {
+        self.slotted_mut()?.add_hardware_key(key)
+    }
+
+    pub fn remove_hardware_key(&mut self, credential_id: &[u8]) -> Result<(), VaultError> {
+        self.slotted_mut()?.remove_hardware_key(credential_id)
+    }
+
+    pub fn disable_hardware_keys(&mut self, current_passphrase: &str, params: KdfParams) -> Result<(), VaultError> {
+        self.slotted_mut()?.disable_hardware_keys(current_passphrase, params)
+    }
+
+    pub fn hardware_keys(&self) -> Vec<HardwareKeyInfo> {
+        match &self.keys {
+            Keys::Slotted(keys) => keys.hardware_keys(),
+            Keys::Legacy(_) => Vec::new(),
+        }
+    }
+
+    pub fn requires_hardware_key(&self) -> bool {
+        matches!(&self.keys, Keys::Slotted(keys) if keys.requires_hardware_key())
     }
 
     pub fn has_recovery_key(&self) -> bool {

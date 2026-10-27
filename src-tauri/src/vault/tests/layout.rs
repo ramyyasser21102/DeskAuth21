@@ -43,7 +43,7 @@ fn a_slot_kind_this_version_does_not_know_is_kept_when_the_vault_is_saved() {
     let mut keys = SlottedKeys::create("pw", FAST_PARAMS).unwrap();
     keys.slots.push(Slot::Unknown { kind: UNKNOWN_KIND, body: vec![1, 2, 3] });
     let file = keys.seal(&sample_data()).unwrap();
-    let (reopened, data) = SlottedKeys::open(&file, "pw").unwrap();
+    let (reopened, data) = SlottedKeys::open(&file, "pw", &crate::key_device::NoKeySupport, None).unwrap();
     assert_eq!(data, sample_data());
     assert!(reopened.slots.contains(&Slot::Unknown { kind: UNKNOWN_KIND, body: vec![1, 2, 3] }));
     let resaved = reopened.seal(&data).unwrap();
