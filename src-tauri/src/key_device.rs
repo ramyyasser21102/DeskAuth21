@@ -1,8 +1,10 @@
 //! What the vault needs from a physical security key, kept apart from any particular
 //! way of talking to one so the vault logic can be tested with a stand-in.
 
-/// Why a key could not be used. The messages tell the person what to do next.
+/// Why a key could not be used. The messages tell the person what to do next. On Windows no
+/// key is ever opened, so most of these are only constructed on other systems.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[cfg_attr(windows, allow(dead_code))]
 pub enum KeyError {
     #[error("no hardware key was found; plug it in and try again")]
     NoKey,

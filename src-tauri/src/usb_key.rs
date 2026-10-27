@@ -3,7 +3,9 @@
 //! Windows does not let ordinary programs open these devices directly (it wants the
 //! WebAuthn API), so there keys are reported as unsupported until that is built.
 
-use crate::key_device::{KeyDevice, KeyError};
+use crate::key_device::KeyDevice;
+#[cfg(not(windows))]
+use crate::key_device::KeyError;
 #[cfg(windows)]
 use crate::key_device::NoKeySupport;
 
@@ -21,6 +23,7 @@ pub fn platform_device() -> Box<dyn KeyDevice> {
 
 /// Sorts the library's error text into what the person can do about it. The library reports
 /// device errors as text containing the CTAP status name.
+#[cfg(not(windows))]
 pub fn classify_error(message: &str) -> KeyError {
     let lowered = message.to_lowercase();
     if lowered.contains("no_credentials") {
