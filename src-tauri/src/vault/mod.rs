@@ -21,7 +21,7 @@ type Key = Zeroizing<[u8; KEY_LEN]>;
 pub enum VaultError {
     #[error("not a DeskAuth21 vault, or an unsupported version")]
     BadFormat,
-    #[error("wrong passphrase or corrupted vault")]
+    #[error("wrong passphrase or damaged vault file; check the passphrase and try again")]
     Decrypt,
     #[error("could not encrypt the vault")]
     Encrypt,

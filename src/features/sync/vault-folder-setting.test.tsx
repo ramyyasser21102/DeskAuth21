@@ -63,7 +63,7 @@ describe("UseExistingVaultButton", () => {
     const onChosen = vi.fn();
     vi.mocked(chooseVaultFolder).mockResolvedValueOnce(null).mockResolvedValueOnce("used_existing");
     render(<UseExistingVaultButton onChosen={onChosen} />);
-    const button = screen.getByRole("button", { name: /Already have a vault/ });
+    const button = screen.getByRole("button", { name: /Open a vault from a synced folder/ });
     fireEvent.click(button);
     await waitFor(() => expect(chooseVaultFolder).toHaveBeenCalledTimes(1));
     expect(onChosen).not.toHaveBeenCalled();

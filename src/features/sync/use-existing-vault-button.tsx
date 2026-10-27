@@ -17,7 +17,7 @@ export function UseExistingVaultButton({ onChosen }: { onChosen: () => void }) {
   return (
     <div className="flex flex-col items-center gap-1">
       <Button type="button" variant="ghost" onClick={handleClick}>
-        Already have a vault in a synced folder?
+        Open a vault from a synced folder
       </Button>
       {errorMessage && <p className="text-xs text-destructive">{errorMessage}</p>}
     </div>
