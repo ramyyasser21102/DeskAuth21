@@ -96,8 +96,8 @@ fn append_placeholder(app: &AppHandle, menu: &Menu<Wry>, snapshot: &TraySnapshot
 }
 
 fn append_account_items(app: &AppHandle, menu: &Menu<Wry>, snapshot: &TraySnapshot) -> tauri::Result<()> {
-    for (index, view) in snapshot.code_views.iter().enumerate() {
-        let item = MenuItem::with_id(app, copy_item_id(index), tray_menu_text(view), true, None::<&str>)?;
+    for view in &snapshot.code_views {
+        let item = MenuItem::with_id(app, copy_item_id(&view.id), tray_menu_text(view), true, None::<&str>)?;
         menu.append(&item)?;
     }
     Ok(())
@@ -121,10 +121,10 @@ fn handle_menu_event(app: &AppHandle, event: MenuEvent) {
 }
 
 fn copy_from_menu_item(app: &AppHandle, item_id: &str) {
-    let Some(account_index) = parse_copy_item_id(item_id) else {
+    let Some(account_id) = parse_copy_item_id(item_id) else {
         return;
     };
-    if let Err(error) = copy_code_for_account(app, account_index) {
+    if let Err(error) = copy_code_for_account(app, account_id) {
         eprintln!("could not copy code: {error}");
     }
 }

@@ -2,7 +2,7 @@
 
 use crate::activity::ActivityClock;
 use crate::error::CommandError;
-use crate::otp::Account;
+use crate::record::{AccountRecord, VaultData};
 use crate::settings::Settings;
 use crate::vault::Session;
 use serde::Serialize;
@@ -36,12 +36,12 @@ pub fn determine_vault_status(is_unlocked: bool, vault_file_exists: bool) -> Vau
     }
 }
 
-/// `session` is `Some` exactly when the vault is unlocked, and `accounts` is
-/// empty whenever it is locked. Both change together so they cannot disagree.
+/// `session` is `Some` exactly when the vault is unlocked, and `data` is empty
+/// whenever it is locked. Both change together so they cannot disagree.
 #[derive(Default)]
 pub struct VaultState {
     session: Option<Session>,
-    accounts: Vec<Account>,
+    data: VaultData,
     /// Identifies the vault file contents we last read or wrote, so a change made
     /// by another device can be told apart from our own saves.
     disk_fingerprint: Option<u64>,
@@ -56,8 +56,16 @@ impl VaultState {
         self.session.as_ref().ok_or(CommandError::VaultLocked)
     }
 
-    pub fn accounts(&self) -> &[Account] {
-        &self.accounts
+    pub fn data(&self) -> &VaultData {
+        &self.data
+    }
+
+    pub fn accounts(&self) -> &[AccountRecord] {
+        &self.data.accounts
+    }
+
+    pub fn replace_data(&mut self, data: VaultData) {
+        self.data = data;
     }
 
     pub fn disk_fingerprint(&self) -> Option<u64> {
@@ -68,25 +76,14 @@ impl VaultState {
         self.disk_fingerprint = fingerprint;
     }
 
-    pub fn unlock(&mut self, session: Session, accounts: Vec<Account>) {
+    pub fn unlock(&mut self, session: Session, data: VaultData) {
         self.session = Some(session);
-        self.accounts = accounts;
+        self.data = data;
     }
 
     /// Dropping the session zeroizes the derived key.
     pub fn relock(&mut self) {
         *self = Self::default();
-    }
-
-    /// Returns the previous account count so a failed save can be rolled back.
-    pub fn append_accounts(&mut self, imported: Vec<Account>) -> usize {
-        let previous_count = self.accounts.len();
-        self.accounts.extend(imported);
-        previous_count
-    }
-
-    pub fn truncate_accounts(&mut self, count: usize) {
-        self.accounts.truncate(count);
     }
 }
 

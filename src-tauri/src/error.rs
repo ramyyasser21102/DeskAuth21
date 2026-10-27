@@ -1,5 +1,6 @@
 //! The single error type surfaced to the frontend.
 
+use crate::account_changes::ChangeError;
 use crate::import::ImportError;
 use crate::vault::VaultError;
 use serde::{Serialize, Serializer};
@@ -10,8 +11,8 @@ pub enum CommandError {
     VaultLocked,
     #[error("a vault already exists")]
     VaultAlreadyExists,
-    #[error("no account at position {0}")]
-    AccountNotFound(usize),
+    #[error(transparent)]
+    Change(#[from] ChangeError),
     #[error("the vault file was replaced by a different vault, possibly on another device; nothing was overwritten, so lock and unlock to reload")]
     VaultChangedElsewhere,
     #[error("{0} is not an allowed setting")]

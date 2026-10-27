@@ -1,5 +1,6 @@
 //! Tauri command handlers: thin adapters from the frontend to `vault_actions`.
 
+use crate::account_changes::AccountLabels;
 use crate::clipboard;
 use crate::codes::CodeView;
 use crate::settings::Settings;
@@ -53,8 +54,22 @@ pub fn list_codes(state: State<AppState>) -> Result<Vec<CodeView>, CommandError>
 
 /// Copies the code and clears the clipboard again after a delay.
 #[tauri::command]
-pub fn copy_code(account_index: usize, app: AppHandle) -> Result<(), CommandError> {
-    clipboard::copy_code_for_account(&app, account_index)
+pub fn copy_code(account_id: String, app: AppHandle) -> Result<(), CommandError> {
+    clipboard::copy_code_for_account(&app, &account_id)
+}
+
+#[tauri::command]
+pub fn rename_account(account_id: String, labels: AccountLabels, state: State<AppState>, app: AppHandle) -> Result<(), CommandError> {
+    vault_actions::rename_stored_account(&state, &account_id, &labels)?;
+    refresh_tray(&app);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn delete_account(account_id: String, state: State<AppState>, app: AppHandle) -> Result<(), CommandError> {
+    vault_actions::delete_stored_account(&state, &account_id)?;
+    refresh_tray(&app);
+    Ok(())
 }
 
 #[tauri::command]

@@ -1,7 +1,7 @@
 //! Reading and writing the vault file.
 
 use crate::error::CommandError;
-use crate::otp::Account;
+use crate::record::VaultData;
 use crate::state::VaultState;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::path::Path;
@@ -23,20 +23,21 @@ pub fn fingerprint(bytes: &[u8]) -> u64 {
 /// Saves and remembers what is now on disk, so our own write is not mistaken
 /// for a change made elsewhere.
 pub fn save_vault(path: &Path, vault: &mut VaultState) -> Result<(), CommandError> {
-    let sealed = vault.session()?.seal(vault.accounts())?;
+    let sealed = vault.session()?.seal(vault.data())?;
     write_atomically(path, &sealed)?;
     vault.set_disk_fingerprint(Some(fingerprint(&sealed)));
     Ok(())
 }
 
-/// Adds accounts and saves. If saving fails the accounts are removed again, so
-/// memory never holds accounts that did not reach disk.
-pub fn append_and_save(path: &Path, vault: &mut VaultState, imported: Vec<Account>) -> Result<(), CommandError> {
+/// Replaces the vault contents and saves. If saving fails the previous contents
+/// are restored, so memory never holds changes that did not reach disk.
+pub fn replace_and_save(path: &Path, vault: &mut VaultState, new_data: VaultData) -> Result<(), CommandError> {
     vault.session()?;
-    let previous_count = vault.append_accounts(imported);
+    let previous = vault.data().clone();
+    vault.replace_data(new_data);
     let saved = save_vault(path, vault);
     if saved.is_err() {
-        vault.truncate_accounts(previous_count);
+        vault.replace_data(previous);
     }
     saved
 }

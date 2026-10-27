@@ -12,8 +12,8 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 /// Counts copies so only the newest one's timer may clear the clipboard.
 static LATEST_COPY_NUMBER: AtomicU64 = AtomicU64::new(0);
 
-pub fn copy_code_for_account(app: &AppHandle, account_index: usize) -> Result<(), CommandError> {
-    let code = code_for_account(&app.state::<AppState>(), account_index, current_unix_seconds())?;
+pub fn copy_code_for_account(app: &AppHandle, account_id: &str) -> Result<(), CommandError> {
+    let code = code_for_account(&app.state::<AppState>(), account_id, current_unix_seconds())?;
     write_text(app, code.clone())?;
     app.state::<AppState>().record_activity();
     let copy_number = LATEST_COPY_NUMBER.fetch_add(1, Ordering::SeqCst) + 1;

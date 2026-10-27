@@ -1,7 +1,8 @@
 use super::*;
+use crate::account_changes::AccountLabels;
 use crate::state::AppState;
 use crate::test_support::{device, device_with_account, remove_all, temp_directory, ACME_URI, GLOBEX_URI, PASSPHRASE};
-use crate::vault_actions::{current_codes_now, import_accounts, unlock_vault};
+use crate::vault_actions::{current_codes_now, delete_stored_account, import_accounts, rename_stored_account, unlock_vault};
 use crate::vault_location::change_vault_folder;
 use std::path::PathBuf;
 
@@ -73,7 +74,7 @@ fn accounts_missing_from_a_restored_older_copy_are_written_back() {
     assert_eq!(sync(&first), DiskSyncOutcome::Updated);
     assert_eq!(labels(&first).len(), 2);
     let healed = first.vault_guard().session().unwrap().unseal(&std::fs::read(&vault_file).unwrap()).unwrap();
-    assert_eq!(healed.len(), 2);
+    assert_eq!(healed.accounts.len(), 2);
     remove_all(&dirs);
 }
 
@@ -97,5 +98,53 @@ fn a_locked_vault_or_a_missing_file_is_left_alone() {
     assert_eq!(sync(&first), DiskSyncOutcome::Unchanged);
     crate::vault_actions::lock_vault(&first);
     assert_eq!(sync(&first), DiskSyncOutcome::Unchanged);
+    remove_all(&dirs);
+}
+
+fn first_id(state: &AppState) -> String {
+    current_codes_now(state).unwrap()[0].id.clone()
+}
+
+#[test]
+fn a_delete_on_one_device_removes_the_account_on_the_other() {
+    let (first, second, _, dirs) = two_devices_sharing_a_vault();
+    delete_stored_account(&first, &first_id(&first)).unwrap();
+    assert_eq!(sync(&second), DiskSyncOutcome::Updated);
+    assert!(labels(&second).is_empty());
+    remove_all(&dirs);
+}
+
+#[test]
+fn a_rename_on_one_device_appears_on_the_other() {
+    let (first, second, _, dirs) = two_devices_sharing_a_vault();
+    rename_stored_account(&first, &first_id(&first), &AccountLabels { issuer: "Work".into(), name: "me@work.com".into() }).unwrap();
+    assert_eq!(sync(&second), DiskSyncOutcome::Updated);
+    assert_eq!(labels(&second), vec!["Work (me@work.com)"]);
+    remove_all(&dirs);
+}
+
+#[test]
+fn a_device_that_still_has_a_deleted_account_cannot_bring_it_back() {
+    let (first, second, shared, dirs) = two_devices_sharing_a_vault();
+    delete_stored_account(&first, &first_id(&first)).unwrap();
+    // The second device never noticed; syncing must not resurrect the account.
+    assert_eq!(sync(&second), DiskSyncOutcome::Updated);
+    let on_disk = first.vault_guard().session().unwrap().unseal(&std::fs::read(shared.join("vault.da21")).unwrap()).unwrap();
+    assert!(on_disk.accounts.is_empty());
+    assert_eq!(on_disk.tombstones.len(), 1);
+    remove_all(&dirs);
+}
+
+#[test]
+fn a_rename_and_a_delete_made_apart_end_the_same_on_both_devices() {
+    let (first, second, _, dirs) = two_devices_sharing_a_vault();
+    let id = first_id(&first);
+    // Both act on the same account before either has seen the other's change.
+    rename_stored_account(&second, &id, &AccountLabels { issuer: "Work".into(), name: "renamed".into() }).unwrap();
+    delete_stored_account(&first, &id).unwrap();
+    sync(&second);
+    sync(&first);
+    assert_eq!(labels(&first), labels(&second));
+    assert!(labels(&first).is_empty());
     remove_all(&dirs);
 }
