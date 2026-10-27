@@ -2,6 +2,7 @@
 
 use crate::clipboard;
 use crate::codes::CodeView;
+use crate::settings::Settings;
 use crate::error::CommandError;
 use crate::state::{AppState, VaultStatus};
 use crate::tray::refresh_tray;
@@ -52,4 +53,20 @@ pub fn list_codes(state: State<AppState>) -> Result<Vec<CodeView>, CommandError>
 #[tauri::command]
 pub fn copy_code(account_index: usize, app: AppHandle) -> Result<(), CommandError> {
     clipboard::copy_code_for_account(&app, account_index)
+}
+
+#[tauri::command]
+pub fn get_settings(state: State<AppState>) -> Settings {
+    state.settings()
+}
+
+#[tauri::command]
+pub fn set_auto_lock_minutes(minutes: Option<u32>, state: State<AppState>) -> Result<Settings, CommandError> {
+    vault_actions::update_auto_lock(&state, minutes)
+}
+
+/// The window reports real user input here; background polling must not.
+#[tauri::command]
+pub fn record_activity(state: State<AppState>) {
+    state.record_activity();
 }

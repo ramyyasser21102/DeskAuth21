@@ -1,12 +1,17 @@
 //! In-memory application state: whether the vault is unlocked, and its accounts.
 
+use crate::activity::ActivityClock;
 use crate::error::CommandError;
 use crate::otp::Account;
+use crate::settings::Settings;
 use crate::vault::Session;
 use serde::Serialize;
 use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Mutex, MutexGuard, PoisonError};
+use std::time::Instant;
+
+const SETTINGS_FILE_NAME: &str = "settings.json";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -71,18 +76,43 @@ pub struct AppState {
     pub vault_path: PathBuf,
     /// Cached launch-at-login setting; see `autostart`.
     pub autostart_enabled: AtomicBool,
+    pub activity: ActivityClock,
+    settings: Mutex<Settings>,
     vault: Mutex<VaultState>,
 }
 
 impl AppState {
     pub fn new(vault_path: PathBuf) -> Self {
-        Self { vault_path, autostart_enabled: AtomicBool::new(false), vault: Mutex::default() }
+        Self {
+            vault_path,
+            autostart_enabled: AtomicBool::new(false),
+            activity: ActivityClock::new(Instant::now()),
+            settings: Mutex::default(),
+            vault: Mutex::default(),
+        }
     }
 
     /// A poisoned lock still guards consistent data (every update is a single
     /// assignment), so recover it instead of crashing the tray thread.
     pub fn vault_guard(&self) -> MutexGuard<'_, VaultState> {
         self.vault.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    pub fn settings_path(&self) -> PathBuf {
+        self.vault_path.with_file_name(SETTINGS_FILE_NAME)
+    }
+
+    pub fn settings(&self) -> Settings {
+        self.settings.lock().unwrap_or_else(PoisonError::into_inner).clone()
+    }
+
+    pub fn replace_settings(&self, settings: Settings) {
+        *self.settings.lock().unwrap_or_else(PoisonError::into_inner) = settings;
+    }
+
+    /// Call for anything the user did on purpose (not for background polling).
+    pub fn record_activity(&self) {
+        self.activity.touch(Instant::now());
     }
 
     pub fn status_of(&self, vault: &VaultState) -> VaultStatus {

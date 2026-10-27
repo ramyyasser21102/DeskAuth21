@@ -82,6 +82,58 @@ fn importing_the_same_export_twice_adds_nothing_new() {
     remove(directory);
 }
 
+const MINUTE: std::time::Duration = std::time::Duration::from_secs(60);
+
+#[test]
+fn locks_after_the_idle_timeout_but_not_before() {
+    let (state, directory) = unlocked_state();
+    state.replace_settings(Settings { auto_lock_minutes: Some(5) });
+    let start = std::time::Instant::now();
+    state.activity.touch(start);
+    assert!(!lock_if_idle(&state, start + 4 * MINUTE));
+    assert!(state.vault_guard().is_unlocked());
+    assert!(lock_if_idle(&state, start + 5 * MINUTE));
+    assert!(!state.vault_guard().is_unlocked());
+    remove(directory);
+}
+
+#[test]
+fn activity_pushes_the_deadline_back() {
+    let (state, directory) = unlocked_state();
+    state.replace_settings(Settings { auto_lock_minutes: Some(5) });
+    let start = std::time::Instant::now();
+    state.activity.touch(start);
+    state.activity.touch(start + 4 * MINUTE);
+    assert!(!lock_if_idle(&state, start + 8 * MINUTE));
+    assert!(lock_if_idle(&state, start + 9 * MINUTE));
+    remove(directory);
+}
+
+#[test]
+fn never_locks_when_auto_lock_is_off_or_the_vault_is_already_locked() {
+    let (state, directory) = unlocked_state();
+    let start = std::time::Instant::now();
+    state.activity.touch(start);
+    state.replace_settings(Settings { auto_lock_minutes: None });
+    assert!(!lock_if_idle(&state, start + 600 * MINUTE));
+    state.replace_settings(Settings { auto_lock_minutes: Some(1) });
+    lock_vault(&state);
+    assert!(!lock_if_idle(&state, start + 600 * MINUTE));
+    remove(directory);
+}
+
+#[test]
+fn updating_auto_lock_saves_applies_and_rejects_bad_values() {
+    let (state, directory) = unlocked_state();
+    let saved = update_auto_lock(&state, Some(15)).unwrap();
+    assert_eq!(saved.auto_lock_minutes, Some(15));
+    assert_eq!(state.settings().auto_lock_minutes, Some(15));
+    assert_eq!(crate::settings_store::load_settings(&state.settings_path()).auto_lock_minutes, Some(15));
+    assert!(matches!(update_auto_lock(&state, Some(7)), Err(CommandError::InvalidSetting(_))));
+    assert_eq!(state.settings().auto_lock_minutes, Some(15));
+    remove(directory);
+}
+
 #[test]
 fn looks_up_a_single_code_by_position() {
     let (state, directory) = unlocked_state();

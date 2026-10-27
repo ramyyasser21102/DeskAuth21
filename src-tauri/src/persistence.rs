@@ -30,7 +30,7 @@ pub fn append_and_save(path: &Path, vault: &mut VaultState, imported: Vec<Accoun
 }
 
 /// Write to a temp file then rename, so a crash mid-save never leaves a truncated vault.
-fn write_atomically(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+pub fn write_atomically(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     if let Some(directory) = path.parent() {
         std::fs::create_dir_all(directory)?;
     }
