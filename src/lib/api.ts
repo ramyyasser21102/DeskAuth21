@@ -28,6 +28,17 @@ export interface VendorInfo {
   name: string;
 }
 
+export interface PassphraseStrength {
+  /** 0 (very weak) to 4 (strong). */
+  score: number;
+  feedback: string | null;
+}
+
+/** Advice on a new passphrase while it is typed. The text stays inside the app. */
+export const assessPassphrase = (passphrase: string) => invoke<PassphraseStrength>("assess_passphrase", { passphrase });
+/** Six random words, made by the app. */
+export const generatePassphrase = () => invoke<string>("generate_passphrase");
+
 export const getVendors = () => invoke<VendorInfo[]>("list_vendors");
 
 export interface CodeView {
