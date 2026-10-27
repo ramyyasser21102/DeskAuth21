@@ -3,6 +3,7 @@
 use crate::error::CommandError;
 use crate::otp::Account;
 use crate::state::VaultState;
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::path::Path;
 
 const TEMP_EXTENSION: &str = "tmp";
@@ -11,9 +12,20 @@ pub fn read_vault_file(path: &Path) -> Result<Vec<u8>, CommandError> {
     Ok(std::fs::read(path)?)
 }
 
-pub fn save_vault(path: &Path, vault: &VaultState) -> Result<(), CommandError> {
+/// A cheap identity for file contents, used only to notice that a file changed.
+/// Not a security measure.
+pub fn fingerprint(bytes: &[u8]) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    bytes.hash(&mut hasher);
+    hasher.finish()
+}
+
+/// Saves and remembers what is now on disk, so our own write is not mistaken
+/// for a change made elsewhere.
+pub fn save_vault(path: &Path, vault: &mut VaultState) -> Result<(), CommandError> {
     let sealed = vault.session()?.seal(vault.accounts())?;
     write_atomically(path, &sealed)?;
+    vault.set_disk_fingerprint(Some(fingerprint(&sealed)));
     Ok(())
 }
 

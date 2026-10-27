@@ -1,39 +1,11 @@
 use super::*;
 use crate::settings_store::load_settings;
-use crate::vault::KdfParams;
-use crate::vault_actions::{create_new_vault, current_codes_now, import_accounts, lock_vault, unlock_vault};
+use crate::vault_actions::{create_new_vault, current_codes_now, lock_vault, unlock_vault};
+use crate::test_support::{device, device_with_account, remove_all, temp_directory, ACME_URI, FAST_KDF, PASSPHRASE};
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU32, Ordering};
-
-const FAST_KDF: KdfParams = KdfParams { memory_kib: 8, passes: 1, lanes: 1 };
-const PASSPHRASE: &str = "correct horse";
-const ACCOUNT_URI: &str = "otpauth://totp/Acme:a@b?secret=GEZDGNBVGY3TQOJQ&issuer=Acme";
-
-static NEXT_ID: AtomicU32 = AtomicU32::new(0);
-
-fn temp_directory(label: &str) -> PathBuf {
-    let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
-    std::env::temp_dir().join(format!("deskauth21-location-{}-{id}-{label}", std::process::id()))
-}
-
-/// One simulated device: its own app data directory and its own in-memory state.
-fn device(label: &str) -> (AppState, PathBuf) {
-    let directory = temp_directory(label);
-    (AppState::new(directory.clone()), directory)
-}
 
 fn device_with_one_account(label: &str) -> (AppState, PathBuf) {
-    let (state, directory) = device(label);
-    create_new_vault(&state, PASSPHRASE, FAST_KDF).unwrap();
-    import_accounts(&state, ACCOUNT_URI).unwrap();
-    (state, directory)
-}
-
-fn remove_all(directories: &[PathBuf]) {
-    for directory in directories {
-        // Best effort: a leftover temp directory must not fail the test.
-        let _ = std::fs::remove_dir_all(directory);
-    }
+    device_with_account(label, ACME_URI)
 }
 
 #[test]

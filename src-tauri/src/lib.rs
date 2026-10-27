@@ -9,6 +9,8 @@ mod clock;
 mod codes;
 mod commands;
 mod dedupe;
+mod disk_sync;
+mod disk_watch;
 mod copy_policy;
 mod error;
 mod hotkey;
@@ -20,6 +22,8 @@ mod persistence;
 mod settings;
 mod settings_store;
 mod state;
+#[cfg(test)]
+mod test_support;
 mod tray;
 mod vault;
 mod vault_actions;
@@ -69,6 +73,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     tray::create_tray(app.handle())?;
     tray::spawn_refresh_loop(app.handle().clone());
     auto_lock::spawn_loop(app.handle().clone());
+    disk_watch::spawn_loop(app.handle().clone());
     if !should_start_hidden(std::env::args()) {
         window::show_main_window(app.handle());
     }

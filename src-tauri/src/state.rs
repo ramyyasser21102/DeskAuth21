@@ -42,6 +42,9 @@ pub fn determine_vault_status(is_unlocked: bool, vault_file_exists: bool) -> Vau
 pub struct VaultState {
     session: Option<Session>,
     accounts: Vec<Account>,
+    /// Identifies the vault file contents we last read or wrote, so a change made
+    /// by another device can be told apart from our own saves.
+    disk_fingerprint: Option<u64>,
 }
 
 impl VaultState {
@@ -55,6 +58,14 @@ impl VaultState {
 
     pub fn accounts(&self) -> &[Account] {
         &self.accounts
+    }
+
+    pub fn disk_fingerprint(&self) -> Option<u64> {
+        self.disk_fingerprint
+    }
+
+    pub fn set_disk_fingerprint(&mut self, fingerprint: Option<u64>) {
+        self.disk_fingerprint = fingerprint;
     }
 
     pub fn unlock(&mut self, session: Session, accounts: Vec<Account>) {

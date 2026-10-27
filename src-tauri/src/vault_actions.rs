@@ -7,7 +7,8 @@ use crate::dedupe::split_new_accounts;
 use crate::error::CommandError;
 use crate::import::import_uri;
 use crate::passphrase::validate_new_passphrase;
-use crate::persistence::{append_and_save, read_vault_file, save_vault};
+use crate::disk_sync::{sync_from_disk, DiskSyncOutcome};
+use crate::persistence::{append_and_save, fingerprint, read_vault_file, save_vault};
 use crate::settings::Settings;
 use crate::settings_store::save_settings;
 use crate::state::AppState;
@@ -23,7 +24,7 @@ pub fn create_new_vault(state: &AppState, passphrase: &str, kdf_params: KdfParam
     let session = Session::create(passphrase, kdf_params)?;
     let mut vault = state.vault_guard();
     vault.unlock(session, Vec::new());
-    let saved = save_vault(&vault_path, &vault);
+    let saved = save_vault(&vault_path, &mut vault);
     if saved.is_err() {
         vault.relock();
     }
@@ -34,7 +35,9 @@ pub fn create_new_vault(state: &AppState, passphrase: &str, kdf_params: KdfParam
 pub fn unlock_vault(state: &AppState, passphrase: &str) -> Result<(), CommandError> {
     let file_bytes = read_vault_file(&state.vault_path())?;
     let (session, accounts) = Session::open(&file_bytes, passphrase)?;
-    state.vault_guard().unlock(session, accounts);
+    let mut vault = state.vault_guard();
+    vault.unlock(session, accounts);
+    vault.set_disk_fingerprint(Some(fingerprint(&file_bytes)));
     state.record_activity();
     Ok(())
 }
@@ -55,6 +58,11 @@ pub fn import_accounts(state: &AppState, uri: &str) -> Result<ImportSummary, Com
     let imported = import_uri(uri)?;
     let mut vault = state.vault_guard();
     vault.session()?;
+    // Pick up anything another device added first, so we neither duplicate it
+    // nor overwrite it. If the file is a different vault entirely, stop.
+    if sync_from_disk(&state.vault_path(), &mut vault) == DiskSyncOutcome::Unreadable {
+        return Err(CommandError::VaultChangedElsewhere);
+    }
     let (new_accounts, skipped_duplicates) = split_new_accounts(vault.accounts(), imported);
     let added = new_accounts.len();
     if added > 0 {
