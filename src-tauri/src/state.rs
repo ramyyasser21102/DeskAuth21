@@ -110,6 +110,11 @@ impl AppState {
         self.app_data_dir.join(SETTINGS_FILE_NAME)
     }
 
+    /// Where the vault would be if `folder` were chosen.
+    pub fn vault_path_in(&self, folder: &str) -> PathBuf {
+        resolve_vault_path(&self.app_data_dir, Some(folder))
+    }
+
     pub fn vault_path(&self) -> PathBuf {
         resolve_vault_path(&self.app_data_dir, self.settings().vault_folder.as_deref())
     }

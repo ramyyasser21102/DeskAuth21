@@ -23,6 +23,8 @@ mod state;
 mod tray;
 mod vault;
 mod vault_actions;
+mod vault_location;
+mod vault_relocation;
 mod window;
 mod window_visibility;
 
@@ -35,6 +37,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(autostart::plugin())
         .plugin(hotkey::plugin())
         .on_window_event(window::keep_running_in_tray)
@@ -49,6 +52,8 @@ pub fn run() {
             commands::get_settings,
             commands::set_auto_lock_minutes,
             commands::record_activity,
+            commands::get_vault_folder,
+            commands::choose_vault_folder,
         ])
         .setup(setup_app)
         .run(tauri::generate_context!())
