@@ -5,7 +5,11 @@ import { invoke } from "@tauri-apps/api/core";
 export type VaultStatus = "uninitialized" | "locked" | "unlocked";
 
 export interface CodeView {
+  /** Stable across devices and reordering; accounts are referred to by this. */
+  id: string;
   label: string;
+  issuer: string;
+  name: string;
   code: string;
   seconds_left: number;
 }
@@ -15,7 +19,15 @@ export const createVault = (passphrase: string) => invoke<void>("create_vault", 
 export const unlockVault = (passphrase: string) => invoke<void>("unlock", { passphrase });
 export const lockVault = () => invoke<void>("lock");
 export const listCodes = () => invoke<CodeView[]>("list_codes");
-export const copyCode = (accountIndex: number) => invoke<void>("copy_code", { accountIndex });
+export interface AccountLabels {
+  issuer: string;
+  name: string;
+}
+
+export const copyCode = (accountId: string) => invoke<void>("copy_code", { accountId });
+export const renameAccount = (accountId: string, labels: AccountLabels) =>
+  invoke<void>("rename_account", { accountId, labels });
+export const deleteAccount = (accountId: string) => invoke<void>("delete_account", { accountId });
 
 export interface ImportSummary {
   added: number;

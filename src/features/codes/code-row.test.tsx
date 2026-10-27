@@ -5,10 +5,8 @@ import { CodeRow } from "./code-row";
 
 vi.mock("@/lib/api", () => ({ copyCode: vi.fn() }));
 
-const VIEW: CodeView = { label: "Acme (a@b)", code: "123456", seconds_left: 12 };
-const THIRD_ACCOUNT_INDEX = 3;
-const renderRow = (accountIndex = THIRD_ACCOUNT_INDEX) =>
-  render(<ul><CodeRow view={VIEW} accountIndex={accountIndex} /></ul>);
+const VIEW: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", code: "123456", seconds_left: 12 };
+const renderRow = () => render(<ul><CodeRow view={VIEW} /></ul>);
 
 afterEach(() => {
   cleanup();
@@ -27,14 +25,14 @@ describe("CodeRow", () => {
     vi.mocked(copyCode).mockResolvedValue(undefined);
     renderRow();
     fireEvent.click(screen.getByRole("button", { name: "Copy code for Acme (a@b)" }));
-    await waitFor(() => expect(copyCode).toHaveBeenCalledWith(THIRD_ACCOUNT_INDEX));
+    await waitFor(() => expect(copyCode).toHaveBeenCalledWith("acct-1"));
     expect((await screen.findAllByText("Copied")).length).toBeGreaterThan(0);
   });
 
   it("reports a failed copy", async () => {
     vi.mocked(copyCode).mockRejectedValue("clipboard unavailable");
     renderRow();
-    fireEvent.click(screen.getByRole("button"));
+    fireEvent.click(screen.getByRole("button", { name: /Copy code for/ }));
     expect((await screen.findAllByText("Copy failed")).length).toBeGreaterThan(0);
   });
 });

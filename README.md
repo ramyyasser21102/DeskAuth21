@@ -15,10 +15,11 @@ Early development. Currently working:
 - Global hotkey `Cmd/Ctrl+Shift+A` shows or hides the window
 - "Launch at login" toggle in the tray menu (starts hidden in the tray)
 - Auto-lock after 1, 5, 15 or 30 minutes without activity, or never (default 5)
+- Rename and delete accounts (a delete asks for confirmation and warns about losing access)
 - Sync between computers by keeping the vault in a synced folder (see below)
 
-Planned: biometric/keychain unlock, lock on sleep/screen lock, code search, CLI, deleting and
-renaming accounts (and syncing those), a self-hosted relay for faster sync.
+Planned: biometric/keychain unlock, lock on sleep/screen lock, code search, CLI, merging "conflicted copy" files from sync
+services, changing the passphrase, a self-hosted relay for faster sync.
 
 ## Syncing between devices
 
@@ -36,9 +37,15 @@ show up on the others as soon as the sync service delivers the file, and the app
 instead of overwriting, so two computers adding accounts at the same time keep both.
 If the file is replaced by a different vault, the app refuses to save over it.
 
-Limits for now: accounts can only be added (not deleted or renamed), so there is nothing
-else to sync; "conflicted copy" files made by a sync service are not merged; and
-speed depends on how quickly your sync service delivers the file.
+Renames and deletes sync too: for each account the newest change wins, a delete is
+remembered so a computer that still has the account cannot bring it back, and
+re-importing a deleted account on purpose adds it again. Computers' clocks are only used
+to order changes, and a new change is always treated as newer than anything the computer
+has already seen, so a slightly wrong clock cannot make an edit lose.
+
+Limits for now: "conflicted copy" files made by a sync service are not merged; speed
+depends on how quickly your sync service delivers the file; and all computers must use
+the same passphrase.
 
 ## Development
 

@@ -15,7 +15,7 @@ vi.mock("@/lib/api", () => ({
   chooseVaultFolder: vi.fn(),
 }));
 
-const ACME: CodeView = { label: "Acme (a@b)", code: "123456", seconds_left: 10 };
+const ACME: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", code: "123456", seconds_left: 10 };
 const IMPORT_BUTTON_LABEL = "Choose QR images";
 const POLL_WAIT_MS = 3000;
 
