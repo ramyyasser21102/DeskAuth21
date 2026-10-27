@@ -68,7 +68,7 @@ mod tests {
         let account = parse_otpauth_uri(&uri("issuer=GitHub")).unwrap();
         assert_eq!(account.issuer, "GitHub");
         assert_eq!(account.name, "me@x.com");
-        assert_eq!(account.secret, b"12345678901234567890");
+        assert_eq!(account.secret.as_bytes(), b"12345678901234567890");
     }
 
     #[test]

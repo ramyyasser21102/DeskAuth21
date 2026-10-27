@@ -42,7 +42,7 @@ mod plain_links {
     fn a_single_link_takes_the_vendor_the_user_picked() {
         let batch = import_text(&format!("otpauth://totp/Acme:a@b?secret={SECRET_B32}&issuer=Acme"), Vendor::Authy).unwrap();
         assert_eq!(first(&batch).vendor, Vendor::Authy);
-        assert_eq!(first(&batch).account.secret, SECRET_BYTES);
+        assert_eq!(first(&batch).account.secret.as_bytes(), SECRET_BYTES);
     }
 
     #[test]
@@ -109,7 +109,7 @@ mod two_fas_backups {
         let batch = import(&backup(&service("TOTP")));
         let account = &first(&batch).account;
         assert_eq!((account.issuer.as_str(), account.name.as_str()), ("GitLab", "foo@bar.com"));
-        assert_eq!(account.secret, SECRET_BYTES);
+        assert_eq!(account.secret.as_bytes(), SECRET_BYTES);
         assert_eq!(first(&batch).vendor, Vendor::TwoFas);
     }
 

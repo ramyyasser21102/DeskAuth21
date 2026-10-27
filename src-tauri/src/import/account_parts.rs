@@ -4,6 +4,7 @@
 
 use super::ImportError;
 use crate::otp::{Account, Algorithm};
+use crate::secret::Secret;
 
 const DEFAULT_DIGITS: u32 = 6;
 const DEFAULT_PERIOD_SECONDS: u64 = 30;
@@ -45,7 +46,7 @@ pub fn build_account(parts: &AccountParts) -> Result<Account, ImportError> {
     Ok(Account {
         issuer: parts.issuer.trim().to_string(),
         name: parts.name.trim().to_string(),
-        secret: decode_base32_secret(parts.secret_base32)?,
+        secret: Secret::new(decode_base32_secret(parts.secret_base32)?),
         algorithm: parse_algorithm_name(parts.algorithm)?,
         digits,
         period_seconds,
@@ -64,7 +65,7 @@ mod tests {
     fn builds_an_account_with_defaults_and_trimmed_labels() {
         let account = build_account(&parts("GEZDGNBVGY3TQOJQ")).unwrap();
         assert_eq!((account.issuer.as_str(), account.digits, account.period_seconds), ("Acme", 6, 30));
-        assert_eq!(account.secret, b"1234567890");
+        assert_eq!(account.secret.as_bytes(), b"1234567890");
     }
 
     #[test]

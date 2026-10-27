@@ -21,6 +21,7 @@ mod launch_options;
 mod otp;
 mod passphrase;
 mod record;
+mod secret;
 mod merge;
 mod persistence;
 mod settings;

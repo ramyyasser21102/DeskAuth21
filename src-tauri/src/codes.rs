@@ -44,12 +44,13 @@ pub fn split_code_in_half(code: &str) -> String {
 mod tests {
     use super::*;
     use crate::otp::{Account, Algorithm};
+    use crate::secret::Secret;
 
     fn sample_record() -> AccountRecord {
         let account = Account {
             issuer: "Acme".into(),
             name: "a@b".into(),
-            secret: b"12345678901234567890".to_vec(),
+            secret: Secret::new(b"12345678901234567890".to_vec()),
             algorithm: Algorithm::Sha1,
             digits: 6,
             period_seconds: 30,

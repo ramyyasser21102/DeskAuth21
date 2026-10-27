@@ -1,6 +1,7 @@
 //! HOTP/TOTP (RFC 4226 / RFC 6238). Pure: time is always passed in.
 
 use hmac::{Hmac, Mac};
+use crate::secret::Secret;
 use serde::{Deserialize, Serialize};
 use sha1::Sha1;
 use sha2::{Sha256, Sha512};
@@ -21,7 +22,7 @@ pub enum Algorithm {
 pub struct Account {
     pub issuer: String,
     pub name: String,
-    pub secret: Vec<u8>,
+    pub secret: Secret,
     pub algorithm: Algorithm,
     pub digits: u32,
     pub period_seconds: u64,
@@ -59,7 +60,7 @@ impl Account {
     /// `period_seconds` must be non-zero; importers reject zero.
     pub fn code_at(&self, unix_seconds: u64) -> String {
         let time_step = unix_seconds / self.period_seconds;
-        hotp(&self.secret, time_step, self.algorithm, self.digits)
+        hotp(self.secret.as_bytes(), time_step, self.algorithm, self.digits)
     }
 
     pub fn seconds_until_next_code(&self, unix_seconds: u64) -> u64 {
@@ -101,7 +102,7 @@ mod tests {
         Account {
             issuer: "Acme".into(),
             name: "a@b".into(),
-            secret: SHA1_SEED.to_vec(),
+            secret: Secret::new(SHA1_SEED.to_vec()),
             algorithm: Algorithm::Sha1,
             digits: 6,
             period_seconds: RFC_TIME_STEP_SECONDS,

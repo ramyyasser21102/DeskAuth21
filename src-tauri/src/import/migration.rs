@@ -7,6 +7,7 @@ use super::query::query_param;
 use super::{ImportBatch, ImportError};
 use crate::otp::{Account, Algorithm};
 use crate::record::NewAccount;
+use crate::secret::Secret;
 use crate::vendor::Vendor;
 use base64::Engine;
 
@@ -30,7 +31,7 @@ const MIGRATION_PERIOD_SECONDS: u64 = 30;
 
 #[derive(Default)]
 struct RawOtpParameters {
-    secret: Vec<u8>,
+    secret: Secret,
     name: String,
     issuer: String,
     algorithm_code: u64,
@@ -73,7 +74,7 @@ fn read_otp_parameters(bytes: &[u8]) -> Result<RawOtpParameters, ImportError> {
 impl RawOtpParameters {
     fn apply_field(&mut self, number: u64, field: Field) {
         match (number, field) {
-            (PARAM_FIELD_SECRET, Field::Bytes(bytes)) => self.secret = bytes.to_vec(),
+            (PARAM_FIELD_SECRET, Field::Bytes(bytes)) => self.secret = Secret::new(bytes.to_vec()),
             (PARAM_FIELD_NAME, Field::Bytes(bytes)) => self.name = lossy_text(bytes),
             (PARAM_FIELD_ISSUER, Field::Bytes(bytes)) => self.issuer = lossy_text(bytes),
             (PARAM_FIELD_ALGORITHM, Field::Varint(code)) => self.algorithm_code = code,
@@ -164,7 +165,7 @@ mod tests {
         let first = &batch.accounts[0];
         assert_eq!((first.account.issuer.as_str(), first.account.name.as_str()), ("Acme", "a@b"));
         assert_eq!(first.vendor, Vendor::GoogleAuthenticator);
-        assert_eq!(batch.accounts[1].account.secret, SEED);
+        assert_eq!(batch.accounts[1].account.secret.as_bytes(), SEED);
     }
 
     #[test]

@@ -1,11 +1,12 @@
 use super::*;
 use crate::otp::{Account, Algorithm};
+use crate::secret::Secret;
 
 fn record(secret: &str, name: &str, updated_at_ms: u64) -> AccountRecord {
     let account = Account {
         issuer: String::new(),
         name: name.into(),
-        secret: secret.as_bytes().to_vec(),
+        secret: Secret::new(secret.as_bytes().to_vec()),
         algorithm: Algorithm::Sha1,
         digits: 6,
         period_seconds: 30,
