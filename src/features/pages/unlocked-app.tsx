@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { TabBar } from "@/features/navigation/tab-bar";
 import type { PageId } from "@/features/navigation/pages";
+import { CaptureBanner } from "@/features/privacy/capture-banner";
+import { PrivacySettingsProvider } from "@/features/privacy/privacy-settings-provider";
 import { useActivityReporter } from "@/features/settings/use-activity-reporter";
 import { useLiveCodes } from "@/features/codes/use-live-codes";
 import { CodesPage } from "./codes-page";
@@ -19,13 +21,14 @@ export function UnlockedApp({ onLocked, onShowWelcome }: UnlockedAppProps) {
   const [page, setPage] = useState<PageId>("codes");
 
   return (
-    <>
+    <PrivacySettingsProvider>
       <div key={page} className="animate-in fade-in slide-in-from-bottom-2 pb-20 duration-200 motion-reduce:animate-none">
+        <CaptureBanner />
         {page === "codes" && <CodesPage codes={codes} onGoToImport={() => setPage("import")} />}
         {page === "import" && <ImportPage />}
         {page === "settings" && <SettingsPage onVaultChanged={onLocked} onShowWelcome={onShowWelcome} />}
       </div>
       <TabBar current={page} onSelect={setPage} />
-    </>
+    </PrivacySettingsProvider>
   );
 }

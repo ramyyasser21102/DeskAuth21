@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PrivacySettings } from "@/features/privacy/privacy-settings";
 import { ProfileSetting } from "@/features/profile/profile-setting";
 import { ThemeToggle } from "@/features/theme/theme-toggle";
 import { AutoLockSetting } from "@/features/settings/auto-lock-setting";
@@ -20,7 +21,7 @@ export function SettingsPage({ onVaultChanged, onShowWelcome }: SettingsPageProp
     <Card>
       <CardHeader>
         <CardTitle>Settings</CardTitle>
-        <CardDescription>You, how it looks, how it locks and where it keeps your vault.</CardDescription>
+        <CardDescription>You, your privacy, how it looks, how it locks and where it keeps your vault.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         <ProfileSetting />
@@ -28,6 +29,7 @@ export function SettingsPage({ onVaultChanged, onShowWelcome }: SettingsPageProp
           <span className="text-sm font-medium">Appearance</span>
           <ThemeToggle />
         </div>
+        <PrivacySettings />
         <AutoLockSetting />
         <VaultFolderSetting onVaultChanged={onVaultChanged} />
         <Button variant="outline" onClick={onShowWelcome}>Show welcome page</Button>

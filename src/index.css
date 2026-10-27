@@ -4,6 +4,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* shadcn's newer output styles Base UI attributes (data-checked, data-open, ...).
+   This project uses Radix, which reports the same states as data-state, so map them. */
+@custom-variant data-checked (&:is([data-state="checked"]));
+@custom-variant data-unchecked (&:is([data-state="unchecked"]));
+@custom-variant data-open (&:is([data-state="open"]));
+@custom-variant data-closed (&:is([data-state="closed"]));
+
 /* Strict black and white: every token below has zero chroma. The single
    exception is --destructive, kept red so errors stay recognisable. */
 :root {
