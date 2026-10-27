@@ -94,7 +94,7 @@ impl VaultState {
         self.data = data;
     }
 
-    /// Dropping the session zeroizes the derived key.
+    /// Dropping the old state zeroizes the derived key and every account secret.
     pub fn relock(&mut self) {
         *self = Self::default();
     }
@@ -187,5 +187,16 @@ mod tests {
         assert!(!vault.is_unlocked());
         assert!(matches!(vault.session(), Err(CommandError::VaultLocked)));
         assert!(vault.accounts().is_empty());
+    }
+
+    #[test]
+    fn relocking_drops_the_session_and_every_account() {
+        use crate::test_support::{device_with_account, remove_all, ACME_URI};
+        let (state, directory) = device_with_account("relock", ACME_URI);
+        assert_eq!(state.vault_guard().accounts().len(), 1);
+        state.vault_guard().relock();
+        assert!(!state.vault_guard().is_unlocked());
+        assert!(state.vault_guard().accounts().is_empty());
+        remove_all(&[directory]);
     }
 }

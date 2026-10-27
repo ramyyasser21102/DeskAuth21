@@ -45,7 +45,7 @@ impl AccountRecord {
 
     pub fn with_vendor(new_account: NewAccount, now_ms: u64) -> Self {
         let NewAccount { account, vendor } = new_account;
-        Self { id: account_id_for(&account.secret), updated_at_ms: now_ms, vendor, account }
+        Self { id: account_id_for(account.secret.as_bytes()), updated_at_ms: now_ms, vendor, account }
     }
 }
 
@@ -88,12 +88,13 @@ pub fn parse_vault_data(json: &[u8]) -> Result<VaultData, serde_json::Error> {
 mod tests {
     use super::*;
     use crate::otp::Algorithm;
+    use crate::secret::Secret;
 
     fn account(secret: &[u8]) -> Account {
         Account {
             issuer: "Acme".into(),
             name: "a@b".into(),
-            secret: secret.to_vec(),
+            secret: Secret::new(secret.to_vec()),
             algorithm: Algorithm::Sha1,
             digits: 6,
             period_seconds: 30,

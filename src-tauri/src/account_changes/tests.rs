@@ -1,6 +1,7 @@
 use super::*;
 use crate::merge::merge;
 use crate::otp::{Account, Algorithm};
+use crate::secret::Secret;
 
 fn labels(issuer: &str, name: &str) -> AccountDetails {
     AccountDetails { issuer: issuer.into(), name: name.into(), vendor: Vendor::Other }
@@ -14,7 +15,7 @@ fn account(secret: &str, name: &str) -> Account {
     Account {
         issuer: "Acme".into(),
         name: name.into(),
-        secret: secret.as_bytes().to_vec(),
+        secret: Secret::new(secret.as_bytes().to_vec()),
         algorithm: Algorithm::Sha1,
         digits: 6,
         period_seconds: 30,
@@ -52,7 +53,7 @@ fn renaming_changes_the_labels_and_trims_them() {
 fn renaming_keeps_the_secret_and_the_id() {
     let data = with_accounts(&[("a", "A")], 10);
     let updated = rename_account(&data, &id_of("a"), &labels("", "B"), 20).unwrap();
-    assert_eq!(updated.accounts[0].account.secret, b"a");
+    assert_eq!(updated.accounts[0].account.secret.as_bytes(), b"a");
     assert_eq!(updated.accounts[0].id, id_of("a"));
 }
 

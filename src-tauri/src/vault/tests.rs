@@ -2,6 +2,7 @@ use super::header::{associated_data, Header, HEADER_LEN, NONCE_LEN};
 use super::*;
 use crate::otp::{Account, Algorithm as OtpAlgorithm};
 use crate::record::AccountRecord;
+use crate::secret::Secret;
 
 /// Cheap parameters so the tests stay fast; production uses `KdfParams::DEFAULT`.
 const FAST_PARAMS: KdfParams = KdfParams { memory_kib: 8, passes: 1, lanes: 1 };
@@ -12,7 +13,7 @@ fn sample_data() -> VaultData {
     let account = Account {
         issuer: "Acme".into(),
         name: "a@b".into(),
-        secret: b"12345678901234567890".to_vec(),
+        secret: Secret::new(b"12345678901234567890".to_vec()),
         algorithm: OtpAlgorithm::Sha1,
         digits: 6,
         period_seconds: 30,
