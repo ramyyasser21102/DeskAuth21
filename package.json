@@ -11,7 +11,8 @@
     "lint": "eslint src",
     "lint:rust": "cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings",
     "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
-    "check": "npm run lint && npm run lint:rust && npm run test:rust && tsc --noEmit"
+    "check": "npm run lint && npm run lint:rust && npm run test:rust && npm test && tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
@@ -24,6 +25,7 @@
     "globals": "^17.13.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.1",
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "vitest": "^5.0.5"
   }
 }
