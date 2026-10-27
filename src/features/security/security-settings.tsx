@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChangePassphraseForm } from "./change-passphrase-form";
+import { HardwareKeySetting } from "./hardware-key-setting";
 import { RecoveryKeySetting } from "./recovery-key-setting";
 import { CURRENT_FORMAT_VERSION, useVaultFormat } from "./use-vault-format";
 
@@ -23,6 +24,7 @@ export function SecuritySettings() {
         <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => setIsChanging(true)}>Change passphrase</Button>
       )}
       <RecoveryKeySetting />
+      <HardwareKeySetting />
     </div>
   );
 }
