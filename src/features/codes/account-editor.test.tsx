@@ -6,7 +6,7 @@ import { CodeRow } from "./code-row";
 
 vi.mock("@/lib/api", () => ({ copyCode: vi.fn(), renameAccount: vi.fn(), deleteAccount: vi.fn() }));
 
-const VIEW: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", code: "123456", seconds_left: 12 };
+const VIEW: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", vendor: "other", code: "123456", seconds_left: 12 };
 
 afterEach(() => {
   cleanup();
@@ -25,7 +25,7 @@ describe("account editor: saving", () => {
     expect((screen.getByLabelText("Service") as HTMLInputElement).value).toBe("Acme");
     fireEvent.change(screen.getByLabelText("Account name"), { target: { value: "me@work.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(renameAccount).toHaveBeenCalledWith("acct-1", { issuer: "Acme", name: "me@work.com" }));
+    await waitFor(() => expect(renameAccount).toHaveBeenCalledWith("acct-1", { issuer: "Acme", name: "me@work.com", vendor: "other" }));
     await waitFor(() => expect(screen.queryByLabelText("Service")).toBeNull());
   });
 

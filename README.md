@@ -21,6 +21,26 @@ Early development. Currently working:
 Planned: biometric/keychain unlock, lock on sleep/screen lock, code search, CLI, changing the
 passphrase, a self-hosted relay for faster sync.
 
+## Importing accounts
+
+Each account is tagged with the app it came from (Google Authenticator, Microsoft
+Authenticator, Authy, 1Password, Bitwarden, LastPass, Duo Mobile, Okta Verify, Aegis, 2FAS,
+Proton Authenticator, Ente Auth, FreeOTP, andOTP, Raivo OTP, or Other).
+
+| Source | How to import | Notes |
+|---|---|---|
+| Google Authenticator | Transfer accounts, then Export; choose the QR images (or paste a screenshot) | Large exports span several QR codes; choose them all |
+| Aegis | Export the vault **without encryption** and choose the `.json` file | |
+| 2FAS | Export a backup **without a password** and choose the file | |
+| Bitwarden | Export as unencrypted `.json` or `.csv` and choose the file | Steam codes are skipped |
+| Ente Auth, others that export `otpauth://` links | Choose the text file, or paste the links | One link per line |
+| Microsoft Authenticator, Authy, 1Password, LastPass, Duo, Okta, ... | Scan or paste each service's own QR code or `otpauth://` link | These apps offer no export of their codes; pick the app so the account is tagged |
+
+Password-protected exports are not supported yet; the app says so and asks for an
+unprotected one. Counter-based (HOTP) and Steam entries are skipped and counted, so one
+odd entry never costs you the rest of a file. The same account imported from two apps is
+recognised by its secret and added once.
+
 ## Syncing between devices
 
 DeskAuth21 does not run a server. To use the same accounts on several computers, keep the

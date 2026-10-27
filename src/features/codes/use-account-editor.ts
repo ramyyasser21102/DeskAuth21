@@ -27,7 +27,7 @@ export function useAccountEditor(view: CodeView, onDone: () => void) {
   const save = async () => {
     const problem = findNameProblem(name);
     if (problem) return setErrorMessage(problem);
-    await run(() => renameAccount(view.id, { issuer, name }));
+    await run(() => renameAccount(view.id, { issuer, name, vendor: view.vendor }));
   };
 
   const confirmDelete = () => run(() => deleteAccount(view.id));

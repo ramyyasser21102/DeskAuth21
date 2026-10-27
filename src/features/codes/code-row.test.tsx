@@ -5,7 +5,7 @@ import { CodeRow } from "./code-row";
 
 vi.mock("@/lib/api", () => ({ copyCode: vi.fn() }));
 
-const VIEW: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", code: "123456", seconds_left: 12 };
+const VIEW: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", vendor: "other", code: "123456", seconds_left: 12 };
 const renderRow = () => render(<ul><CodeRow view={VIEW} /></ul>);
 
 afterEach(() => {
