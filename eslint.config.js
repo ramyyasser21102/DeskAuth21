@@ -34,4 +34,9 @@ export default tseslint.config(
       ...namingAndClarityRules,
     },
   },
+  {
+    // Expected values and fixture sizes read better inline than behind constants.
+    files: ["src/**/*.test.{ts,tsx}"],
+    rules: { "no-magic-numbers": "off" },
+  },
 );
