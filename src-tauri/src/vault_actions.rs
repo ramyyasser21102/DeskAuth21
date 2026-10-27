@@ -2,6 +2,7 @@
 
 use crate::clock::current_unix_seconds;
 use crate::codes::{build_code_views, CodeView};
+use crate::dedupe::split_new_accounts;
 use crate::error::CommandError;
 use crate::import::import_uri;
 use crate::passphrase::validate_new_passphrase;
@@ -35,12 +36,24 @@ pub fn lock_vault(state: &AppState) {
     state.vault_guard().relock();
 }
 
-/// Returns how many accounts were imported.
-pub fn import_accounts(state: &AppState, uri: &str) -> Result<usize, CommandError> {
+/// What an import did, so the UI can tell the user.
+#[derive(Debug, PartialEq, Eq, serde::Serialize)]
+pub struct ImportSummary {
+    pub added: usize,
+    pub skipped_duplicates: usize,
+}
+
+/// Imports accounts from a URI, skipping any whose secret the vault already holds.
+pub fn import_accounts(state: &AppState, uri: &str) -> Result<ImportSummary, CommandError> {
     let imported = import_uri(uri)?;
-    let imported_count = imported.len();
-    append_and_save(&state.vault_path, &mut state.vault_guard(), imported)?;
-    Ok(imported_count)
+    let mut vault = state.vault_guard();
+    vault.session()?;
+    let (new_accounts, skipped_duplicates) = split_new_accounts(vault.accounts(), imported);
+    let added = new_accounts.len();
+    if added > 0 {
+        append_and_save(&state.vault_path, &mut vault, new_accounts)?;
+    }
+    Ok(ImportSummary { added, skipped_duplicates })
 }
 
 pub fn current_codes(state: &AppState, unix_seconds: u64) -> Result<Vec<CodeView>, CommandError> {

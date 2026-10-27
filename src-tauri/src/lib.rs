@@ -4,6 +4,7 @@ mod clipboard;
 mod clock;
 mod codes;
 mod commands;
+mod dedupe;
 mod copy_policy;
 mod error;
 mod import;
