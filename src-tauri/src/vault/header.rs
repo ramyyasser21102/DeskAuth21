@@ -25,10 +25,12 @@ const U32_LEN: usize = 4;
 
 pub const HEADER_LEN: usize = NONCE_OFFSET + NONCE_LEN;
 
-/// Upper bounds so a hostile file cannot make us allocate gigabytes or spin for minutes.
-const MAX_MEMORY_KIB: u32 = 1024 * 1024;
-const MAX_PASSES: u32 = 64;
-const MAX_LANES: u32 = 16;
+/// Upper bounds so a hostile file cannot make unlocking allocate gigabytes or spin for
+/// minutes. They sit well above the defaults (64 MiB, 3 passes, 1 lane) to leave room
+/// for stronger settings later.
+const MAX_MEMORY_KIB: u32 = 256 * 1024;
+const MAX_PASSES: u32 = 10;
+const MAX_LANES: u32 = 4;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Header {

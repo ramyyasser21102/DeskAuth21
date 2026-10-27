@@ -20,6 +20,8 @@ use crate::vendor::Vendor;
 
 const OTPAUTH_PREFIX: &str = "otpauth://";
 const MIGRATION_PREFIX: &str = "otpauth-migration://offline?";
+/// Above the window's own 5 MB limit, so only input that bypassed the window is refused.
+const MAX_IMPORT_TEXT_BYTES: usize = 8 * 1024 * 1024;
 
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum ImportError {
@@ -27,6 +29,8 @@ pub enum ImportError {
     BadUri,
     #[error("invalid base64/base32 data")]
     BadEncoding,
+    #[error("this is far larger than any authenticator export")]
+    TooLarge,
     #[error("malformed migration payload")]
     BadPayload,
     #[error("HOTP (counter-based) accounts are not supported yet: {0}")]
@@ -64,6 +68,9 @@ impl ImportBatch {
 /// file. `fallback_vendor` tags accounts whose format does not say where they
 /// came from (a plain `otpauth://` link).
 pub fn import_text(text: &str, fallback_vendor: Vendor) -> Result<ImportBatch, ImportError> {
+    if text.len() > MAX_IMPORT_TEXT_BYTES {
+        return Err(ImportError::TooLarge);
+    }
     let text = text.trim_start_matches('\u{feff}').trim();
     if text.starts_with('{') {
         return import_json(text, fallback_vendor);
