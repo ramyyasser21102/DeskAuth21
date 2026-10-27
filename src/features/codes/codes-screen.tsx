@@ -4,7 +4,7 @@ import { lockVault } from "@/lib/api";
 import { CodeRow } from "./code-row";
 import { useLiveCodes } from "./use-live-codes";
 
-const IMPORT_HINT = "Import arrives in the next release. Codes also appear in the tray menu.";
+const IMPORT_HINT = "Click a code to copy it; it is cleared from the clipboard after 30 seconds. Import arrives in the next release.";
 
 export function CodesScreen({ onLocked }: { onLocked: () => void }) {
   const codes = useLiveCodes(onLocked);
@@ -21,7 +21,7 @@ export function CodesScreen({ onLocked }: { onLocked: () => void }) {
       <CardContent>
         <ul>
           {codes.map((view, index) => (
-            <CodeRow key={`${index}-${view.label}`} view={view} />
+            <CodeRow key={`${index}-${view.label}`} view={view} accountIndex={index} />
           ))}
         </ul>
       </CardContent>
