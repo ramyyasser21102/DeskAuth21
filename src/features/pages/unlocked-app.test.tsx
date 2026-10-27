@@ -1,8 +1,10 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { listCodes, type CodeView, type VendorId } from "@/lib/api";
+import { ProfileProvider } from "@/features/profile/profile-provider";
 import { UnlockedApp } from "./unlocked-app";
 
+vi.mock("@/features/theme/theme-toggle", () => ({ ThemeToggle: () => null }));
 vi.mock("@/lib/api", () => ({
   listCodes: vi.fn(),
   lockVault: vi.fn(),
@@ -29,12 +31,15 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+const renderApp = (onShowWelcome: () => void = () => {}) =>
+  render(<ProfileProvider><UnlockedApp onLocked={() => {}} onShowWelcome={onShowWelcome} /></ProfileProvider>);
+
 const openTab = (name: string) => fireEvent.click(screen.getByRole("button", { name }));
 
 describe("UnlockedApp pages", () => {
   it("starts on the codes page and moves between pages with the tab bar", async () => {
     vi.mocked(listCodes).mockResolvedValue([account("Acme", "aegis")]);
-    render(<UnlockedApp onLocked={() => {}} />);
+    renderApp();
     expect(await screen.findByText("Your codes")).toBeTruthy();
 
     openTab("Import");
@@ -47,9 +52,19 @@ describe("UnlockedApp pages", () => {
     expect(await screen.findByRole("button", { name: "Lock now" })).toBeTruthy();
   });
 
+  it("reopens the welcome page from Settings", async () => {
+    vi.mocked(listCodes).mockResolvedValue([]);
+    const onShowWelcome = vi.fn();
+    renderApp(onShowWelcome);
+    await screen.findByText("Your codes");
+    openTab("Settings");
+    fireEvent.click(screen.getByRole("button", { name: "About DeskAuth21" }));
+    expect(onShowWelcome).toHaveBeenCalledOnce();
+  });
+
   it("offers to import from the empty codes page", async () => {
     vi.mocked(listCodes).mockResolvedValue([]);
-    render(<UnlockedApp onLocked={() => {}} />);
+    renderApp();
     fireEvent.click(await screen.findByRole("button", { name: "Import accounts" }));
     expect(screen.getByLabelText("Files to import")).toBeTruthy();
   });
@@ -60,7 +75,7 @@ describe("UnlockedApp vendor tabs", () => {
 
   it("filters the list by app and goes back to all", async () => {
     vi.mocked(listCodes).mockResolvedValue(mixed);
-    render(<UnlockedApp onLocked={() => {}} />);
+    renderApp();
     fireEvent.click(await screen.findByRole("button", { name: "Authy (2)" }));
     expect(screen.queryByText("Aegis one")).toBeNull();
     expect(screen.getByText("Authy two")).toBeTruthy();
@@ -70,7 +85,7 @@ describe("UnlockedApp vendor tabs", () => {
 
   it("hides the chips when every account is from one app", async () => {
     vi.mocked(listCodes).mockResolvedValue([account("Only", "aegis")]);
-    render(<UnlockedApp onLocked={() => {}} />);
+    renderApp();
     expect(await screen.findByText("Only")).toBeTruthy();
     expect(screen.queryByRole("group", { name: "Filter by app" })).toBeNull();
   });

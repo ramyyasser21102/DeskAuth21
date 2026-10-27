@@ -1,32 +1,63 @@
+import { useState } from "react";
+import { AppLogo } from "@/components/app-logo";
 import { UnlockedApp } from "@/features/pages/unlocked-app";
-import { ThemeToggle } from "@/features/theme/theme-toggle";
+import { ProfileAvatar } from "@/features/profile/profile-avatar";
+import { useProfile } from "@/features/profile/profile-provider";
 import { CreateVaultScreen, UnlockScreen } from "@/features/vault/vault-screens";
+import { WelcomePage } from "@/features/welcome/welcome-page";
+import { hasSeenWelcome, markWelcomeSeen } from "@/features/welcome/welcome-seen";
 import type { VaultStatus } from "@/lib/api";
 import { useVaultStatus } from "./use-vault-status";
 
-function ScreenFor({ status, onChange }: { status: VaultStatus | null; onChange: () => void }) {
+interface ScreenProps {
+  status: VaultStatus | null;
+  onChange: () => void;
+  onShowWelcome: () => void;
+}
+
+function ScreenFor({ status, onChange, onShowWelcome }: ScreenProps) {
   switch (status) {
     case "uninitialized":
       return <CreateVaultScreen onCreated={onChange} />;
     case "locked":
       return <UnlockScreen onUnlocked={onChange} />;
     case "unlocked":
-      return <UnlockedApp onLocked={onChange} />;
+      return <UnlockedApp onLocked={onChange} onShowWelcome={onShowWelcome} />;
     case null:
       return null;
   }
 }
 
+function AppHeader() {
+  const { profile } = useProfile();
+  return (
+    <header className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <AppLogo className="size-7" />
+        <span className="text-lg font-semibold tracking-tight">DeskAuth21</span>
+      </div>
+      <ProfileAvatar profile={profile} />
+    </header>
+  );
+}
+
 export function App() {
   const { status, refreshStatus } = useVaultStatus();
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(() => !hasSeenWelcome());
+  const closeWelcome = () => {
+    markWelcomeSeen();
+    setIsWelcomeOpen(false);
+  };
+
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col gap-6 px-4 py-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold tracking-tight">DeskAuth21</h1>
-        <ThemeToggle />
-      </header>
+      <AppHeader />
       <main>
-        <ScreenFor status={status} onChange={refreshStatus} />
+        {isWelcomeOpen && <WelcomePage onContinue={closeWelcome} continueLabel="Continue" />}
+        {/* Hidden, not unmounted, so reopening the welcome page keeps your place. */}
+        <div hidden={isWelcomeOpen}>
+          <ScreenFor status={status} onChange={refreshStatus} onShowWelcome={() => setIsWelcomeOpen(true)} />
+        </div>
       </main>
     </div>
   );

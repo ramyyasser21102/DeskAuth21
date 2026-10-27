@@ -8,7 +8,12 @@ import { ImportPage } from "./import-page";
 import { SettingsPage } from "./settings-page";
 
 /** Everything shown once the vault is open: the current page and the tab bar. */
-export function UnlockedApp({ onLocked }: { onLocked: () => void }) {
+interface UnlockedAppProps {
+  onLocked: () => void;
+  onShowWelcome: () => void;
+}
+
+export function UnlockedApp({ onLocked, onShowWelcome }: UnlockedAppProps) {
   useActivityReporter();
   const { codes } = useLiveCodes(onLocked);
   const [page, setPage] = useState<PageId>("codes");
@@ -18,7 +23,7 @@ export function UnlockedApp({ onLocked }: { onLocked: () => void }) {
       <div className="pb-20">
         {page === "codes" && <CodesPage codes={codes} onGoToImport={() => setPage("import")} />}
         {page === "import" && <ImportPage />}
-        {page === "settings" && <SettingsPage onVaultChanged={onLocked} />}
+        {page === "settings" && <SettingsPage onVaultChanged={onLocked} onShowWelcome={onShowWelcome} />}
       </div>
       <TabBar current={page} onSelect={setPage} />
     </>
