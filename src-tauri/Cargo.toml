@@ -34,6 +34,7 @@ zeroize = "1.9.1"
 getrandom = "0.4.3"
 tauri-plugin-clipboard-manager = "2.5.0"
 csv = "1.4.0"
+zxcvbn = "3.1.1"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
