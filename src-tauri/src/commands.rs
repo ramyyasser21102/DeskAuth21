@@ -18,7 +18,7 @@ use crate::usb_key;
 use crate::vault_security;
 use crate::vault_location::{self, RelocationOutcome};
 use crate::vendor::{vendor_catalog, Vendor, VendorInfo};
-use tauri::{AppHandle, State, WebviewWindow};
+use tauri::{AppHandle, State};
 use tauri_plugin_dialog::DialogExt;
 
 #[tauri::command]
@@ -130,9 +130,9 @@ pub fn set_auto_lock_minutes(minutes: Option<u32>, state: State<AppState>) -> Re
 }
 
 #[tauri::command]
-pub fn set_capture_protection(enabled: bool, state: State<AppState>, window: WebviewWindow) -> Result<SettingsView, CommandError> {
+pub fn set_capture_protection(enabled: bool, state: State<AppState>, app: AppHandle) -> Result<SettingsView, CommandError> {
     let settings = vault_actions::update_settings(&state, |settings| settings.capture_protection = enabled)?;
-    capture_protection::apply(&window, enabled);
+    capture_protection::apply_to_all_windows(&app, enabled);
     Ok(settings.into())
 }
 

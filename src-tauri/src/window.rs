@@ -1,6 +1,7 @@
 //! Showing, hiding and toggling the main window. The app lives in the tray, so
 //! closing the window hides it instead of quitting.
 
+use crate::quick_panel;
 use crate::window_visibility::{action_for_toggle, VisibilityAction};
 use tauri::{AppHandle, Manager, WebviewWindow, Window, WindowEvent};
 
@@ -45,8 +46,12 @@ pub fn toggle_main_window(app: &AppHandle) {
 
 /// Window-event hook: turn "close" into "hide" so the tray keeps running.
 pub fn keep_running_in_tray(window: &Window, event: &WindowEvent) {
-    if let WindowEvent::CloseRequested { api, .. } = event {
-        api.prevent_close();
-        log_if_failed("hide", window.hide());
+    match event {
+        WindowEvent::CloseRequested { api, .. } => {
+            api.prevent_close();
+            log_if_failed("hide", window.hide());
+        }
+        WindowEvent::Focused(false) => quick_panel::hide_when_focus_is_lost(window),
+        _ => {}
     }
 }

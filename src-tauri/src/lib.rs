@@ -14,6 +14,7 @@ mod data_dir_override;
 mod codes;
 mod commands;
 mod commands_hardware;
+mod commands_panel;
 mod disk_sync;
 mod disk_watch;
 mod copy_policy;
@@ -25,6 +26,7 @@ mod launch_options;
 mod lock_triggers;
 mod locking;
 mod otp;
+mod panel_position;
 mod passphrase;
 mod passphrase_generator;
 mod passphrase_strength;
@@ -34,6 +36,7 @@ mod screen_lock;
 mod secret;
 mod merge;
 mod persistence;
+mod quick_panel;
 mod settings;
 mod settings_store;
 mod state;
@@ -52,7 +55,7 @@ mod vault_relocation;
 mod window;
 mod window_visibility;
 
-use launch_options::should_start_hidden;
+use launch_options::{should_show_panel, should_start_hidden};
 use state::AppState;
 use tauri::Manager;
 
@@ -64,6 +67,7 @@ fn command_handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'sta
         commands::vault_format_version, commands::upgrade_vault_format, commands::change_passphrase,
         commands::has_recovery_key, commands::generate_recovery_key, commands::save_recovery_key,
         commands::reset_passphrase_with_recovery_key, commands::assess_passphrase, commands::generate_passphrase,
+        commands_panel::hide_quick_panel, commands_panel::open_app_page,
         commands_hardware::unlock_needs_hardware_key, commands_hardware::hardware_key_status, commands_hardware::enable_hardware_key,
         commands_hardware::add_hardware_key, commands_hardware::remove_hardware_key, commands_hardware::disable_hardware_keys,
         // Accounts and codes.
@@ -114,10 +118,14 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     autostart::load_initial_state(app.handle());
     hotkey::register(app.handle());
     tray::create_tray(app.handle())?;
+    quick_panel::create(app.handle(), capture_protection_enabled && capture_protection::is_supported())?;
     tray::spawn_refresh_loop(app.handle().clone());
     auto_lock::spawn_loop(app.handle().clone());
     system_lock_watcher::spawn_loop(app.handle().clone());
     disk_watch::spawn_loop(app.handle().clone());
+    if should_show_panel(std::env::args()) {
+        quick_panel::toggle(app.handle(), None);
+    }
     if !should_start_hidden(std::env::args()) {
         window::show_main_window(app.handle());
     }

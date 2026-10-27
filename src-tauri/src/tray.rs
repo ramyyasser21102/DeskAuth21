@@ -80,6 +80,8 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
         .icon(icon)
         .icon_as_template(cfg!(target_os = "macos"))
         .menu(&built.menu)
+        .show_menu_on_left_click(false)
+        .on_tray_icon_event(crate::quick_panel::handle_tray_event)
         .on_menu_event(handle_menu_event)
         .build(app)?;
     app.state::<TrayMenuState>().store(built);
