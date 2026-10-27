@@ -1,6 +1,6 @@
 //! Tauri command handlers: thin adapters from the frontend to `vault_actions`.
 
-use crate::account_changes::AccountLabels;
+use crate::account_changes::AccountDetails;
 use crate::clipboard;
 use crate::codes::CodeView;
 use crate::settings::Settings;
@@ -10,6 +10,7 @@ use crate::tray::refresh_tray;
 use crate::vault::KdfParams;
 use crate::vault_actions::{self, ImportSummary};
 use crate::vault_location::{self, RelocationOutcome};
+use crate::vendor::{vendor_catalog, Vendor, VendorInfo};
 use tauri::{AppHandle, State};
 use tauri_plugin_dialog::DialogExt;
 
@@ -41,8 +42,8 @@ pub fn lock(state: State<AppState>, app: AppHandle) {
 }
 
 #[tauri::command]
-pub fn import_uri(uri: String, state: State<AppState>, app: AppHandle) -> Result<ImportSummary, CommandError> {
-    let summary = vault_actions::import_accounts(&state, &uri)?;
+pub fn import_text(text: String, vendor: Option<Vendor>, state: State<AppState>, app: AppHandle) -> Result<ImportSummary, CommandError> {
+    let summary = vault_actions::import_accounts(&state, &text, vendor)?;
     refresh_tray(&app);
     Ok(summary)
 }
@@ -59,8 +60,8 @@ pub fn copy_code(account_id: String, app: AppHandle) -> Result<(), CommandError>
 }
 
 #[tauri::command]
-pub fn rename_account(account_id: String, labels: AccountLabels, state: State<AppState>, app: AppHandle) -> Result<(), CommandError> {
-    vault_actions::rename_stored_account(&state, &account_id, &labels)?;
+pub fn rename_account(account_id: String, details: AccountDetails, state: State<AppState>, app: AppHandle) -> Result<(), CommandError> {
+    vault_actions::rename_stored_account(&state, &account_id, &details)?;
     refresh_tray(&app);
     Ok(())
 }
@@ -106,4 +107,10 @@ pub async fn choose_vault_folder(state: State<'_, AppState>, app: AppHandle) -> 
     let outcome = vault_location::change_vault_folder(&state, &folder)?;
     refresh_tray(&app);
     Ok(Some(outcome))
+}
+
+/// The apps accounts can be tagged as coming from, for the pickers in the window.
+#[tauri::command]
+pub fn list_vendors() -> Vec<VendorInfo> {
+    vendor_catalog()
 }

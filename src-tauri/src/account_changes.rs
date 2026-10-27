@@ -1,8 +1,8 @@
 //! Adding, renaming and deleting accounts. Pure: each returns a new `VaultData`
 //! and the time is passed in.
 
-use crate::otp::Account;
-use crate::record::{AccountRecord, Tombstone, VaultData};
+use crate::record::{AccountRecord, NewAccount, Tombstone, VaultData};
+use crate::vendor::Vendor;
 use serde::Deserialize;
 
 #[derive(Debug, PartialEq, Eq, thiserror::Error)]
@@ -13,11 +13,13 @@ pub enum ChangeError {
     EmptyName,
 }
 
-/// What the user sees for an account: who issued it and which login it is for.
+/// What the user can edit about an account: who issued it, which login it is
+/// for, and which app it came from.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-pub struct AccountLabels {
+pub struct AccountDetails {
     pub issuer: String,
     pub name: String,
+    pub vendor: Vendor,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -47,12 +49,12 @@ fn find_index(data: &VaultData, id: &str) -> Result<usize, ChangeError> {
 
 /// Skips accounts already in the vault (same secret) and repeats within the batch.
 /// An account that was deleted can be added again; it counts as new.
-pub fn add_accounts(data: &VaultData, imported: Vec<Account>, now_ms: u64) -> (VaultData, AddReport) {
+pub fn add_accounts(data: &VaultData, imported: Vec<NewAccount>, now_ms: u64) -> (VaultData, AddReport) {
     let timestamp = change_timestamp(data, now_ms);
     let mut updated = data.clone();
     let mut skipped_duplicates = 0;
-    for account in imported {
-        let record = AccountRecord::new(account, timestamp);
+    for new_account in imported {
+        let record = AccountRecord::with_vendor(new_account, timestamp);
         if updated.accounts.iter().any(|existing| existing.id == record.id) {
             skipped_duplicates += 1;
             continue;
@@ -64,15 +66,16 @@ pub fn add_accounts(data: &VaultData, imported: Vec<Account>, now_ms: u64) -> (V
     (updated, AddReport { added, skipped_duplicates })
 }
 
-pub fn rename_account(data: &VaultData, id: &str, labels: &AccountLabels, now_ms: u64) -> Result<VaultData, ChangeError> {
-    let name = labels.name.trim();
+pub fn rename_account(data: &VaultData, id: &str, details: &AccountDetails, now_ms: u64) -> Result<VaultData, ChangeError> {
+    let name = details.name.trim();
     if name.is_empty() {
         return Err(ChangeError::EmptyName);
     }
     let index = find_index(data, id)?;
     let mut updated = data.clone();
     let record = &mut updated.accounts[index];
-    record.account.issuer = labels.issuer.trim().to_string();
+    record.account.issuer = details.issuer.trim().to_string();
+    record.vendor = details.vendor;
     record.account.name = name.to_string();
     record.updated_at_ms = change_timestamp(data, now_ms);
     Ok(updated)

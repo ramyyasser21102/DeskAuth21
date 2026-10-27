@@ -1,9 +1,10 @@
 use super::*;
-use crate::account_changes::AccountLabels;
+use crate::account_changes::AccountDetails;
 use crate::state::AppState;
 use crate::test_support::{device, device_with_account, remove_all, temp_directory, ACME_URI, GLOBEX_URI, PASSPHRASE};
 use crate::vault_actions::{current_codes_now, delete_stored_account, import_accounts, rename_stored_account, unlock_vault};
 use crate::vault_location::change_vault_folder;
+use crate::vendor::Vendor;
 
 const MAIN_NAME: &str = "vault.da21";
 
@@ -62,7 +63,7 @@ fn labels(state: &AppState) -> Vec<String> {
 fn an_account_added_on_the_other_device_is_recovered_from_its_copy() {
     let (first, second, shared, dirs) = two_devices();
     leave_conflict(&second, &shared, "vault (conflicted copy).da21", |device| {
-        import_accounts(device, GLOBEX_URI).unwrap();
+        import_accounts(device, GLOBEX_URI, None).unwrap();
     });
     assert_eq!(merge_for(&first), 1);
     assert_eq!(labels(&first), vec!["Acme (a@b)", "Globex (c@d)"]);
@@ -75,7 +76,7 @@ fn an_account_added_on_the_other_device_is_recovered_from_its_copy() {
 fn a_merged_copy_is_set_aside_not_deleted() {
     let (first, second, shared, dirs) = two_devices();
     leave_conflict(&second, &shared, "vault (conflicted copy).da21", |device| {
-        import_accounts(device, GLOBEX_URI).unwrap();
+        import_accounts(device, GLOBEX_URI, None).unwrap();
     });
     merge_for(&first);
     assert!(!shared.join("vault (conflicted copy).da21").exists());
@@ -87,11 +88,11 @@ fn a_merged_copy_is_set_aside_not_deleted() {
 #[test]
 fn a_delete_and_a_rename_made_in_a_conflicting_copy_are_applied() {
     let (first, second, shared, dirs) = two_devices();
-    import_accounts(&first, GLOBEX_URI).unwrap();
+    import_accounts(&first, GLOBEX_URI, None).unwrap();
     crate::disk_sync::sync_from_disk(&second.vault_path(), &mut second.vault_guard());
     let acme = current_codes_now(&second).unwrap()[0].id.clone();
     leave_conflict(&second, &shared, "vault.sync-conflict-20261027-101500-ABCDEFG.da21", |device| {
-        rename_stored_account(device, &current_codes_now(device).unwrap()[1].id, &AccountLabels { issuer: "Globex".into(), name: "renamed".into() }).unwrap();
+        rename_stored_account(device, &current_codes_now(device).unwrap()[1].id, &AccountDetails { issuer: "Globex".into(), name: "renamed".into(), vendor: Vendor::Other }).unwrap();
         delete_stored_account(device, &acme).unwrap();
     });
     assert_eq!(merge_for(&first), 1);
@@ -137,7 +138,7 @@ fn nothing_is_merged_while_locked_or_when_there_are_no_copies() {
 fn a_copy_that_cannot_be_set_aside_is_merged_once_and_not_retried() {
     let (first, second, shared, dirs) = two_devices();
     leave_conflict(&second, &shared, "vault 2.da21", |device| {
-        import_accounts(device, GLOBEX_URI).unwrap();
+        import_accounts(device, GLOBEX_URI, None).unwrap();
     });
     // A directory already sits where the ".merged" file would go, so renaming fails.
     std::fs::create_dir(shared.join("vault 2.da21.merged")).unwrap();

@@ -1,12 +1,10 @@
 //! Parser for the standard `otpauth://totp/Issuer:name?secret=...` format.
 
-use super::query::{numeric_param, query_param};
+use super::account_parts::{build_account, AccountParts};
+use super::query::query_param;
 use super::{ImportError, OTPAUTH_PREFIX};
-use crate::otp::{Account, Algorithm};
+use crate::otp::Account;
 
-const DEFAULT_DIGITS: u32 = 6;
-const DEFAULT_PERIOD_SECONDS: u64 = 30;
-const SUPPORTED_DIGITS: std::ops::RangeInclusive<u32> = 6..=8;
 const TOTP_KIND: &str = "totp";
 
 struct UriParts<'a> {
@@ -21,16 +19,21 @@ pub fn parse_otpauth_uri(uri: &str) -> Result<Account, ImportError> {
         return Err(ImportError::HotpUnsupported(parts.label));
     }
     let (label_issuer, name) = split_label(&parts.label);
-    let account = Account {
-        issuer: query_param(parts.query, "issuer").unwrap_or(label_issuer),
-        name,
-        secret: decode_secret(parts.query)?,
-        algorithm: parse_algorithm(parts.query)?,
-        digits: numeric_param(parts.query, "digits", DEFAULT_DIGITS),
-        period_seconds: numeric_param(parts.query, "period", DEFAULT_PERIOD_SECONDS),
-    };
-    ensure_supported_timing(&account)?;
-    Ok(account)
+    let issuer = query_param(parts.query, "issuer").unwrap_or(label_issuer);
+    let secret = query_param(parts.query, "secret").ok_or(ImportError::BadUri)?;
+    let algorithm = query_param(parts.query, "algorithm");
+    build_account(&AccountParts {
+        issuer: &issuer,
+        name: &name,
+        secret_base32: &secret,
+        algorithm: algorithm.as_deref(),
+        digits: number_param(parts.query, "digits"),
+        period_seconds: number_param(parts.query, "period"),
+    })
+}
+
+fn number_param<T: std::str::FromStr>(query: &str, key: &str) -> Option<T> {
+    query_param(query, key).and_then(|value| value.parse().ok())
 }
 
 fn split_uri(uri: &str) -> Result<UriParts<'_>, ImportError> {
@@ -49,33 +52,10 @@ fn split_label(label: &str) -> (String, String) {
     }
 }
 
-fn decode_secret(query: &str) -> Result<Vec<u8>, ImportError> {
-    let encoded = query_param(query, "secret").ok_or(ImportError::BadUri)?;
-    let normalized = encoded.replace(' ', "").trim_end_matches('=').to_uppercase();
-    base32::decode(base32::Alphabet::Rfc4648 { padding: false }, &normalized)
-        .ok_or(ImportError::BadEncoding)
-}
-
-fn parse_algorithm(query: &str) -> Result<Algorithm, ImportError> {
-    let name = query_param(query, "algorithm").map(|value| value.to_uppercase());
-    match name.as_deref() {
-        None | Some("SHA1") => Ok(Algorithm::Sha1),
-        Some("SHA256") => Ok(Algorithm::Sha256),
-        Some("SHA512") => Ok(Algorithm::Sha512),
-        Some(_) => Err(ImportError::BadUri),
-    }
-}
-
-/// A zero period would divide by zero when computing codes, and digit counts
-/// outside 6..=8 are not interoperable with real services.
-fn ensure_supported_timing(account: &Account) -> Result<(), ImportError> {
-    let is_valid = account.period_seconds > 0 && SUPPORTED_DIGITS.contains(&account.digits);
-    if is_valid { Ok(()) } else { Err(ImportError::BadUri) }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::otp::Algorithm;
 
     const SEED_BASE32: &str = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
 

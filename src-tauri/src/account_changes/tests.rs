@@ -1,9 +1,13 @@
 use super::*;
 use crate::merge::merge;
-use crate::otp::Algorithm;
+use crate::otp::{Account, Algorithm};
 
-fn labels(issuer: &str, name: &str) -> AccountLabels {
-    AccountLabels { issuer: issuer.into(), name: name.into() }
+fn labels(issuer: &str, name: &str) -> AccountDetails {
+    AccountDetails { issuer: issuer.into(), name: name.into(), vendor: Vendor::Other }
+}
+
+fn new_account(secret: &str, name: &str) -> NewAccount {
+    NewAccount { account: account(secret, name), vendor: Vendor::Other }
 }
 
 fn account(secret: &str, name: &str) -> Account {
@@ -18,7 +22,7 @@ fn account(secret: &str, name: &str) -> Account {
 }
 
 fn with_accounts(accounts: &[(&str, &str)], now_ms: u64) -> VaultData {
-    let imported = accounts.iter().map(|(secret, name)| account(secret, name)).collect();
+    let imported = accounts.iter().map(|(secret, name)| new_account(secret, name)).collect();
     add_accounts(&VaultData::default(), imported, now_ms).0
 }
 
@@ -29,7 +33,7 @@ fn id_of(secret: &str) -> String {
 #[test]
 fn adding_appends_new_accounts_and_skips_duplicates() {
     let data = with_accounts(&[("a", "A")], 10);
-    let (updated, report) = add_accounts(&data, vec![account("a", "A again"), account("b", "B"), account("b", "B twice")], 20);
+    let (updated, report) = add_accounts(&data, vec![new_account("a", "A again"), new_account("b", "B"), new_account("b", "B twice")], 20);
     assert_eq!(report, AddReport { added: 1, skipped_duplicates: 2 });
     assert_eq!(updated.accounts.len(), 2);
     assert_eq!(updated.accounts[0].account.name, "A");
@@ -72,7 +76,7 @@ fn deleting_removes_the_account_and_leaves_a_tombstone() {
 fn a_deleted_account_can_be_added_again() {
     let data = with_accounts(&[("a", "A")], 10);
     let deleted = delete_account(&data, &id_of("a"), 20).unwrap();
-    let (readded, report) = add_accounts(&deleted, vec![account("a", "A")], 30);
+    let (readded, report) = add_accounts(&deleted, vec![new_account("a", "A")], 30);
     assert_eq!(report.added, 1);
     assert!(readded.tombstones.is_empty());
 }
@@ -92,4 +96,14 @@ fn a_delete_on_one_device_and_a_rename_on_another_resolve_the_same_everywhere() 
     let one_way = merge(&deleted, &renamed);
     let other_way = merge(&renamed, &deleted);
     assert!(one_way.accounts.is_empty() && other_way.accounts.is_empty());
+}
+
+#[test]
+fn the_vendor_comes_from_the_import_and_can_be_changed_when_editing() {
+    let imported = NewAccount { account: account("a", "A"), vendor: Vendor::Aegis };
+    let (data, _) = add_accounts(&VaultData::default(), vec![imported], 10);
+    assert_eq!(data.accounts[0].vendor, Vendor::Aegis);
+    let details = AccountDetails { issuer: "Acme".into(), name: "A".into(), vendor: Vendor::MicrosoftAuthenticator };
+    let edited = rename_account(&data, &id_of("a"), &details, 20).unwrap();
+    assert_eq!(edited.accounts[0].vendor, Vendor::MicrosoftAuthenticator);
 }

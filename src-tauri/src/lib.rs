@@ -29,6 +29,7 @@ mod state;
 mod test_support;
 mod tray;
 mod vault;
+mod vendor;
 mod vault_actions;
 mod vault_location;
 mod vault_relocation;
@@ -53,7 +54,8 @@ pub fn run() {
             commands::create_vault,
             commands::unlock,
             commands::lock,
-            commands::import_uri,
+            commands::import_text,
+            commands::list_vendors,
             commands::list_codes,
             commands::copy_code,
             commands::rename_account,

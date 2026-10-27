@@ -1,12 +1,22 @@
-//! Import accounts from `otpauth://` and Google Authenticator
-//! `otpauth-migration://` URIs.
+//! Importing accounts from the formats other authenticator apps export, or from
+//! `otpauth://` and Google Authenticator `otpauth-migration://` links.
+//!
+//! Anything that cannot be imported (counter-based HOTP, Steam codes, an
+//! unreadable entry) is counted and skipped, so one odd entry never costs
+//! the user the rest of a file.
 
+mod account_parts;
+mod aegis;
+mod bitwarden;
 mod migration;
+mod otpauth_lines;
 mod otpauth_uri;
 mod protobuf;
 mod query;
+mod twofas;
 
-use crate::otp::Account;
+use crate::record::NewAccount;
+use crate::vendor::Vendor;
 
 const OTPAUTH_PREFIX: &str = "otpauth://";
 const MIGRATION_PREFIX: &str = "otpauth-migration://offline?";
@@ -21,32 +31,68 @@ pub enum ImportError {
     BadPayload,
     #[error("HOTP (counter-based) accounts are not supported yet: {0}")]
     HotpUnsupported(String),
+    #[error("this does not look like a supported export; paste an otpauth link, or use a file from Google Authenticator, Aegis, 2FAS or Bitwarden")]
+    UnsupportedFormat,
+    #[error("the file is damaged or not in the format it claims to be")]
+    MalformedFile,
+    #[error("this {0} export is password-protected; export it again without a password and import that file")]
+    EncryptedExport(&'static str),
 }
 
-pub fn import_uri(uri: &str) -> Result<Vec<Account>, ImportError> {
-    let uri = uri.trim();
-    if let Some(query) = uri.strip_prefix(MIGRATION_PREFIX) {
-        return migration::parse_migration_query(query);
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct ImportBatch {
+    pub accounts: Vec<NewAccount>,
+    /// Entries left out because they are unsupported or unreadable.
+    pub skipped_unsupported: usize,
+}
+
+impl ImportBatch {
+    pub fn add(&mut self, result: Result<NewAccount, ImportError>) {
+        match result {
+            Ok(account) => self.accounts.push(account),
+            Err(_) => self.skipped_unsupported += 1,
+        }
     }
-    if uri.starts_with(OTPAUTH_PREFIX) {
-        return otpauth_uri::parse_otpauth_uri(uri).map(|account| vec![account]);
+
+    pub fn absorb(&mut self, other: ImportBatch) {
+        self.accounts.extend(other.accounts);
+        self.skipped_unsupported += other.skipped_unsupported;
     }
-    Err(ImportError::BadUri)
+}
+
+/// Imports from text: a link, a list of links, or the contents of an export
+/// file. `fallback_vendor` tags accounts whose format does not say where they
+/// came from (a plain `otpauth://` link).
+pub fn import_text(text: &str, fallback_vendor: Vendor) -> Result<ImportBatch, ImportError> {
+    let text = text.trim_start_matches('\u{feff}').trim();
+    if text.starts_with('{') {
+        return import_json(text, fallback_vendor);
+    }
+    if text.starts_with("otpauth") {
+        return otpauth_lines::import(text, fallback_vendor);
+    }
+    if bitwarden::looks_like_csv(text) {
+        return bitwarden::import_csv(text);
+    }
+    Err(ImportError::UnsupportedFormat)
+}
+
+fn import_json(text: &str, fallback_vendor: Vendor) -> Result<ImportBatch, ImportError> {
+    let root: serde_json::Value = serde_json::from_str(text).map_err(|_| ImportError::MalformedFile)?;
+    if root.get("encrypted").and_then(serde_json::Value::as_bool) == Some(true) {
+        return Err(ImportError::EncryptedExport("Bitwarden"));
+    }
+    if root.get("db").is_some() {
+        return aegis::import(&root);
+    }
+    if root.get("services").is_some() || root.get("servicesEncrypted").is_some() {
+        return twofas::import(&root);
+    }
+    if root.get("items").is_some() {
+        return bitwarden::import_json(&root, fallback_vendor);
+    }
+    Err(ImportError::UnsupportedFormat)
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn rejects_unknown_schemes() {
-        assert_eq!(import_uri("https://example.com"), Err(ImportError::BadUri));
-        assert_eq!(import_uri(""), Err(ImportError::BadUri));
-    }
-
-    #[test]
-    fn trims_surrounding_whitespace() {
-        let uri = "  otpauth://totp/a?secret=GEZDGNBVGY3TQOJQ \n";
-        assert_eq!(import_uri(uri).unwrap().len(), 1);
-    }
-}
+mod tests;

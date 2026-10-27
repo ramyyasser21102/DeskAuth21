@@ -2,6 +2,7 @@
 //! deleted ones, so deletions and renames can be merged between devices.
 
 use crate::otp::Account;
+use crate::vendor::Vendor;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -18,18 +19,33 @@ pub fn account_id_for(secret: &[u8]) -> String {
     hex[..ID_HEX_CHARS].to_string()
 }
 
-/// An account plus when it was last changed (milliseconds since the Unix epoch).
+/// An account plus when it was last changed (milliseconds since the Unix epoch)
+/// and which app it came from. Records saved before vendors existed read as `Other`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccountRecord {
     pub id: String,
     pub updated_at_ms: u64,
+    #[serde(default)]
+    pub vendor: Vendor,
     #[serde(flatten)]
     pub account: Account,
 }
 
+/// An account about to be added, with the app it came from.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NewAccount {
+    pub account: Account,
+    pub vendor: Vendor,
+}
+
 impl AccountRecord {
     pub fn new(account: Account, now_ms: u64) -> Self {
-        Self { id: account_id_for(&account.secret), updated_at_ms: now_ms, account }
+        Self::with_vendor(NewAccount { account, vendor: Vendor::Other }, now_ms)
+    }
+
+    pub fn with_vendor(new_account: NewAccount, now_ms: u64) -> Self {
+        let NewAccount { account, vendor } = new_account;
+        Self { id: account_id_for(&account.secret), updated_at_ms: now_ms, vendor, account }
     }
 }
 
@@ -105,6 +121,21 @@ mod tests {
         };
         let json = serde_json::to_vec(&data).unwrap();
         assert_eq!(parse_vault_data(&json).unwrap(), data);
+    }
+
+    #[test]
+    fn a_record_saved_without_a_vendor_reads_as_other() {
+        let json = br#"{"accounts":[{"id":"abc","updated_at_ms":5,"issuer":"Acme","name":"a","secret":[1,2],"algorithm":"Sha1","digits":6,"period_seconds":30}]}"#;
+        let data = parse_vault_data(json).unwrap();
+        assert_eq!(data.accounts[0].vendor, Vendor::Other);
+    }
+
+    #[test]
+    fn the_vendor_is_stored_and_read_back() {
+        let record = AccountRecord::with_vendor(NewAccount { account: account(b"one"), vendor: Vendor::Aegis }, 1);
+        let data = VaultData { accounts: vec![record], tombstones: Vec::new() };
+        let round_tripped = parse_vault_data(&serde_json::to_vec(&data).unwrap()).unwrap();
+        assert_eq!(round_tripped.accounts[0].vendor, Vendor::Aegis);
     }
 
     #[test]

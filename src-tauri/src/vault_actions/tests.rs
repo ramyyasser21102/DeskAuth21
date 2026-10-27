@@ -59,14 +59,14 @@ fn wrong_passphrase_keeps_the_vault_locked() {
 fn imports_require_an_unlocked_vault() {
     let (state, directory) = unlocked_state();
     lock_vault(&state);
-    assert!(matches!(import_accounts(&state, ACCOUNT_URI), Err(CommandError::VaultLocked)));
+    assert!(matches!(import_accounts(&state, ACCOUNT_URI, None), Err(CommandError::VaultLocked)));
     remove(directory);
 }
 
 #[test]
 fn imported_accounts_survive_a_lock_cycle() {
     let (state, directory) = unlocked_state();
-    assert_eq!(import_accounts(&state, ACCOUNT_URI).unwrap().added, 1);
+    assert_eq!(import_accounts(&state, ACCOUNT_URI, None).unwrap().added, 1);
     lock_vault(&state);
     unlock_vault(&state, PASSPHRASE).unwrap();
     assert_eq!(current_codes_now(&state).unwrap()[0].label, "Acme (a@b)");
@@ -76,8 +76,8 @@ fn imported_accounts_survive_a_lock_cycle() {
 #[test]
 fn importing_the_same_export_twice_adds_nothing_new() {
     let (state, directory) = unlocked_state();
-    assert_eq!(import_accounts(&state, ACCOUNT_URI).unwrap(), ImportSummary { added: 1, skipped_duplicates: 0 });
-    assert_eq!(import_accounts(&state, ACCOUNT_URI).unwrap(), ImportSummary { added: 0, skipped_duplicates: 1 });
+    assert_eq!(import_accounts(&state, ACCOUNT_URI, None).unwrap(), ImportSummary { added: 1, skipped_duplicates: 0, skipped_unsupported: 0 });
+    assert_eq!(import_accounts(&state, ACCOUNT_URI, None).unwrap(), ImportSummary { added: 0, skipped_duplicates: 1, skipped_unsupported: 0 });
     assert_eq!(current_codes_now(&state).unwrap().len(), 1);
     remove(directory);
 }
@@ -141,7 +141,7 @@ fn updating_auto_lock_saves_applies_and_rejects_bad_values() {
 #[test]
 fn looks_up_a_single_code_by_id() {
     let (state, directory) = unlocked_state();
-    import_accounts(&state, ACCOUNT_URI).unwrap();
+    import_accounts(&state, ACCOUNT_URI, None).unwrap();
     let all_codes = current_codes(&state, 59).unwrap();
     let id = all_codes[0].id.clone();
     assert_eq!(code_for_account(&state, &id, 59).unwrap(), all_codes[0].code);
@@ -159,9 +159,9 @@ fn first_account_id(state: &AppState) -> String {
 #[test]
 fn renaming_an_account_changes_its_label_and_survives_a_lock_cycle() {
     let (state, directory) = unlocked_state();
-    import_accounts(&state, ACCOUNT_URI).unwrap();
+    import_accounts(&state, ACCOUNT_URI, None).unwrap();
     let id = first_account_id(&state);
-    rename_stored_account(&state, &id, &AccountLabels { issuer: "Work".into(), name: "me@work.com".into() }).unwrap();
+    rename_stored_account(&state, &id, &AccountDetails { issuer: "Work".into(), name: "me@work.com".into(), vendor: Vendor::Other }).unwrap();
     lock_vault(&state);
     unlock_vault(&state, PASSPHRASE).unwrap();
     let view = &current_codes_now(&state).unwrap()[0];
@@ -172,13 +172,13 @@ fn renaming_an_account_changes_its_label_and_survives_a_lock_cycle() {
 #[test]
 fn deleting_an_account_removes_it_for_good_and_it_can_be_imported_again() {
     let (state, directory) = unlocked_state();
-    import_accounts(&state, ACCOUNT_URI).unwrap();
+    import_accounts(&state, ACCOUNT_URI, None).unwrap();
     let id = first_account_id(&state);
     delete_stored_account(&state, &id).unwrap();
     lock_vault(&state);
     unlock_vault(&state, PASSPHRASE).unwrap();
     assert!(current_codes_now(&state).unwrap().is_empty());
-    assert_eq!(import_accounts(&state, ACCOUNT_URI).unwrap().added, 1);
+    assert_eq!(import_accounts(&state, ACCOUNT_URI, None).unwrap().added, 1);
     assert_eq!(first_account_id(&state), id);
     remove(directory);
 }
@@ -187,7 +187,7 @@ fn deleting_an_account_removes_it_for_good_and_it_can_be_imported_again() {
 fn renaming_or_deleting_needs_an_unlocked_vault_and_a_real_account() {
     let (state, directory) = unlocked_state();
     assert!(matches!(delete_stored_account(&state, "nope"), Err(CommandError::Change(_))));
-    assert!(matches!(rename_stored_account(&state, "nope", &AccountLabels { issuer: "".into(), name: "x".into() }), Err(CommandError::Change(_))));
+    assert!(matches!(rename_stored_account(&state, "nope", &AccountDetails { issuer: "".into(), name: "x".into(), vendor: Vendor::Other }), Err(CommandError::Change(_))));
     lock_vault(&state);
     assert!(matches!(delete_stored_account(&state, "nope"), Err(CommandError::VaultLocked)));
     remove(directory);
@@ -199,7 +199,65 @@ fn a_failed_save_rolls_the_import_back() {
     // The vault file is a regular file, so nothing can be created "inside" it.
     let blocked = AppState::new(directory.join("vault.da21"));
     blocked.vault_guard().unlock(Session::create(PASSPHRASE, FAST_KDF).unwrap(), VaultData::default());
-    assert!(import_accounts(&blocked, ACCOUNT_URI).is_err());
+    assert!(import_accounts(&blocked, ACCOUNT_URI, None).is_err());
     assert!(blocked.vault_guard().accounts().is_empty());
+    remove(directory);
+}
+
+fn aegis_export(entries: &[(&str, &str, &str)]) -> String {
+    let body: Vec<String> = entries
+        .iter()
+        .map(|(kind, name, secret)| {
+            format!(r#"{{"type":"{kind}","name":"{name}","issuer":"Acme","info":{{"secret":"{secret}","algo":"SHA1","digits":6,"period":30}}}}"#)
+        })
+        .collect();
+    format!(r#"{{"version":1,"header":{{"slots":null,"params":null}},"db":{{"version":3,"entries":[{}]}}}}"#, body.join(","))
+}
+
+#[test]
+fn an_exported_file_tags_every_account_with_its_source_app() {
+    let (state, directory) = unlocked_state();
+    let export = aegis_export(&[("totp", "a@b", "GEZDGNBVGY3TQOJQ"), ("totp", "c@d", "MFRGGZDFMZTWQ2LK")]);
+    assert_eq!(import_accounts(&state, &export, None).unwrap().added, 2);
+    assert!(current_codes_now(&state).unwrap().iter().all(|view| view.vendor == Vendor::Aegis));
+    remove(directory);
+}
+
+#[test]
+fn a_plain_link_takes_the_vendor_the_user_chose_and_defaults_to_other() {
+    let (state, directory) = unlocked_state();
+    import_accounts(&state, ACCOUNT_URI, Some(Vendor::MicrosoftAuthenticator)).unwrap();
+    assert_eq!(current_codes_now(&state).unwrap()[0].vendor, Vendor::MicrosoftAuthenticator);
+    let other_uri = "otpauth://totp/Globex:c@d?secret=MFRGGZDFMZTWQ2LK&issuer=Globex";
+    import_accounts(&state, other_uri, None).unwrap();
+    assert_eq!(current_codes_now(&state).unwrap()[1].vendor, Vendor::Other);
+    remove(directory);
+}
+
+#[test]
+fn the_same_account_exported_from_two_apps_is_a_duplicate_not_a_second_entry() {
+    let (state, directory) = unlocked_state();
+    import_accounts(&state, ACCOUNT_URI, Some(Vendor::GoogleAuthenticator)).unwrap();
+    let again = import_accounts(&state, &aegis_export(&[("totp", "a@b", "GEZDGNBVGY3TQOJQ")]), None).unwrap();
+    assert_eq!((again.added, again.skipped_duplicates), (0, 1));
+    assert_eq!(current_codes_now(&state).unwrap()[0].vendor, Vendor::GoogleAuthenticator);
+    remove(directory);
+}
+
+#[test]
+fn unsupported_entries_are_reported_without_failing_the_import() {
+    let (state, directory) = unlocked_state();
+    let export = aegis_export(&[("totp", "a@b", "GEZDGNBVGY3TQOJQ"), ("hotp", "c@d", "MFRGGZDFMZTWQ2LK"), ("steam", "e@f", "ONSWG4TFOQ")]);
+    let summary = import_accounts(&state, &export, None).unwrap();
+    assert_eq!((summary.added, summary.skipped_unsupported), (1, 2));
+    remove(directory);
+}
+
+#[test]
+fn an_unrecognised_file_fails_with_a_helpful_message_and_changes_nothing() {
+    let (state, directory) = unlocked_state();
+    let result = import_accounts(&state, "just some words", None);
+    assert!(matches!(result, Err(CommandError::Import(_))));
+    assert!(current_codes_now(&state).unwrap().is_empty());
     remove(directory);
 }

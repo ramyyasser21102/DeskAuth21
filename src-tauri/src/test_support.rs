@@ -28,7 +28,7 @@ pub fn device(label: &str) -> (AppState, PathBuf) {
 pub fn device_with_account(label: &str, uri: &str) -> (AppState, PathBuf) {
     let (state, directory) = device(label);
     create_new_vault(&state, PASSPHRASE, FAST_KDF).unwrap();
-    import_accounts(&state, uri).unwrap();
+    import_accounts(&state, uri, None).unwrap();
     (state, directory)
 }
 
