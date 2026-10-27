@@ -8,7 +8,7 @@ use crate::error::CommandError;
 use crate::import::import_text;
 use crate::passphrase::validate_new_passphrase;
 use crate::disk_sync::{sync_vault_folder, DiskSyncOutcome};
-use crate::persistence::{fingerprint, read_vault_file, replace_and_save, save_vault, write_backup_copy};
+use crate::persistence::{fingerprint, read_vault_file, replace_and_save, save_vault};
 use crate::settings::Settings;
 use crate::settings_store::save_settings;
 use crate::record::VaultData;
@@ -17,9 +17,6 @@ use crate::vault::{KdfParams, Session};
 use crate::vendor::Vendor;
 use std::path::Path;
 use std::time::Instant;
-
-/// Ends in neither `.da21` nor anything the sync code looks at, so it is never merged.
-const V1_BACKUP_SUFFIX: &str = ".v1.bak";
 
 pub fn create_new_vault(state: &AppState, passphrase: &str, kdf_params: KdfParams) -> Result<(), CommandError> {
     validate_new_passphrase(passphrase)?;
@@ -48,28 +45,6 @@ pub fn unlock_vault(state: &AppState, passphrase: &str) -> Result<(), CommandErr
     Ok(())
 }
 
-/// Which file format the unlocked vault is in: 1 for vaults made before unlock slots.
-pub fn vault_format_version(state: &AppState) -> Result<u8, CommandError> {
-    Ok(state.vault_guard().session()?.format_version())
-}
-
-/// Moves an older vault to the current format. The old file is kept beside it first,
-/// and if saving fails the vault stays exactly as it was.
-pub fn upgrade_vault_format(state: &AppState) -> Result<(), CommandError> {
-    with_synced_vault(state, |vault, path| {
-        let Some(upgraded) = vault.session()?.upgraded()? else {
-            return Ok(());
-        };
-        write_backup_copy(path, V1_BACKUP_SUFFIX)?;
-        let previous = vault.replace_session(upgraded);
-        let saved = save_vault(path, vault);
-        if let (Err(_), Some(previous)) = (&saved, previous) {
-            vault.replace_session(previous);
-        }
-        saved
-    })
-}
-
 pub fn lock_vault(state: &AppState) {
     state.vault_guard().relock();
 }
@@ -86,7 +61,7 @@ pub struct ImportSummary {
 /// Runs a change to the unlocked vault. It first merges in anything another
 /// device did, so the change builds on current data and nothing is lost or
 /// duplicated; if the file is a different vault entirely, it stops instead.
-fn with_synced_vault<T>(
+pub(crate) fn with_synced_vault<T>(
     state: &AppState,
     change: impl FnOnce(&mut VaultState, &Path) -> Result<T, CommandError>,
 ) -> Result<T, CommandError> {
@@ -182,5 +157,3 @@ pub fn current_codes_now(state: &AppState) -> Result<Vec<CodeView>, CommandError
 
 #[cfg(test)]
 mod tests;
-#[cfg(test)]
-mod upgrade_tests;

@@ -94,6 +94,13 @@ impl VaultState {
         self.data = data;
     }
 
+    /// After reading a changed vault file with our key, follows the unlock slots it holds.
+    pub fn adopt_slots_from(&mut self, file: &[u8]) {
+        if let Some(Err(error)) = self.session.as_mut().map(|session| session.adopt_slots_from(file)) {
+            eprintln!("could not follow the vault file's unlock slots: {error}");
+        }
+    }
+
     /// Swaps in a session for the same unlocked vault and hands back the one it replaced.
     pub fn replace_session(&mut self, session: Session) -> Option<Session> {
         self.session.replace(session)

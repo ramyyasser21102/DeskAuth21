@@ -1,4 +1,7 @@
 use super::*;
+use crate::error::CommandError;
+use crate::state::AppState;
+use crate::vault_actions::{current_codes_now, import_accounts, lock_vault, unlock_vault};
 use crate::conflict_copies::is_conflict_copy_name;
 use crate::test_support::{device, remove_all, temp_directory, ACME_URI, PASSPHRASE};
 use crate::vault_location::change_vault_folder;
