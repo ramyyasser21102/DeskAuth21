@@ -7,6 +7,7 @@ mod auto_lock_policy;
 mod autostart;
 mod clipboard;
 mod clock;
+mod conflict_copies;
 mod codes;
 mod commands;
 mod disk_sync;

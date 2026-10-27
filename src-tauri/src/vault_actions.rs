@@ -7,7 +7,7 @@ use crate::codes::{build_code_views, CodeView};
 use crate::error::CommandError;
 use crate::import::import_uri;
 use crate::passphrase::validate_new_passphrase;
-use crate::disk_sync::{sync_from_disk, DiskSyncOutcome};
+use crate::disk_sync::{sync_vault_folder, DiskSyncOutcome};
 use crate::persistence::{fingerprint, read_vault_file, replace_and_save, save_vault};
 use crate::settings::Settings;
 use crate::settings_store::save_settings;
@@ -65,7 +65,7 @@ fn with_synced_vault<T>(
     let mut vault = state.vault_guard();
     vault.session()?;
     let vault_path = state.vault_path();
-    if sync_from_disk(&vault_path, &mut vault) == DiskSyncOutcome::Unreadable {
+    if sync_vault_folder(&vault_path, &mut vault) == DiskSyncOutcome::Unreadable {
         return Err(CommandError::VaultChangedElsewhere);
     }
     let result = change(&mut vault, &vault_path)?;

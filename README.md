@@ -18,8 +18,8 @@ Early development. Currently working:
 - Rename and delete accounts (a delete asks for confirmation and warns about losing access)
 - Sync between computers by keeping the vault in a synced folder (see below)
 
-Planned: biometric/keychain unlock, lock on sleep/screen lock, code search, CLI, merging "conflicted copy" files from sync
-services, changing the passphrase, a self-hosted relay for faster sync.
+Planned: biometric/keychain unlock, lock on sleep/screen lock, code search, CLI, changing the
+passphrase, a self-hosted relay for faster sync.
 
 ## Syncing between devices
 
@@ -43,9 +43,14 @@ re-importing a deleted account on purpose adds it again. Computers' clocks are o
 to order changes, and a new change is always treated as newer than anything the computer
 has already seen, so a slightly wrong clock cannot make an edit lose.
 
-Limits for now: "conflicted copy" files made by a sync service are not merged; speed
-depends on how quickly your sync service delivers the file; and all computers must use
-the same passphrase.
+If two computers save at nearly the same moment, sync services leave a second file beside
+the vault ("conflicted copy", "sync-conflict", "vault 2" and similar). DeskAuth21 merges any
+such file that opens with your passphrase's key, then renames it to end in `.merged` instead
+of deleting it, so you can always inspect or undo a merge by hand. Files from a different
+vault are never touched.
+
+Limits for now: speed depends on how quickly your sync service delivers the file, and all
+computers must use the same passphrase.
 
 ## Development
 

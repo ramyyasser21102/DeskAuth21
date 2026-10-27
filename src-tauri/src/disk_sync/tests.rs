@@ -148,3 +148,27 @@ fn a_rename_and_a_delete_made_apart_end_the_same_on_both_devices() {
     assert!(labels(&first).is_empty());
     remove_all(&dirs);
 }
+
+#[test]
+fn the_folder_sync_picks_up_a_conflicted_copy_and_reports_an_update() {
+    let (first, second, shared, dirs) = two_devices_sharing_a_vault();
+    let main = shared.join("vault.da21");
+    let older = std::fs::read(&main).unwrap();
+    import_accounts(&first, GLOBEX_URI).unwrap();
+    std::fs::write(shared.join("vault (conflicted copy).da21"), std::fs::read(&main).unwrap()).unwrap();
+    std::fs::write(&main, older).unwrap();
+    let outcome = sync_vault_folder(&second.vault_path(), &mut second.vault_guard());
+    assert_eq!(outcome, DiskSyncOutcome::Updated);
+    assert_eq!(labels(&second), vec!["Acme (a@b)", "Globex (c@d)"]);
+    remove_all(&dirs);
+}
+
+#[test]
+fn a_foreign_main_file_stops_the_folder_sync_before_it_touches_any_copies() {
+    let (first, _, shared, dirs) = two_devices_sharing_a_vault();
+    let (_, stranger_dir) = device_with_account("sync-stranger-2", GLOBEX_URI);
+    std::fs::write(shared.join("vault.da21"), std::fs::read(stranger_dir.join("vault.da21")).unwrap()).unwrap();
+    let outcome = sync_vault_folder(&first.vault_path(), &mut first.vault_guard());
+    assert_eq!(outcome, DiskSyncOutcome::Unreadable);
+    remove_all(&[dirs, vec![stranger_dir]].concat());
+}

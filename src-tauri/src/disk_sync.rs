@@ -4,6 +4,7 @@
 //! The two copies are merged per account (see `merge`), so edits and deletes
 //! made on different devices resolve the same way everywhere.
 
+use crate::conflict_copies::merge_conflict_copies;
 use crate::merge::{has_same_content, merge};
 use crate::persistence::{fingerprint, save_vault};
 use crate::record::VaultData;
@@ -19,6 +20,21 @@ pub enum DiskSyncOutcome {
     /// The file changed but cannot be read with our key: a different vault, or
     /// a copy still being written by the sync service.
     Unreadable,
+}
+
+/// Everything another device may have left for us: changes to the vault file,
+/// and conflicted copies the sync service made when two devices wrote at once.
+pub fn sync_vault_folder(path: &Path, vault: &mut VaultState) -> DiskSyncOutcome {
+    let file_outcome = sync_from_disk(path, vault);
+    if file_outcome == DiskSyncOutcome::Unreadable {
+        return file_outcome;
+    }
+    let merged_copies = merge_conflict_copies(path, vault);
+    if merged_copies > 0 || file_outcome == DiskSyncOutcome::Updated {
+        DiskSyncOutcome::Updated
+    } else {
+        DiskSyncOutcome::Unchanged
+    }
 }
 
 /// Merges the file into memory and, if the file lacked something we hold (for
