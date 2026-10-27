@@ -6,7 +6,7 @@ const FEEDBACK_DURATION_MS = 2000;
 export type CopyState = "idle" | "copied" | "failed";
 
 /** Copies one account's code through the backend (which also clears it later). */
-export function useCopyCode(accountIndex: number) {
+export function useCopyCode(accountId: string) {
   const [copyState, setCopyState] = useState<CopyState>("idle");
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export function useCopyCode(accountIndex: number) {
 
   const copy = async () => {
     try {
-      await copyCode(accountIndex);
+      await copyCode(accountId);
       setCopyState("copied");
     } catch {
       setCopyState("failed");

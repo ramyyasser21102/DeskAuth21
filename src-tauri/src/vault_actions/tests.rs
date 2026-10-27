@@ -139,14 +139,57 @@ fn updating_auto_lock_saves_applies_and_rejects_bad_values() {
 }
 
 #[test]
-fn looks_up_a_single_code_by_position() {
+fn looks_up_a_single_code_by_id() {
     let (state, directory) = unlocked_state();
     import_accounts(&state, ACCOUNT_URI).unwrap();
     let all_codes = current_codes(&state, 59).unwrap();
-    assert_eq!(code_for_account(&state, 0, 59).unwrap(), all_codes[0].code);
-    assert!(matches!(code_for_account(&state, 1, 59), Err(CommandError::AccountNotFound(1))));
+    let id = all_codes[0].id.clone();
+    assert_eq!(code_for_account(&state, &id, 59).unwrap(), all_codes[0].code);
+    let unknown = code_for_account(&state, "nope", 59);
+    assert!(matches!(unknown, Err(CommandError::Change(ChangeError::AccountNotFound(_)))));
     lock_vault(&state);
-    assert!(matches!(code_for_account(&state, 0, 59), Err(CommandError::VaultLocked)));
+    assert!(matches!(code_for_account(&state, &id, 59), Err(CommandError::VaultLocked)));
+    remove(directory);
+}
+
+fn first_account_id(state: &AppState) -> String {
+    current_codes_now(state).unwrap()[0].id.clone()
+}
+
+#[test]
+fn renaming_an_account_changes_its_label_and_survives_a_lock_cycle() {
+    let (state, directory) = unlocked_state();
+    import_accounts(&state, ACCOUNT_URI).unwrap();
+    let id = first_account_id(&state);
+    rename_stored_account(&state, &id, &AccountLabels { issuer: "Work".into(), name: "me@work.com".into() }).unwrap();
+    lock_vault(&state);
+    unlock_vault(&state, PASSPHRASE).unwrap();
+    let view = &current_codes_now(&state).unwrap()[0];
+    assert_eq!((view.id.as_str(), view.label.as_str()), (id.as_str(), "Work (me@work.com)"));
+    remove(directory);
+}
+
+#[test]
+fn deleting_an_account_removes_it_for_good_and_it_can_be_imported_again() {
+    let (state, directory) = unlocked_state();
+    import_accounts(&state, ACCOUNT_URI).unwrap();
+    let id = first_account_id(&state);
+    delete_stored_account(&state, &id).unwrap();
+    lock_vault(&state);
+    unlock_vault(&state, PASSPHRASE).unwrap();
+    assert!(current_codes_now(&state).unwrap().is_empty());
+    assert_eq!(import_accounts(&state, ACCOUNT_URI).unwrap().added, 1);
+    assert_eq!(first_account_id(&state), id);
+    remove(directory);
+}
+
+#[test]
+fn renaming_or_deleting_needs_an_unlocked_vault_and_a_real_account() {
+    let (state, directory) = unlocked_state();
+    assert!(matches!(delete_stored_account(&state, "nope"), Err(CommandError::Change(_))));
+    assert!(matches!(rename_stored_account(&state, "nope", &AccountLabels { issuer: "".into(), name: "x".into() }), Err(CommandError::Change(_))));
+    lock_vault(&state);
+    assert!(matches!(delete_stored_account(&state, "nope"), Err(CommandError::VaultLocked)));
     remove(directory);
 }
 
@@ -155,7 +198,7 @@ fn a_failed_save_rolls_the_import_back() {
     let (_state, directory) = unlocked_state();
     // The vault file is a regular file, so nothing can be created "inside" it.
     let blocked = AppState::new(directory.join("vault.da21"));
-    blocked.vault_guard().unlock(Session::create(PASSPHRASE, FAST_KDF).unwrap(), Vec::new());
+    blocked.vault_guard().unlock(Session::create(PASSPHRASE, FAST_KDF).unwrap(), VaultData::default());
     assert!(import_accounts(&blocked, ACCOUNT_URI).is_err());
     assert!(blocked.vault_guard().accounts().is_empty());
     remove(directory);

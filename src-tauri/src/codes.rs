@@ -1,22 +1,29 @@
 //! Pure presentation of one-time codes for the window and the tray.
 
-use crate::otp::Account;
+use crate::record::AccountRecord;
 use serde::Serialize;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CodeView {
+    /// Stable across devices and reordering; the UI refers to accounts by this.
+    pub id: String,
     pub label: String,
+    pub issuer: String,
+    pub name: String,
     pub code: String,
     pub seconds_left: u64,
 }
 
-pub fn build_code_views(accounts: &[Account], unix_seconds: u64) -> Vec<CodeView> {
-    accounts
+pub fn build_code_views(records: &[AccountRecord], unix_seconds: u64) -> Vec<CodeView> {
+    records
         .iter()
-        .map(|account| CodeView {
-            label: account.display_label(),
-            code: account.code_at(unix_seconds),
-            seconds_left: account.seconds_until_next_code(unix_seconds),
+        .map(|record| CodeView {
+            id: record.id.clone(),
+            label: record.account.display_label(),
+            issuer: record.account.issuer.clone(),
+            name: record.account.name.clone(),
+            code: record.account.code_at(unix_seconds),
+            seconds_left: record.account.seconds_until_next_code(unix_seconds),
         })
         .collect()
 }
@@ -35,25 +42,29 @@ pub fn tray_menu_text(view: &CodeView) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::otp::Algorithm;
+    use crate::otp::{Account, Algorithm};
 
-    fn sample_account() -> Account {
-        Account {
+    fn sample_record() -> AccountRecord {
+        let account = Account {
             issuer: "Acme".into(),
             name: "a@b".into(),
             secret: b"12345678901234567890".to_vec(),
             algorithm: Algorithm::Sha1,
             digits: 6,
             period_seconds: 30,
-        }
+        };
+        AccountRecord::new(account, 1)
     }
 
     #[test]
     fn builds_a_view_per_account_at_the_given_time() {
-        let views = build_code_views(&[sample_account()], 59);
+        let record = sample_record();
+        let views = build_code_views(std::slice::from_ref(&record), 59);
         assert_eq!(views.len(), 1);
+        assert_eq!(views[0].id, record.id);
         assert_eq!(views[0].label, "Acme (a@b)");
-        assert_eq!(views[0].code, sample_account().code_at(59));
+        assert_eq!((views[0].issuer.as_str(), views[0].name.as_str()), ("Acme", "a@b"));
+        assert_eq!(views[0].code, record.account.code_at(59));
         assert_eq!(views[0].seconds_left, 1);
     }
 
@@ -65,7 +76,14 @@ mod tests {
 
     #[test]
     fn formats_tray_text() {
-        let view = CodeView { label: "Acme".into(), code: "123456".into(), seconds_left: 7 };
+        let view = CodeView {
+            id: "id".into(),
+            label: "Acme".into(),
+            issuer: String::new(),
+            name: "Acme".into(),
+            code: "123456".into(),
+            seconds_left: 7,
+        };
         assert_eq!(tray_menu_text(&view), "Acme  123 456  (7s)");
     }
 }

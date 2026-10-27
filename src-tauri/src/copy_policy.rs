@@ -8,13 +8,15 @@ pub const CLIPBOARD_CLEAR_DELAY: Duration = Duration::from_secs(30);
 
 const COPY_ITEM_ID_PREFIX: &str = "copy:";
 
-pub fn copy_item_id(account_index: usize) -> String {
-    format!("{COPY_ITEM_ID_PREFIX}{account_index}")
+/// Menu items carry the account id, not its position, so a click always copies
+/// the account the user saw even if the list was reordered by a sync meanwhile.
+pub fn copy_item_id(account_id: &str) -> String {
+    format!("{COPY_ITEM_ID_PREFIX}{account_id}")
 }
 
-/// `Some(index)` when `item_id` is a copy item created by [`copy_item_id`].
-pub fn parse_copy_item_id(item_id: &str) -> Option<usize> {
-    item_id.strip_prefix(COPY_ITEM_ID_PREFIX)?.parse().ok()
+/// `Some(account_id)` when `item_id` is a copy item created by [`copy_item_id`].
+pub fn parse_copy_item_id(item_id: &str) -> Option<&str> {
+    item_id.strip_prefix(COPY_ITEM_ID_PREFIX).filter(|account_id| !account_id.is_empty())
 }
 
 /// Clear only if this is still the most recent copy and the clipboard still
@@ -30,16 +32,14 @@ mod tests {
 
     #[test]
     fn copy_item_ids_round_trip() {
-        assert_eq!(parse_copy_item_id(&copy_item_id(0)), Some(0));
-        assert_eq!(parse_copy_item_id(&copy_item_id(12)), Some(12));
+        assert_eq!(parse_copy_item_id(&copy_item_id("abc123")), Some("abc123"));
     }
 
     #[test]
-    fn ignores_other_menu_items_and_malformed_ids() {
+    fn ignores_other_menu_items_and_empty_ids() {
         assert_eq!(parse_copy_item_id("quit"), None);
+        assert_eq!(parse_copy_item_id("autostart"), None);
         assert_eq!(parse_copy_item_id("copy:"), None);
-        assert_eq!(parse_copy_item_id("copy:abc"), None);
-        assert_eq!(parse_copy_item_id("copy:-1"), None);
     }
 
     #[test]

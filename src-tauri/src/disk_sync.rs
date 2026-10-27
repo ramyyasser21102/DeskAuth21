@@ -1,11 +1,12 @@
 //! Keeps the unlocked vault in step with the file on disk, which another
 //! device may have changed through a sync service.
 //!
-//! Accounts are only ever added, so merging is a union: it gives the same
-//! result in either order, and two devices can never undo each other's work.
+//! The two copies are merged per account (see `merge`), so edits and deletes
+//! made on different devices resolve the same way everywhere.
 
-use crate::dedupe::split_new_accounts;
+use crate::merge::{has_same_content, merge};
 use crate::persistence::{fingerprint, save_vault};
+use crate::record::VaultData;
 use crate::state::VaultState;
 use std::path::Path;
 
@@ -13,15 +14,15 @@ use std::path::Path;
 pub enum DiskSyncOutcome {
     /// Nothing to do: the file is ours, absent, or holds nothing we lack.
     Unchanged,
-    /// Accounts were merged in, or this device's accounts were written back.
+    /// Changes were merged in, or this device's changes were written back.
     Updated,
     /// The file changed but cannot be read with our key: a different vault, or
     /// a copy still being written by the sync service.
     Unreadable,
 }
 
-/// Merges the file's accounts into memory and, if the file lacked accounts we
-/// hold (for example a sync conflict restored an older copy), writes them back.
+/// Merges the file into memory and, if the file lacked something we hold (for
+/// example a sync conflict restored an older copy), writes the merge back.
 pub fn sync_from_disk(path: &Path, vault: &mut VaultState) -> DiskSyncOutcome {
     if !vault.is_unlocked() {
         return DiskSyncOutcome::Unchanged;
@@ -34,27 +35,22 @@ pub fn sync_from_disk(path: &Path, vault: &mut VaultState) -> DiskSyncOutcome {
     if vault.disk_fingerprint() == Some(seen) {
         return DiskSyncOutcome::Unchanged;
     }
-    let Some(disk_accounts) = vault.session().ok().and_then(|session| session.unseal(&file_bytes).ok()) else {
+    let Some(disk_data) = vault.session().ok().and_then(|session| session.unseal(&file_bytes).ok()) else {
         return DiskSyncOutcome::Unreadable;
     };
-    merge_disk_accounts(path, vault, disk_accounts, seen)
+    merge_disk_data(path, vault, &disk_data, seen)
 }
 
-fn merge_disk_accounts(
-    path: &Path,
-    vault: &mut VaultState,
-    disk_accounts: Vec<crate::otp::Account>,
-    seen: u64,
-) -> DiskSyncOutcome {
-    let (from_disk, _) = split_new_accounts(vault.accounts(), disk_accounts.clone());
-    let (only_here, _) = split_new_accounts(&disk_accounts, vault.accounts().to_vec());
-    let is_changed = !from_disk.is_empty() || !only_here.is_empty();
-    vault.append_accounts(from_disk);
+fn merge_disk_data(path: &Path, vault: &mut VaultState, disk_data: &VaultData, seen: u64) -> DiskSyncOutcome {
+    let merged = merge(vault.data(), disk_data);
+    let is_changed_here = !has_same_content(&merged, vault.data());
+    let disk_lacks_something = !has_same_content(&merged, disk_data);
+    vault.replace_data(merged);
     vault.set_disk_fingerprint(Some(seen));
-    if !only_here.is_empty() {
+    if disk_lacks_something {
         write_back(path, vault);
     }
-    if is_changed { DiskSyncOutcome::Updated } else { DiskSyncOutcome::Unchanged }
+    if is_changed_here || disk_lacks_something { DiskSyncOutcome::Updated } else { DiskSyncOutcome::Unchanged }
 }
 
 fn write_back(path: &Path, vault: &mut VaultState) {

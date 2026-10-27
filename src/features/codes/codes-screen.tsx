@@ -23,8 +23,8 @@ export function CodesScreen({ onLocked }: { onLocked: () => void }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         <ul>
-          {codes?.map((view, index) => (
-            <CodeRow key={`${index}-${view.label}`} view={view} accountIndex={index} />
+          {codes?.map((view) => (
+            <CodeRow key={view.id} view={view} />
           ))}
         </ul>
         {isImportOpen && <ImportPanel />}

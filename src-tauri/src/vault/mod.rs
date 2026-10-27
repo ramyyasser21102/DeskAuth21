@@ -7,7 +7,7 @@ mod header;
 #[cfg(test)]
 mod tests;
 
-use crate::otp::Account;
+use crate::record::{parse_vault_data, VaultData};
 use argon2::{Algorithm, Argon2, Params, Version};
 use chacha20poly1305::aead::{Aead, KeyInit, Payload};
 use chacha20poly1305::XChaCha20Poly1305;
@@ -61,10 +61,10 @@ impl Session {
     }
 
     /// Encrypt the account list under a fresh random nonce.
-    pub fn seal(&self, accounts: &[Account]) -> Result<Vec<u8>, VaultError> {
+    pub fn seal(&self, data: &VaultData) -> Result<Vec<u8>, VaultError> {
         let header = Header { params: self.params, salt: self.salt, nonce: random_bytes()? };
         let encoded_header = header.encode();
-        let plaintext = Zeroizing::new(serde_json::to_vec(accounts)?);
+        let plaintext = Zeroizing::new(serde_json::to_vec(data)?);
         let ciphertext = build_cipher(&self.key)?
             .encrypt(
                 (&header.nonce).into(),
@@ -76,19 +76,19 @@ impl Session {
 
     /// Decrypt another copy of this vault with the key already held, without
     /// re-deriving it. Fails if the file was made with a different key.
-    pub fn unseal(&self, file: &[u8]) -> Result<Vec<Account>, VaultError> {
+    pub fn unseal(&self, file: &[u8]) -> Result<VaultData, VaultError> {
         let header = Header::decode(file)?;
         let plaintext = decrypt_payload(&self.key, &header, file)?;
-        Ok(serde_json::from_slice(&plaintext)?)
+        Ok(parse_vault_data(&plaintext)?)
     }
 
-    /// Decrypt a vault file, returning the live session and its accounts.
-    pub fn open(bytes: &[u8], passphrase: &str) -> Result<(Self, Vec<Account>), VaultError> {
+    /// Decrypt a vault file, returning the live session and its contents.
+    pub fn open(bytes: &[u8], passphrase: &str) -> Result<(Self, VaultData), VaultError> {
         let header = Header::decode(bytes)?;
         let key = derive_key(passphrase, &header.salt, header.params)?;
         let plaintext = decrypt_payload(&key, &header, bytes)?;
-        let accounts = serde_json::from_slice(&plaintext)?;
-        Ok((Self { key, salt: header.salt, params: header.params }, accounts))
+        let data = parse_vault_data(&plaintext)?;
+        Ok((Self { key, salt: header.salt, params: header.params }, data))
     }
 }
 

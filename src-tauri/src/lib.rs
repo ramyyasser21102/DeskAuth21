@@ -1,5 +1,6 @@
 //! DeskAuth21: wires the modules together. No business logic lives here.
 
+mod account_changes;
 mod activity;
 mod auto_lock;
 mod auto_lock_policy;
@@ -8,7 +9,6 @@ mod clipboard;
 mod clock;
 mod codes;
 mod commands;
-mod dedupe;
 mod disk_sync;
 mod disk_watch;
 mod copy_policy;
@@ -18,6 +18,8 @@ mod import;
 mod launch_options;
 mod otp;
 mod passphrase;
+mod record;
+mod merge;
 mod persistence;
 mod settings;
 mod settings_store;
@@ -53,6 +55,8 @@ pub fn run() {
             commands::import_uri,
             commands::list_codes,
             commands::copy_code,
+            commands::rename_account,
+            commands::delete_account,
             commands::get_settings,
             commands::set_auto_lock_minutes,
             commands::record_activity,
