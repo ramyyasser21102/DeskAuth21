@@ -1,4 +1,4 @@
-# DeskAuth21
+# DA21
 
 A free, private, cross-platform desktop authenticator (TOTP) that lives in your
 menu bar (macOS/Linux) or system tray (Windows). Built with Tauri 2 (Rust + TypeScript).
@@ -25,7 +25,7 @@ passphrase, a self-hosted relay for faster sync.
 ## The menu bar icon
 
 Click the menu bar icon (macOS) or the tray icon (Windows) to open the app. Right-click it for a
-short menu: Open DeskAuth21, Settings, Lock now (greyed out when there is nothing to lock),
+short menu: Open DA21, Settings, Lock now (greyed out when there is nothing to lock),
 Launch at login and Quit. Linux tray icons cannot report clicks, so there the icon opens the menu,
 and the menu also lists every account, under a heading for its app, with full names, so a code can
 be copied without opening the window.
@@ -74,7 +74,7 @@ The vault file now keeps its data under a random key that "unlock slots" in the 
 wrap, instead of encrypting straight under the passphrase. That is what will let a recovery key
 and a hardware key be added later without re-encrypting. New vaults use it from the start.
 Vaults made earlier still open; the app offers to upgrade them once per unlock, keeps a copy of
-the old file as `vault.da21.v1.bak`, and asks you to update DeskAuth21 on your other computers
+the old file as `vault.da21.v1.bak`, and asks you to update DA21 on your other computers
 first, because older versions cannot open an upgraded vault. The exact layout is in
 [docs/vault-format.md](docs/vault-format.md).
 
@@ -127,13 +127,13 @@ recognised by its secret and added once.
 
 ## Syncing between devices
 
-DeskAuth21 does not run a server. To use the same accounts on several computers, keep the
+DA21 does not run a server. To use the same accounts on several computers, keep the
 vault in a folder that iCloud Drive, Dropbox, OneDrive, Syncthing or similar already
 syncs. Only the encrypted file is shared, so the sync service never sees your accounts.
 
 1. On the first computer, open **Vault location** and **Choose folder...**, picking a
    synced folder. Your vault is moved there.
-2. On each other computer, install DeskAuth21 and choose **Open a vault from a
+2. On each other computer, install DA21 and choose **Open a vault from a
    synced folder**, pick the same folder, then unlock with the **same passphrase**.
 
 While unlocked, the app checks the file every second. Accounts added on one computer
@@ -148,7 +148,7 @@ to order changes, and a new change is always treated as newer than anything the 
 has already seen, so a slightly wrong clock cannot make an edit lose.
 
 If two computers save at nearly the same moment, sync services leave a second file beside
-the vault ("conflicted copy", "sync-conflict", "vault 2" and similar). DeskAuth21 merges any
+the vault ("conflicted copy", "sync-conflict", "vault 2" and similar). DA21 merges any
 such file that opens with your passphrase's key, then renames it to end in `.merged` instead
 of deleting it, so you can always inspect or undo a merge by hand. Files from a different
 vault are never touched.
@@ -179,8 +179,8 @@ Installers for macOS, Windows and Linux are attached to the
 (there are no Apple or Microsoft developer certificates yet), so each system warns the
 first time:
 
-- **macOS**: open the `.dmg` and drag DeskAuth21 to Applications. The first time, right-click
-  the app and choose **Open**, or run `xattr -dr com.apple.quarantine /Applications/DeskAuth21.app`.
+- **macOS**: open the `.dmg` and drag DA21 to Applications. The first time, right-click
+  the app and choose **Open**, or run `xattr -dr com.apple.quarantine /Applications/DA21.app`.
 - **Windows**: SmartScreen shows "Windows protected your PC". Choose **More info**, then
   **Run anyway**.
 - **Linux**: make the `.AppImage` executable (`chmod +x`) and run it, or install the `.deb`.
@@ -202,6 +202,13 @@ git push origin v0.1.0
 ```
 
 Every pull request is also checked on macOS, Windows and Linux (lint, clippy, tests).
+
+## Name
+
+The app is called **DA21** (short for DeskAuth21). Internal names keep the long form on purpose,
+because changing them would lock people out of existing data: the data folder identifier
+(`com.deskauth21.app`), the `DESKAUTH21_DATA_DIR` variable, the repository name, and the labels
+mixed into vault and hardware-key cryptography.
 
 ## Development
 

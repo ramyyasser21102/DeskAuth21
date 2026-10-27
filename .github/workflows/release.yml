@@ -54,7 +54,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: DeskAuth21 ${{ github.ref_name }}
+          releaseName: DA21 ${{ github.ref_name }}
           releaseBody: |
             Unsigned preview build. See "Installing a build" in the README for the first-run
             steps on macOS and Windows.

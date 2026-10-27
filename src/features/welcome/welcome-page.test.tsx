@@ -11,7 +11,7 @@ afterEach(() => {
 describe("WelcomePage", () => {
   it("explains what the app does and how it keeps codes safe", () => {
     render(<WelcomePage onContinue={() => {}} continueLabel="Get started" />);
-    expect(screen.getByRole("img", { name: "DeskAuth21 logo" })).toBeTruthy();
+    expect(screen.getByRole("img", { name: "DA21 logo" })).toBeTruthy();
     expect(screen.getByText("How it works")).toBeTruthy();
     expect(screen.getByText("How your codes stay safe")).toBeTruthy();
     expect(screen.getByText(/Your passphrase is never saved/)).toBeTruthy();

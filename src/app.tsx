@@ -34,7 +34,7 @@ function AppHeader() {
     <header className="mx-auto flex w-full max-w-md items-center justify-between">
       <div className="flex items-center gap-2">
         <AppLogo className="size-7" />
-        <span className="text-lg font-semibold tracking-tight">DeskAuth21</span>
+        <span className="text-lg font-semibold tracking-tight">DA21</span>
       </div>
       <ProfileAvatar profile={profile} />
     </header>
@@ -53,7 +53,7 @@ export function App() {
     <div className="flex min-h-screen flex-col gap-6 px-4 py-6">
       <AppHeader />
       <main className="mx-auto w-full max-w-md">
-        {isWelcomeOpen && <WelcomePage onContinue={closeWelcome} continueLabel="Start using DeskAuth21" />}
+        {isWelcomeOpen && <WelcomePage onContinue={closeWelcome} continueLabel="Start using DA21" />}
         {/* Hidden, not unmounted, so reopening the welcome page keeps your place. */}
         <div hidden={isWelcomeOpen}>
           <ScreenFor status={status} onChange={refreshStatus} onShowWelcome={() => setIsWelcomeOpen(true)} />

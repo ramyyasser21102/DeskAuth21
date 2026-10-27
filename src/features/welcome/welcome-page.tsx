@@ -24,7 +24,7 @@ export function WelcomePage({ onContinue, continueLabel }: { onContinue: () => v
     <div className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-3 text-center">
         <AppLogo className="size-16" />
-        <h2 className="text-2xl font-semibold tracking-tight">Welcome to DeskAuth21</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Welcome to DA21</h2>
         <p className="text-sm text-muted-foreground">{WELCOME_SUMMARY}</p>
       </div>
       <PointList heading="How it works" points={WELCOME_STEPS} />

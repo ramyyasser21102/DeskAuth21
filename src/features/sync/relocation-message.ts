@@ -3,7 +3,7 @@ import type { RelocationOutcome } from "@/lib/api";
 const MESSAGES: Record<RelocationOutcome, string> = {
   unchanged: "That is already where your vault is.",
   moved:
-    "Vault moved. On your other devices, install DeskAuth21, choose this same folder and unlock with the same passphrase.",
+    "Vault moved. On your other devices, install DA21, choose this same folder and unlock with the same passphrase.",
   used_existing: "Now using the vault in that folder. Unlock it with its passphrase.",
   selected: "Folder chosen. Your vault will be created there.",
 };

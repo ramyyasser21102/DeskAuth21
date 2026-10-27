@@ -1,4 +1,4 @@
-# DeskAuth21
+# DA21
 
 A desktop app that holds a person's two-factor accounts and shows their one-time codes, so a phone is not needed. Its promise is privacy: nothing leaves the person's computer except an encrypted file they choose to sync.
 

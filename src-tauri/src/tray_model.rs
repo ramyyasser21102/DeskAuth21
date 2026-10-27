@@ -54,9 +54,9 @@ pub struct MenuStructure {
 
 pub fn placeholder_text(status: VaultStatus, has_no_accounts: bool) -> Option<&'static str> {
     match status {
-        VaultStatus::Uninitialized => Some("Open DeskAuth21 to create your vault"),
-        VaultStatus::Locked => Some("Locked — open DeskAuth21 to unlock"),
-        VaultStatus::Unlocked if has_no_accounts => Some("No accounts — open DeskAuth21 to import"),
+        VaultStatus::Uninitialized => Some("Open DA21 to create your vault"),
+        VaultStatus::Locked => Some("Locked — open DA21 to unlock"),
+        VaultStatus::Unlocked if has_no_accounts => Some("No accounts — open DA21 to import"),
         VaultStatus::Unlocked => None,
     }
 }

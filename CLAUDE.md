@@ -1,4 +1,4 @@
-# DeskAuth21
+# DA21
 
 Free, private, cross-platform desktop authenticator (TOTP) living in the
 menu bar / system tray. Tauri 2 (Rust core) + TypeScript frontend.

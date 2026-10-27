@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CURRENT_FORMAT_VERSION, useVaultFormat } from "./use-vault-format";
 
 const EXPLANATION =
-  "The new format lets you add a recovery key and, later, a hardware key. A copy of the current file is kept beside it. Computers that share this vault must update DeskAuth21 first, or they will not be able to open it.";
+  "The new format lets you add a recovery key and, later, a hardware key. A copy of the current file is kept beside it. Computers that share this vault must update DA21 first, or they will not be able to open it.";
 
 /** Offered on every unlock while the vault is in an older format; "Not now" only hides it until next time. */
 export function UpgradePrompt() {

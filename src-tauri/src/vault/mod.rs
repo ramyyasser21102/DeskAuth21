@@ -24,7 +24,7 @@ pub use session::Session;
 
 #[derive(Debug, thiserror::Error)]
 pub enum VaultError {
-    #[error("not a DeskAuth21 vault, or an unsupported version")]
+    #[error("not a DA21 vault, or an unsupported version")]
     BadFormat,
     #[error("wrong passphrase or damaged vault file; check the passphrase and try again")]
     Decrypt,

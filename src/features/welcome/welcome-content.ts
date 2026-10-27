@@ -15,7 +15,7 @@ export const WELCOME_STEPS: readonly WelcomePoint[] = [
 export const SECURITY_POINTS: readonly WelcomePoint[] = [
   { title: "Encrypted on this computer", detail: "Your accounts are sealed with a key made from your passphrase (Argon2id) and XChaCha20-Poly1305." },
   { title: "Your passphrase is never saved", detail: "Only you can open the vault, so a forgotten passphrase cannot be recovered." },
-  { title: "No accounts, no servers, no tracking", detail: "DeskAuth21 makes no network calls and works fully offline." },
+  { title: "No accounts, no servers, no tracking", detail: "DA21 makes no network calls and works fully offline." },
   { title: "Sync shares only an encrypted file", detail: "Your sync service never sees your accounts." },
   { title: "Hides your codes from screens", detail: "Codes show as dots until you reveal them, and the window asks the system to stay out of screenshots and screen sharing. That is a request the system may not honour, and nothing can protect codes from malware already running on your computer." },
   { title: "Locks itself", detail: "After a few idle minutes, when the computer sleeps or the screen locks, and copied codes are cleared from the clipboard after 15 seconds, when it locks and when you quit." },

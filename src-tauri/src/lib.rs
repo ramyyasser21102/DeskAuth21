@@ -1,4 +1,4 @@
-//! DeskAuth21: wires the modules together. No business logic lives here.
+//! DA21: wires the modules together. No business logic lives here.
 
 mod account_changes;
 mod activity;

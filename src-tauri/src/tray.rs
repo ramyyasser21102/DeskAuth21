@@ -111,7 +111,7 @@ fn handle_menu_event(app: &AppHandle, event: MenuEvent) {
 }
 
 /// A left click on the icon opens the app. (Linux tray icons cannot report clicks; there the
-/// icon opens the menu, which has Open DeskAuth21 at the top of its actions.)
+/// icon opens the menu, which has Open DA21 at the top of its actions.)
 fn open_app_on_left_click(tray: &TrayIcon, event: TrayIconEvent) {
     if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
         show_main_window(tray.app_handle());
