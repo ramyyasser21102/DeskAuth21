@@ -58,6 +58,8 @@ fn command_handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'sta
             commands::create_vault,
             commands::unlock,
             commands::lock,
+            commands::vault_format_version,
+            commands::upgrade_vault_format,
             commands::import_text,
             commands::list_vendors,
             commands::list_codes,
