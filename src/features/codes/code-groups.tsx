@@ -1,3 +1,4 @@
+import { AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import type { VendorGroup as Group } from "@/features/vendors/search-and-group";
 import { VendorGroup } from "./vendor-group";
@@ -18,5 +19,5 @@ export function CodeGroups({ groups, query, onClearSearch }: CodeGroupsProps) {
       </div>
     );
   }
-  return <>{groups.map((group) => <VendorGroup key={group.vendor} group={group} />)}</>;
+  return <AnimatePresence initial={false}>{groups.map((group) => <VendorGroup key={group.vendor} group={group} />)}</AnimatePresence>;
 }

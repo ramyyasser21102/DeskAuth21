@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { useOpenPageRequests } from "@/features/navigation/use-open-page-requests";
 import { TabBar } from "@/features/navigation/tab-bar";
@@ -6,6 +7,7 @@ import { CaptureBanner } from "@/features/privacy/capture-banner";
 import { UpgradePrompt } from "@/features/security/upgrade-prompt";
 import { PrivacySettingsProvider } from "@/features/privacy/privacy-settings-provider";
 import { useActivityReporter } from "@/features/settings/use-activity-reporter";
+import { PAGE_MOTION } from "@/lib/motion-tokens";
 import { useLiveCodes } from "@/features/codes/use-live-codes";
 import { CodesPage } from "./codes-page";
 import { ImportPage } from "./import-page";
@@ -25,13 +27,15 @@ export function UnlockedApp({ onLocked, onShowWelcome }: UnlockedAppProps) {
 
   return (
     <PrivacySettingsProvider>
-      <div key={page} className="animate-in fade-in slide-in-from-bottom-2 pb-20 duration-200 motion-reduce:animate-none">
-        <UpgradePrompt />
-        <CaptureBanner />
-        {page === "codes" && <CodesPage codes={codes} onGoToImport={() => setPage("import")} />}
-        {page === "import" && <ImportPage />}
-        {page === "settings" && <SettingsPage onVaultChanged={onLocked} onShowWelcome={onShowWelcome} />}
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key={page} className="pb-20" {...PAGE_MOTION}>
+          <UpgradePrompt />
+          <CaptureBanner />
+          {page === "codes" && <CodesPage codes={codes} onGoToImport={() => setPage("import")} />}
+          {page === "import" && <ImportPage />}
+          {page === "settings" && <SettingsPage onVaultChanged={onLocked} onShowWelcome={onShowWelcome} />}
+        </motion.div>
+      </AnimatePresence>
       <TabBar current={page} onSelect={setPage} />
     </PrivacySettingsProvider>
   );

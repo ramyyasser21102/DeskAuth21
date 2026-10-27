@@ -1,3 +1,5 @@
+import { AnimatePresence, motion } from "motion/react";
+import { ROW_MOTION } from "@/lib/motion-tokens";
 import type { VendorGroup as Group } from "@/features/vendors/search-and-group";
 import { CodeRow } from "./code-row";
 
@@ -5,15 +7,17 @@ import { CodeRow } from "./code-row";
 export function VendorGroup({ group }: { group: Group }) {
   const headingId = `group-${group.vendor}`;
   return (
-    <section aria-labelledby={headingId} className="flex flex-col">
+    <motion.section layout="position" aria-labelledby={headingId} className="flex flex-col" {...ROW_MOTION}>
       <h3 id={headingId} className="px-2 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {group.name} ({group.views.length})
       </h3>
       <ul>
-        {group.views.map((view) => (
-          <CodeRow key={view.id} view={view} />
-        ))}
+        <AnimatePresence initial={false}>
+          {group.views.map((view) => (
+            <CodeRow key={view.id} view={view} />
+          ))}
+        </AnimatePresence>
       </ul>
-    </section>
+    </motion.section>
   );
 }
