@@ -90,13 +90,7 @@ fn locked_or_empty_shows_only_an_explanation() {
 fn the_short_menu_lists_no_accounts_no_countdown_and_no_status_line() {
     let model = build_tray_model(VaultStatus::Unlocked, &many_views(5), SMALL_MENU);
     assert!(model.entries.is_empty() && model.countdown_text.is_none() && model.placeholder.is_none());
-    assert!(!model.offers_panel && model.is_unlocked);
-}
-
-#[test]
-fn the_listing_menu_offers_the_panel_the_short_menu_does_not() {
-    assert!(build_tray_model(VaultStatus::Unlocked, &[], LISTING).offers_panel);
-    assert!(!build_tray_model(VaultStatus::Unlocked, &[], SMALL_MENU).offers_panel);
+    assert!(model.is_unlocked);
 }
 
 #[test]

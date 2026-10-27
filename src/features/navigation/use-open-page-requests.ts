@@ -4,7 +4,7 @@ import { isPageId, type PageId } from "./pages";
 const OPEN_PAGE_EVENT = "open-page";
 
 /**
- * The quick panel asks the main window to show a page (the settings, say) by sending an event.
+ * The tray menu asks the main window to show a page (the settings, say) by sending an event.
  * Outside the real app there is nothing to listen to, so this does nothing.
  */
 export function useOpenPageRequests(onPage: (page: PageId) => void) {

@@ -8,19 +8,18 @@ use crate::autostart;
 use crate::clipboard::copy_code_for_account;
 use crate::clock::current_unix_seconds;
 use crate::codes::build_code_views;
-use crate::commands_panel::open_page;
+use crate::app_pages::open_page;
 use crate::copy_policy::parse_copy_item_id;
 use crate::locking::lock_and_clean_up;
-use crate::quick_panel;
 use crate::state::AppState;
-use crate::tray_menu::{build_menu, update_texts, TrayMenuState, MENU_ID_AUTOSTART, MENU_ID_LOCK, MENU_ID_PANEL, MENU_ID_QUIT, MENU_ID_SETTINGS, MENU_ID_SHOW};
+use crate::tray_menu::{build_menu, update_texts, TrayMenuState, MENU_ID_AUTOSTART, MENU_ID_LOCK, MENU_ID_QUIT, MENU_ID_SETTINGS, MENU_ID_SHOW};
 use crate::tray_model::{build_tray_model, TrayModel, TrayOptions};
 use crate::window::show_main_window;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 use tauri::image::Image;
 use tauri::menu::MenuEvent;
-use tauri::tray::{TrayIcon, TrayIconBuilder};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Manager, Wry};
 
 const TRAY_ID: &str = "main";
@@ -50,7 +49,7 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
         .icon_as_template(cfg!(target_os = "macos"))
         .menu(&built.menu)
         .show_menu_on_left_click(false)
-        .on_tray_icon_event(quick_panel::handle_tray_event)
+        .on_tray_icon_event(open_app_on_left_click)
         .on_menu_event(handle_menu_event)
         .build(app)?;
     app.state::<TrayMenuState>().store(built);
@@ -106,9 +105,16 @@ fn handle_menu_event(app: &AppHandle, event: MenuEvent) {
         MENU_ID_SHOW => show_main_window(app),
         MENU_ID_SETTINGS => open_settings(app),
         MENU_ID_LOCK => lock_and_clean_up(app),
-        MENU_ID_PANEL => quick_panel::toggle(app, None),
         MENU_ID_AUTOSTART => toggle_autostart_from_menu(app),
         item_id => copy_from_menu_item(app, item_id),
+    }
+}
+
+/// A left click on the icon opens the app. (Linux tray icons cannot report clicks; there the
+/// icon opens the menu, which has Open DeskAuth21 at the top of its actions.)
+fn open_app_on_left_click(tray: &TrayIcon, event: TrayIconEvent) {
+    if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
+        show_main_window(tray.app_handle());
     }
 }
 

@@ -22,19 +22,13 @@ Early development. Currently working:
 Planned: biometric/keychain unlock, lock on sleep/screen lock, code search, CLI, changing the
 passphrase, a self-hosted relay for faster sync.
 
-## The menu bar panel
+## The menu bar icon
 
-Click the menu bar icon (macOS) or the tray icon (Windows) and a small panel opens under it:
-a search box with the cursor already in it, every account in a scrolling list under a heading
-for its app, full names, and buttons for opening the app, the Settings and locking. Type a few
-letters and press Enter to copy the first match; the arrow keys move through the list, Escape
-clears the search and then closes the panel, and clicking anywhere else closes it. Copying a code
-closes the panel, ready for you to paste. Codes follow the same hidden-until-revealed rule as the
-window, and the panel is kept out of screenshots like the window is. Right-click the icon for a
+Click the menu bar icon (macOS) or the tray icon (Windows) to open the app. Right-click it for a
 short menu: Open DeskAuth21, Settings, Lock now (greyed out when there is nothing to lock),
-Launch at login and Quit. On Linux, tray icons cannot report clicks, so the icon's menu carries
-the accounts instead: every account, under a heading for its app, with full names, plus Open
-quick panel. `deskauth21 --show-panel` opens the panel as soon as the app starts.
+Launch at login and Quit. Linux tray icons cannot report clicks, so there the icon opens the menu,
+and the menu also lists every account, under a heading for its app, with full names, so a code can
+be copied without opening the window.
 
 ## Privacy and its limits
 

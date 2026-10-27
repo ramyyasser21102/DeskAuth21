@@ -10,7 +10,6 @@ pub const MENU_ID_AUTOSTART: &str = "autostart";
 pub const MENU_ID_SHOW: &str = "show";
 pub const MENU_ID_SETTINGS: &str = "settings";
 pub const MENU_ID_LOCK: &str = "lock";
-pub const MENU_ID_PANEL: &str = "panel";
 pub const MENU_ID_QUIT: &str = "quit";
 const MENU_ID_STATUS: &str = "status";
 const MENU_ID_COUNTDOWN: &str = "countdown";
@@ -92,9 +91,6 @@ fn append_entries(app: &AppHandle, menu: &Menu<Wry>, model: &TrayModel) -> tauri
 fn append_footer(app: &AppHandle, menu: &Menu<Wry>, model: &TrayModel) -> tauri::Result<()> {
     if model.placeholder.is_some() || !model.entries.is_empty() {
         menu.append(&PredefinedMenuItem::separator(app)?)?;
-    }
-    if model.offers_panel {
-        menu.append(&MenuItem::with_id(app, MENU_ID_PANEL, "Open quick panel", true, None::<&str>)?)?;
     }
     menu.append(&MenuItem::with_id(app, MENU_ID_SHOW, "Open DeskAuth21", true, None::<&str>)?)?;
     menu.append(&MenuItem::with_id(app, MENU_ID_SETTINGS, "Settings", true, None::<&str>)?)?;

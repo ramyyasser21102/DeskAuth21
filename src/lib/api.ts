@@ -39,11 +39,6 @@ export const assessPassphrase = (passphrase: string) => invoke<PassphraseStrengt
 /** Six random words, made by the app. */
 export const generatePassphrase = () => invoke<string>("generate_passphrase");
 
-/** The page of the main window to bring forward from the quick panel. */
-export type AppPage = "codes" | "import" | "settings";
-export const hideQuickPanel = () => invoke<void>("hide_quick_panel");
-export const openAppPage = (page: AppPage) => invoke<void>("open_app_page", { page });
-
 export const getVendors = () => invoke<VendorInfo[]>("list_vendors");
 
 export interface CodeView {

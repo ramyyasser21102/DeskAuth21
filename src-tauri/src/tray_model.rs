@@ -1,8 +1,8 @@
 //! What the tray menu should contain, decided without touching the OS. Pure.
 //!
-//! On macOS and Windows a click opens the quick panel and the menu is a short list of actions.
-//! On Linux tray icons cannot report clicks, so the menu also lists every account, grouped by
-//! the app it came from. Replacing an open menu closes it, so the live tray only rebuilds when
+//! On macOS and Windows a click opens the app and the menu is a short list of actions. On Linux
+//! tray icons cannot report clicks, so the menu also lists every account, grouped by the app it
+//! came from. Replacing an open menu closes it, so the live tray only rebuilds when
 //! the *structure* changes and otherwise updates item text in place.
 
 use crate::codes::{split_code_in_half, CodeView};
@@ -28,7 +28,7 @@ pub struct TrayOptions {
     pub is_autostart_enabled: bool,
     /// Show each account's code in the menu (otherwise the name only; a click still copies it).
     pub shows_codes: bool,
-    /// List the accounts in the menu. Only where the icon cannot open the quick panel.
+    /// List the accounts in the menu. Only where the icon cannot be clicked (Linux).
     pub lists_accounts: bool,
 }
 
@@ -39,7 +39,6 @@ pub struct TrayModel {
     pub entries: Vec<TrayEntry>,
     pub is_unlocked: bool,
     pub is_autostart_enabled: bool,
-    pub offers_panel: bool,
 }
 
 /// Everything that decides which items exist and in what order. While it stays
@@ -51,7 +50,6 @@ pub struct MenuStructure {
     entry_keys: Vec<String>,
     is_unlocked: bool,
     is_autostart_enabled: bool,
-    offers_panel: bool,
 }
 
 pub fn placeholder_text(status: VaultStatus, has_no_accounts: bool) -> Option<&'static str> {
@@ -109,7 +107,6 @@ pub fn build_tray_model(status: VaultStatus, views: &[CodeView], options: TrayOp
         entries: if lists { entries_for(views, options.shows_codes) } else { Vec::new() },
         is_unlocked: status == VaultStatus::Unlocked,
         is_autostart_enabled: options.is_autostart_enabled,
-        offers_panel: lists,
     }
 }
 
@@ -121,7 +118,6 @@ impl TrayModel {
             entry_keys: self.entries.iter().map(entry_key).collect(),
             is_unlocked: self.is_unlocked,
             is_autostart_enabled: self.is_autostart_enabled,
-            offers_panel: self.offers_panel,
         }
     }
 
