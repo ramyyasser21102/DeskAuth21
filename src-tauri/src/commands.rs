@@ -3,7 +3,8 @@
 use crate::account_changes::AccountDetails;
 use crate::clipboard;
 use crate::codes::CodeView;
-use crate::settings::Settings;
+use crate::capture_protection;
+use crate::settings::SettingsView;
 use crate::error::CommandError;
 use crate::state::{AppState, VaultStatus};
 use crate::tray::refresh_tray;
@@ -11,7 +12,7 @@ use crate::vault::KdfParams;
 use crate::vault_actions::{self, ImportSummary};
 use crate::vault_location::{self, RelocationOutcome};
 use crate::vendor::{vendor_catalog, Vendor, VendorInfo};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, State, WebviewWindow};
 use tauri_plugin_dialog::DialogExt;
 
 #[tauri::command]
@@ -74,13 +75,31 @@ pub fn delete_account(account_id: String, state: State<AppState>, app: AppHandle
 }
 
 #[tauri::command]
-pub fn get_settings(state: State<AppState>) -> Settings {
-    state.settings()
+pub fn get_settings(state: State<AppState>) -> SettingsView {
+    state.settings().into()
 }
 
 #[tauri::command]
-pub fn set_auto_lock_minutes(minutes: Option<u32>, state: State<AppState>) -> Result<Settings, CommandError> {
-    vault_actions::update_auto_lock(&state, minutes)
+pub fn set_auto_lock_minutes(minutes: Option<u32>, state: State<AppState>) -> Result<SettingsView, CommandError> {
+    Ok(vault_actions::update_auto_lock(&state, minutes)?.into())
+}
+
+#[tauri::command]
+pub fn set_capture_protection(enabled: bool, state: State<AppState>, window: WebviewWindow) -> Result<SettingsView, CommandError> {
+    let settings = vault_actions::update_settings(&state, |settings| settings.capture_protection = enabled)?;
+    capture_protection::apply(&window, enabled);
+    Ok(settings.into())
+}
+
+#[tauri::command]
+pub fn set_hide_codes(hidden: bool, state: State<AppState>) -> Result<SettingsView, CommandError> {
+    Ok(vault_actions::update_settings(&state, |settings| settings.hide_codes = hidden)?.into())
+}
+
+/// The tray menu is rebuilt by its own refresh loop, so only the setting changes here.
+#[tauri::command]
+pub fn set_tray_shows_codes(shown: bool, state: State<AppState>) -> Result<SettingsView, CommandError> {
+    Ok(vault_actions::update_settings(&state, |settings| settings.tray_shows_codes = shown)?.into())
 }
 
 /// The window reports real user input here; background polling must not.

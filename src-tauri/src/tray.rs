@@ -114,7 +114,7 @@ fn take_model(app: &AppHandle) -> TrayModel {
     let state = app.state::<AppState>();
     let vault = state.vault_guard();
     let views = build_code_views(vault.accounts(), current_unix_seconds());
-    build_tray_model(state.status_of(&vault), &views, state.autostart_enabled.load(Ordering::Relaxed))
+    build_tray_model(state.status_of(&vault), &views, state.autostart_enabled.load(Ordering::Relaxed), state.settings().tray_shows_codes)
 }
 
 fn update_texts(items: &LiveItems, model: &TrayModel) -> tauri::Result<()> {

@@ -61,21 +61,26 @@ pub fn placeholder_text(status: VaultStatus, has_no_accounts: bool) -> Option<&'
 
 /// Codes that share a period expire together, so one countdown for the soonest
 /// expiry replaces a "(17s)" on every row.
-fn countdown_text(views: &[CodeView]) -> Option<String> {
+fn countdown_text(views: &[CodeView], shows_codes: bool) -> Option<String> {
+    if !shows_codes {
+        return None;
+    }
     let soonest = views.iter().map(|view| view.seconds_left).min()?;
     Some(format!("Codes refresh in {soonest}s"))
 }
 
-fn row_for(view: &CodeView) -> TrayRow {
+/// With codes hidden the row is just the label; clicking it still copies the code.
+fn row_for(view: &CodeView, shows_codes: bool) -> TrayRow {
     let label = truncate_label(&view.label, MAX_LABEL_CHARS);
-    TrayRow { account_id: view.id.clone(), text: format!("{label}   {}", split_code_in_half(&view.code)) }
+    let text = if shows_codes { format!("{label}   {}", split_code_in_half(&view.code)) } else { label };
+    TrayRow { account_id: view.id.clone(), text }
 }
 
-pub fn build_tray_model(status: VaultStatus, views: &[CodeView], is_autostart_enabled: bool) -> TrayModel {
+pub fn build_tray_model(status: VaultStatus, views: &[CodeView], is_autostart_enabled: bool, shows_codes: bool) -> TrayModel {
     TrayModel {
         placeholder: placeholder_text(status, views.is_empty()),
-        countdown_text: countdown_text(views),
-        rows: views.iter().take(MAX_TRAY_ACCOUNTS).map(row_for).collect(),
+        countdown_text: countdown_text(views, shows_codes),
+        rows: views.iter().take(MAX_TRAY_ACCOUNTS).map(|view| row_for(view, shows_codes)).collect(),
         hidden_accounts: views.len().saturating_sub(MAX_TRAY_ACCOUNTS),
         is_autostart_enabled,
     }

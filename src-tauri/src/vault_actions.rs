@@ -122,8 +122,14 @@ pub fn update_auto_lock(state: &AppState, minutes: Option<u32>) -> Result<Settin
     if !is_allowed_minutes(minutes) {
         return Err(CommandError::InvalidSetting(format!("auto-lock of {minutes:?} minutes")));
     }
+    update_settings(state, |settings| settings.auto_lock_minutes = minutes)
+}
+
+/// Applies `change` to the settings, saves them, and returns the result. The
+/// change is only kept in memory if saving worked.
+pub fn update_settings(state: &AppState, change: impl FnOnce(&mut Settings)) -> Result<Settings, CommandError> {
     let mut settings = state.settings();
-    settings.auto_lock_minutes = minutes;
+    change(&mut settings);
     save_settings(&state.settings_path(), &settings)?;
     state.replace_settings(settings.clone());
     state.record_activity();

@@ -13,17 +13,44 @@ pub struct Settings {
     /// Folder holding the vault file; `None` means the app's own data directory.
     /// Point it at an iCloud/Dropbox/Syncthing folder to sync between devices.
     pub vault_folder: Option<String>,
+    /// Ask the system to keep the window out of screenshots and recordings.
+    pub capture_protection: bool,
+    /// Show dots instead of digits until the person asks for a code to be revealed.
+    pub hide_codes: bool,
+    /// List codes in the tray menu; off means labels only, and a click still copies.
+    pub tray_shows_codes: bool,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { auto_lock_minutes: Some(DEFAULT_AUTO_LOCK_MINUTES), vault_folder: None }
+        Self {
+            auto_lock_minutes: Some(DEFAULT_AUTO_LOCK_MINUTES),
+            vault_folder: None,
+            capture_protection: true,
+            hide_codes: true,
+            tray_shows_codes: false,
+        }
     }
 }
 
 impl Settings {
     pub fn auto_lock_timeout(&self) -> Option<Duration> {
         timeout_from_minutes(self.auto_lock_minutes)
+    }
+}
+
+/// What the window gets: the settings plus what this system can do, so it never
+/// claims a protection the system cannot give.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct SettingsView {
+    #[serde(flatten)]
+    pub settings: Settings,
+    pub capture_protection_supported: bool,
+}
+
+impl From<Settings> for SettingsView {
+    fn from(settings: Settings) -> Self {
+        Self { settings, capture_protection_supported: crate::capture_protection::is_supported() }
     }
 }
 
@@ -53,7 +80,7 @@ mod tests {
     #[test]
     fn round_trips_including_never() {
         for minutes in [Some(1), Some(30), None] {
-            let settings = Settings { auto_lock_minutes: minutes, vault_folder: None };
+            let settings = Settings { auto_lock_minutes: minutes, ..Settings::default() };
             let json = serde_json::to_string(&settings).unwrap();
             assert_eq!(parse_settings(&json), settings);
         }
@@ -71,6 +98,27 @@ mod tests {
         assert_eq!(parse_settings(""), Settings::default());
         assert_eq!(parse_settings(r#"{"auto_lock_minutes":0}"#), Settings::default());
         assert_eq!(parse_settings(r#"{"auto_lock_minutes":7}"#), Settings::default());
+    }
+
+    #[test]
+    fn privacy_defaults_protect_the_person_and_old_files_get_them() {
+        let defaults = Settings::default();
+        assert!(defaults.capture_protection && defaults.hide_codes && !defaults.tray_shows_codes);
+        let from_an_old_file = parse_settings(r#"{"auto_lock_minutes":15,"vault_folder":"/sync"}"#);
+        assert!(from_an_old_file.capture_protection && from_an_old_file.hide_codes && !from_an_old_file.tray_shows_codes);
+    }
+
+    #[test]
+    fn privacy_choices_survive_a_round_trip() {
+        let chosen = Settings { capture_protection: false, hide_codes: false, tray_shows_codes: true, ..Settings::default() };
+        assert_eq!(parse_settings(&serde_json::to_string(&chosen).unwrap()), chosen);
+    }
+
+    #[test]
+    fn the_window_view_flattens_the_settings_and_reports_support() {
+        let json = serde_json::to_value(SettingsView::from(Settings::default())).unwrap();
+        assert_eq!(json["hide_codes"], true);
+        assert!(json["capture_protection_supported"].is_boolean());
     }
 
     #[test]
