@@ -39,11 +39,6 @@ export const assessPassphrase = (passphrase: string) => invoke<PassphraseStrengt
 /** Six random words, made by the app. */
 export const generatePassphrase = () => invoke<string>("generate_passphrase");
 
-/** The page of the main window to bring forward from the quick panel. */
-export type AppPage = "codes" | "import" | "settings";
-export const hideQuickPanel = () => invoke<void>("hide_quick_panel");
-export const openAppPage = (page: AppPage) => invoke<void>("open_app_page", { page });
-
 export const getVendors = () => invoke<VendorInfo[]>("list_vendors");
 
 export interface CodeView {
@@ -143,6 +138,8 @@ export interface Settings {
   clipboard_clear_seconds: number;
   /** False where the system has no way to block screen capture (Linux). */
   capture_protection_supported: boolean;
+  /** True where the tray menu lists the accounts (Linux), so "show codes in the menu" applies. */
+  tray_menu_lists_accounts: boolean;
 }
 
 export const getSettings = () => invoke<Settings>("get_settings");

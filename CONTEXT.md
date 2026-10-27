@@ -43,10 +43,6 @@ _Avoid_: screenshot blocking, DRM
 A code shown as digits. By default codes are hidden and shown only briefly after the person asks. Copying a code never requires revealing it.
 _Avoid_: unmasked, visible code
 
-**Quick panel**:
-The small window that opens under the menu bar icon, with a search box and every account, so a code can be copied without opening the main window.
-_Avoid_: popup, popover, dropdown
-
 **Tray menu**:
 The menu opened from the menu bar or system tray icon, where codes can be copied without opening the window.
 _Avoid_: dropdown, status menu

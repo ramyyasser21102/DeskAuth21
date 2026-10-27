@@ -3,7 +3,7 @@
 //! This is a request, not a guarantee: macOS and Windows honour it for their own
 //! capture tools, other recorders may not, and Linux has no way to do it.
 
-use tauri::{AppHandle, Manager, WebviewWindow};
+use tauri::WebviewWindow;
 
 pub const fn is_supported() -> bool {
     cfg!(any(target_os = "macos", target_os = "windows"))
@@ -15,12 +15,6 @@ pub fn apply(window: &WebviewWindow, enabled: bool) {
     }
 }
 
-/// The main window and the quick panel both show codes, so both are protected together.
-pub fn apply_to_all_windows(app: &AppHandle, enabled: bool) {
-    for window in app.webview_windows().values() {
-        apply(window, enabled);
-    }
-}
 
 #[cfg(test)]
 mod tests {
