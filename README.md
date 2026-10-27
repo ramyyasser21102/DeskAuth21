@@ -10,7 +10,7 @@ Early development. Currently working:
 - TOTP generation (RFC 6238; SHA1/SHA256/SHA512, 6 or 8 digits)
 - Passphrase-encrypted vault (Argon2id + XChaCha20-Poly1305) with lock/unlock
 - Import from Google Authenticator exports: QR images, pasted screenshots or links
-- Tray menu with live codes; click a code to copy it (cleared after 30 seconds)
+- Tray menu with live codes; click a code to copy it (cleared after 15 seconds by default)
 - Closing the window keeps the app running in the tray
 - Global hotkey `Cmd/Ctrl+Shift+A` shows or hides the window
 - "Launch at login" toggle in the tray menu (starts hidden in the tray)
@@ -33,7 +33,15 @@ passphrase, a self-hosted relay for faster sync.
 - **Menu bar menu** lists account names only by default; clicking one copies its code. Turn on
   "Show codes in the menu bar menu" to see the digits there.
 
-All three are in Settings under Privacy.
+- **Locking** also happens when the computer sleeps or the screen locks (on by default). The
+  vault locks as soon as the computer wakes; the screen lock is noticed on macOS and Windows
+  (on Windows a permission prompt that takes over the screen counts too), and on Linux only
+  sleep is. Closing the window to the tray does not lock.
+- **Copied codes** are removed from the clipboard after 15 seconds (10, 15, 30 or 60 in
+  Settings), when the vault locks and when you quit, if the clipboard still holds them.
+  Clipboard managers may still keep their own copy, which an app cannot prevent.
+
+All of these are in Settings under Privacy.
 
 What this cannot do: nothing in an authenticator can protect codes from malware already
 running on your computer. Builds are not code-signed, so other programs on your computer
