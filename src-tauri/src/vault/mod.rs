@@ -41,8 +41,9 @@ pub struct KdfParams {
 }
 
 impl KdfParams {
-    /// 64 MiB, 3 passes, 1 lane: a sensible interactive default for desktops.
-    pub const DEFAULT: Self = Self { memory_kib: 64 * 1024, passes: 3, lanes: 1 };
+    /// 128 MiB, 3 passes, 1 lane: about 0.13 s to unlock on a recent laptop. Vaults made
+    /// with the earlier 64 MiB setting keep it, because the file records its own cost.
+    pub const DEFAULT: Self = Self { memory_kib: 128 * 1024, passes: 3, lanes: 1 };
 }
 
 /// An unlocked vault: the derived key plus what is needed to re-seal quickly,

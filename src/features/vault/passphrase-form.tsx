@@ -1,6 +1,8 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PassphraseGenerator } from "./passphrase-generator";
+import { PassphraseStrengthMeter } from "./passphrase-strength-meter";
 import { PasswordField } from "./password-field";
 import { usePassphraseForm } from "./use-passphrase-form";
 
@@ -23,9 +25,11 @@ export function PassphraseForm({ title, hint, submitLabel, requiresConfirmation,
       <CardContent>
         <form onSubmit={form.handleSubmit} className="flex flex-col gap-4">
           <PasswordField id="passphrase" label="Passphrase" value={form.passphrase} onChange={form.setPassphrase} autoFocus />
+          {requiresConfirmation && <PassphraseStrengthMeter passphrase={form.passphrase} />}
           {requiresConfirmation && (
             <PasswordField id="confirmation" label="Confirm passphrase" value={form.confirmation} onChange={form.setConfirmation} />
           )}
+          {requiresConfirmation && <PassphraseGenerator onGenerated={(phrase) => { form.setPassphrase(phrase); form.setConfirmation(phrase); }} />}
           {form.errorMessage && (
             <Alert variant="destructive">
               <AlertDescription>{form.errorMessage}</AlertDescription>

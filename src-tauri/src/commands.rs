@@ -6,6 +6,8 @@ use crate::codes::CodeView;
 use crate::capture_protection;
 use crate::copy_policy::is_allowed_clear_seconds;
 use crate::locking::lock_and_clean_up;
+use crate::passphrase_generator;
+use crate::passphrase_strength::{assess, PassphraseStrength};
 use crate::settings::SettingsView;
 use crate::error::CommandError;
 use crate::state::{AppState, VaultStatus};
@@ -95,6 +97,17 @@ pub fn set_capture_protection(enabled: bool, state: State<AppState>, window: Web
 #[tauri::command]
 pub fn set_hide_codes(hidden: bool, state: State<AppState>) -> Result<SettingsView, CommandError> {
     Ok(vault_actions::update_settings(&state, |settings| settings.hide_codes = hidden)?.into())
+}
+
+/// Advice while the person types a new passphrase. It stays inside this program.
+#[tauri::command]
+pub fn assess_passphrase(passphrase: String) -> PassphraseStrength {
+    assess(&passphrase)
+}
+
+#[tauri::command]
+pub fn generate_passphrase() -> Result<String, CommandError> {
+    passphrase_generator::generate_passphrase().map_err(|_| CommandError::Vault(crate::vault::VaultError::Random))
 }
 
 #[tauri::command]

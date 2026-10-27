@@ -24,6 +24,8 @@ mod lock_triggers;
 mod locking;
 mod otp;
 mod passphrase;
+mod passphrase_generator;
+mod passphrase_strength;
 mod record;
 mod screen_lock;
 mod secret;
@@ -67,6 +69,8 @@ fn command_handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'sta
             commands::set_capture_protection,
             commands::set_hide_codes,
             commands::set_tray_shows_codes,
+            commands::assess_passphrase,
+            commands::generate_passphrase,
             commands::set_lock_on_sleep,
             commands::set_clipboard_clear_seconds,
             commands::record_activity,

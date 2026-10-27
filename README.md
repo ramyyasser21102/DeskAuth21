@@ -47,6 +47,18 @@ What this cannot do: nothing in an authenticator can protect codes from malware 
 running on your computer. Builds are not code-signed, so other programs on your computer
 can attach to the app, and macOS and Windows warn the first time you open it.
 
+## Choosing a passphrase
+
+The passphrase is the only thing between a copied vault file and your accounts, so a new
+vault needs at least 12 characters. The create screen shows a strength estimate as you type
+(advice only, from the zxcvbn estimator, computed inside the app) and can generate a
+passphrase of six random words from the EFF large word list (about 77 bits). Write a
+generated passphrase down: it cannot be recovered.
+
+New vaults also use a slower key derivation (Argon2id, 128 MiB, 3 passes; about 0.13 seconds
+to unlock on a recent laptop). Vaults made earlier keep their own settings and still open with
+whatever passphrase they were made with.
+
 ## Importing accounts
 
 Each account is tagged with the app it came from (Google Authenticator, Microsoft

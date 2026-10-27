@@ -3,7 +3,7 @@ import { createVault, unlockVault } from "@/lib/api";
 import { PassphraseForm } from "./passphrase-form";
 
 const CREATE_VAULT_HINT =
-  "Choose a passphrase of at least 8 characters. It cannot be recovered if you forget it.";
+  "Choose a passphrase of at least 12 characters, or generate one. It cannot be recovered if you forget it.";
 
 export function CreateVaultScreen({ onCreated }: { onCreated: () => void }) {
   const handleSubmit = async (passphrase: string) => {
