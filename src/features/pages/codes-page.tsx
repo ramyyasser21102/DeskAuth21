@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CodeRow } from "@/features/codes/code-row";
-import { countByVendor, filterByVendor, resolveFilter, type VendorFilter } from "@/features/vendors/vendor-filter";
+import { CodeGroups } from "@/features/codes/code-groups";
+import { CodeSearch } from "@/features/codes/code-search";
+import { useVisibleGroups } from "@/features/codes/use-visible-groups";
+import { countByVendor, resolveFilter, type VendorFilter } from "@/features/vendors/vendor-filter";
 import { VendorTabs } from "@/features/vendors/vendor-tabs";
 import { usePrivacySettings } from "@/features/privacy/privacy-settings-provider";
 import type { CodeView } from "@/lib/api";
@@ -10,6 +12,10 @@ import type { CodeView } from "@/lib/api";
 const copyHint = (clearSeconds: number) => `Click a code to copy it; it is cleared from the clipboard after ${clearSeconds} seconds.`;
 const DEFAULT_CLEAR_SECONDS = 15;
 const EMPTY_HINT = "No accounts yet. Bring them over from another authenticator app.";
+
+function describePage(codes: CodeView[] | null, clearSeconds: number | undefined): string {
+  return codes?.length === 0 ? EMPTY_HINT : copyHint(clearSeconds ?? DEFAULT_CLEAR_SECONDS);
+}
 
 interface CodesPageProps {
   /** `null` until the first answer arrives. */
@@ -23,20 +29,19 @@ export function CodesPage({ codes, onGoToImport }: CodesPageProps) {
   const all = codes ?? [];
   const counts = countByVendor(all);
   const filter = resolveFilter(chosenFilter, counts);
+  const [query, setQuery] = useState("");
+  const groups = useVisibleGroups(all, filter, query);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Your codes</CardTitle>
-        <CardDescription>{codes?.length === 0 ? EMPTY_HINT : copyHint(settings?.clipboard_clear_seconds ?? DEFAULT_CLEAR_SECONDS)}</CardDescription>
+        <CardDescription>{describePage(codes, settings?.clipboard_clear_seconds)}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        {all.length > 0 && <CodeSearch query={query} onChange={setQuery} />}
         <VendorTabs counts={counts} total={all.length} selected={filter} onSelect={setChosenFilter} />
-        <ul>
-          {filterByVendor(all, filter).map((view) => (
-            <CodeRow key={view.id} view={view} />
-          ))}
-        </ul>
+        <CodeGroups groups={groups} query={query} onClearSearch={() => setQuery("")} />
         {codes?.length === 0 && <Button onClick={onGoToImport}>Import accounts</Button>}
       </CardContent>
     </Card>
