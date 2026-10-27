@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { deleteAccount, renameAccount, type CodeView } from "@/lib/api";
 import { EMPTY_NAME_MESSAGE } from "./account-rules";
+import { PrivacySettingsProvider } from "@/features/privacy/privacy-settings-provider";
 import { CodeRow } from "./code-row";
 
 vi.mock("@/lib/api", () => ({
@@ -9,6 +10,7 @@ vi.mock("@/lib/api", () => ({
   renameAccount: vi.fn(),
   deleteAccount: vi.fn(),
   getVendors: vi.fn().mockResolvedValue([{ id: "other", name: "Other" }]),
+  getSettings: vi.fn().mockResolvedValue({ hide_codes: false }),
 }));
 
 const VIEW: CodeView = { id: "acct-1", label: "Acme (a@b)", issuer: "Acme", name: "a@b", vendor: "other", code: "123456", seconds_left: 12, period_seconds: 30 };
@@ -19,7 +21,7 @@ afterEach(() => {
 });
 
 function openEditor() {
-  render(<ul><CodeRow view={VIEW} /></ul>);
+  render(<PrivacySettingsProvider><ul><CodeRow view={VIEW} /></ul></PrivacySettingsProvider>);
   fireEvent.click(screen.getByRole("button", { name: "Edit Acme (a@b)" }));
 }
 

@@ -1,5 +1,6 @@
 import type { CodeView } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { maskCode } from "@/features/privacy/privacy-state";
 import { AccountLabel } from "./account-label";
 import { CountdownRing } from "./countdown-ring";
 import { useCopyCode, type CopyState } from "./use-copy-code";
@@ -11,7 +12,7 @@ const STATUS_TEXT: Record<CopyState, string> = {
 };
 
 /** The code and its countdown; clicking copies it (and the backend clears it later). */
-export function CopyCodeButton({ view }: { view: CodeView }) {
+export function CopyCodeButton({ view, isCodeHidden }: { view: CodeView; isCodeHidden: boolean }) {
   const { copyState, copy } = useCopyCode(view.id);
   const hasStatus = copyState !== "idle";
   return (
@@ -26,7 +27,7 @@ export function CopyCodeButton({ view }: { view: CodeView }) {
         <span className="flex items-center gap-3 tabular-nums">
           {/* A new key per code replays the fade, so a changed code is noticed. */}
           <span key={view.code} className="animate-in fade-in text-xl font-semibold tracking-wide duration-300 sm:text-2xl sm:tracking-wider motion-reduce:animate-none">
-            {view.code}
+            {isCodeHidden ? maskCode(view.code) : view.code}
           </span>
           {hasStatus ? (
             <span className={cn("w-12 text-xs text-muted-foreground", copyState === "failed" && "text-destructive")}>{STATUS_TEXT[copyState]}</span>
