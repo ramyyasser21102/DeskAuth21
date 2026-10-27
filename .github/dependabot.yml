@@ -1,0 +1,16 @@
+# Weekly pull requests for outdated or vulnerable dependencies, including the
+# pinned GitHub Actions, so pinning does not mean going stale.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: cargo
+    directory: /src-tauri
+    schedule:
+      interval: weekly
