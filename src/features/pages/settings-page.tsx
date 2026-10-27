@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SecuritySettings } from "@/features/security/security-settings";
 import { PrivacySettings } from "@/features/privacy/privacy-settings";
 import { ProfileSetting } from "@/features/profile/profile-setting";
+import { ShortcutSettings } from "@/features/shortcuts/shortcut-settings";
 import { ThemeToggle } from "@/features/theme/theme-toggle";
 import { AutoLockSetting } from "@/features/settings/auto-lock-setting";
 import { VaultFolderSetting } from "@/features/sync/vault-folder-setting";
@@ -31,6 +32,7 @@ export function SettingsPage({ onVaultChanged, onShowWelcome }: SettingsPageProp
           <ThemeToggle />
         </div>
         <PrivacySettings />
+        <ShortcutSettings />
         <SecuritySettings />
         <AutoLockSetting />
         <VaultFolderSetting onVaultChanged={onVaultChanged} />

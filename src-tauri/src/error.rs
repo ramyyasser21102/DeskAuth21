@@ -17,6 +17,10 @@ pub enum CommandError {
     VaultChangedElsewhere,
     #[error("{0} is not an allowed setting")]
     InvalidSetting(String),
+    #[error(transparent)]
+    Shortcut(#[from] crate::shortcuts::ShortcutError),
+    #[error("the system would not register that shortcut, so another app may be using it: {0}")]
+    ShortcutRegistration(String),
     #[error("could not change the launch-at-login setting: {0}")]
     Autostart(String),
     #[error("clipboard unavailable: {0}")]

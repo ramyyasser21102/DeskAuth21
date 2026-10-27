@@ -10,6 +10,8 @@ use crate::passphrase_generator;
 use crate::passphrase_strength::{assess, PassphraseStrength};
 use crate::settings::SettingsView;
 use crate::error::CommandError;
+use crate::hotkey;
+use crate::shortcuts::{validate_shortcut, ShortcutAction};
 use crate::state::{AppState, VaultStatus};
 use crate::tray::refresh_tray;
 use crate::vault::KdfParams;
@@ -169,6 +171,21 @@ pub fn set_clipboard_clear_seconds(seconds: u32, state: State<AppState>) -> Resu
 #[tauri::command]
 pub fn set_tray_shows_codes(shown: bool, state: State<AppState>) -> Result<SettingsView, CommandError> {
     Ok(vault_actions::update_settings(&state, |settings| settings.tray_shows_codes = shown)?.into())
+}
+
+/// Sets or clears (`None`) one shortcut. The system must accept it before it is saved.
+#[tauri::command]
+pub fn set_shortcut(action: ShortcutAction, shortcut: Option<String>, state: State<AppState>, app: AppHandle) -> Result<SettingsView, CommandError> {
+    let current = state.settings().shortcuts;
+    if let Some(text) = &shortcut {
+        validate_shortcut(action, text, &current)?;
+    }
+    let updated = current.with(action, shortcut);
+    if let Err(error) = hotkey::register_all(&app, &updated) {
+        hotkey::apply(&app);
+        return Err(CommandError::ShortcutRegistration(error.to_string()));
+    }
+    Ok(vault_actions::update_settings(&state, |settings| settings.shortcuts = updated)?.into())
 }
 
 /// The window reports real user input here; background polling must not.

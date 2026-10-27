@@ -12,7 +12,7 @@ Early development. Currently working:
 - Import from Google Authenticator exports: QR images, pasted screenshots or links
 - Tray menu with live codes; click a code to copy it (cleared after 15 seconds by default)
 - Closing the window keeps the app running in the tray
-- Global hotkey `Cmd/Ctrl+Shift+A` shows or hides the window
+- Global shortcuts, settable in Settings: show or hide the window (default `Cmd/Ctrl+Shift+A`) and lock the vault (off by default)
 - "Launch at login" toggle in the tray menu (starts hidden in the tray)
 - Auto-lock after 1, 5, 15 or 30 minutes without activity, or never (default 5)
 - Screen capture protection, hidden codes and an optional codes-free tray menu (see below)

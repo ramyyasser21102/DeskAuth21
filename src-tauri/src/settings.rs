@@ -2,6 +2,7 @@
 
 use crate::auto_lock_policy::{is_allowed_minutes, timeout_from_minutes, DEFAULT_AUTO_LOCK_MINUTES};
 use crate::copy_policy::{is_allowed_clear_seconds, DEFAULT_CLIPBOARD_CLEAR_SECONDS};
+use crate::shortcuts::{sanitize, ShortcutSettings};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -24,6 +25,8 @@ pub struct Settings {
     pub lock_on_sleep: bool,
     /// How long a copied code stays on the clipboard.
     pub clipboard_clear_seconds: u32,
+    /// Global keyboard shortcuts; each can be changed or switched off.
+    pub shortcuts: ShortcutSettings,
 }
 
 impl Default for Settings {
@@ -36,6 +39,7 @@ impl Default for Settings {
             tray_shows_codes: false,
             lock_on_sleep: true,
             clipboard_clear_seconds: DEFAULT_CLIPBOARD_CLEAR_SECONDS,
+            shortcuts: ShortcutSettings::default(),
         }
     }
 }
@@ -81,6 +85,7 @@ pub fn parse_settings(json: &str) -> Settings {
     if !is_allowed_clear_seconds(settings.clipboard_clear_seconds) {
         settings.clipboard_clear_seconds = DEFAULT_CLIPBOARD_CLEAR_SECONDS;
     }
+    settings.shortcuts = sanitize(settings.shortcuts);
     settings
 }
 
@@ -153,6 +158,13 @@ mod tests {
         assert_eq!(json["hide_codes"], true);
         assert!(json["capture_protection_supported"].is_boolean());
         assert!(json["tray_menu_lists_accounts"].is_boolean());
+    }
+
+    #[test]
+    fn an_unusable_shortcut_in_the_file_is_dropped_without_losing_other_choices() {
+        let parsed = parse_settings(r#"{"hide_codes":false,"shortcuts":{"toggle_window":"KeyA","lock_vault":"Ctrl+KeyL"}}"#);
+        assert_eq!((parsed.shortcuts.toggle_window, parsed.shortcuts.lock_vault.as_deref()), (None, Some("Ctrl+KeyL")));
+        assert!(!parsed.hide_codes);
     }
 
     #[test]

@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS: Settings = {
   tray_shows_codes: false,
   lock_on_sleep: true,
   clipboard_clear_seconds: 15,
+  shortcuts: { toggle_window: "CmdOrCtrl+Shift+A", lock_vault: null },
   capture_protection_supported: true,
   tray_menu_lists_accounts: false,
 };
