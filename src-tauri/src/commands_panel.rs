@@ -15,12 +15,16 @@ pub fn hide_quick_panel(app: AppHandle) {
 }
 
 /// Brings the main window forward on `page` (codes, import or settings) and closes the panel.
-#[tauri::command]
-pub fn open_app_page(page: String, app: AppHandle) -> Result<(), CommandError> {
-    if !PAGES.contains(&page.as_str()) {
+pub fn open_page(app: &AppHandle, page: &str) -> Result<(), CommandError> {
+    if !PAGES.contains(&page) {
         return Err(CommandError::InvalidSetting(format!("the page {page}")));
     }
-    quick_panel::hide(&app);
-    show_main_window(&app);
+    quick_panel::hide(app);
+    show_main_window(app);
     app.emit_to(MAIN_WINDOW_LABEL, OPEN_PAGE_EVENT, page).map_err(|error| CommandError::Storage(std::io::Error::other(error.to_string())))
+}
+
+#[tauri::command]
+pub fn open_app_page(page: String, app: AppHandle) -> Result<(), CommandError> {
+    open_page(&app, &page)
 }

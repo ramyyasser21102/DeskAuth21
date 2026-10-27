@@ -44,6 +44,7 @@ mod system_lock_watcher;
 #[cfg(test)]
 mod test_support;
 mod tray;
+mod tray_menu;
 mod usb_key;
 mod tray_model;
 mod vault;
