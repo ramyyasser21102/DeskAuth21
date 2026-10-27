@@ -6,7 +6,7 @@
 
 use crate::conflict_copies::merge_conflict_copies;
 use crate::merge::{has_same_content, merge};
-use crate::persistence::{fingerprint, save_vault};
+use crate::persistence::{fingerprint, read_bounded, save_vault, MAX_VAULT_FILE_BYTES};
 use crate::record::VaultData;
 use crate::state::VaultState;
 use std::path::Path;
@@ -44,7 +44,7 @@ pub fn sync_from_disk(path: &Path, vault: &mut VaultState) -> DiskSyncOutcome {
         return DiskSyncOutcome::Unchanged;
     }
     // A missing or unreadable file has nothing to merge; the next save recreates it.
-    let Ok(file_bytes) = std::fs::read(path) else {
+    let Ok(file_bytes) = read_bounded(path, MAX_VAULT_FILE_BYTES) else {
         return DiskSyncOutcome::Unchanged;
     };
     let seen = fingerprint(&file_bytes);

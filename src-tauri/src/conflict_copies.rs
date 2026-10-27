@@ -3,7 +3,7 @@
 //! so neither device's changes are lost.
 
 use crate::merge::{has_same_content, merge};
-use crate::persistence::{fingerprint, replace_and_save};
+use crate::persistence::{fingerprint, read_bounded, replace_and_save, MAX_VAULT_FILE_BYTES};
 use crate::state::VaultState;
 use std::path::{Path, PathBuf};
 
@@ -50,7 +50,7 @@ fn set_aside(copy_path: &Path) -> bool {
 
 /// Merges one copy if it decrypts with our key. Returns whether it was merged.
 fn merge_one_copy(copy_path: &Path, vault_path: &Path, vault: &mut VaultState) -> bool {
-    let Ok(bytes) = std::fs::read(copy_path) else {
+    let Ok(bytes) = read_bounded(copy_path, MAX_VAULT_FILE_BYTES) else {
         return false;
     };
     let seen = fingerprint(&bytes);
