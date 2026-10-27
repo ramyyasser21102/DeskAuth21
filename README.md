@@ -59,6 +59,16 @@ New vaults also use a slower key derivation (Argon2id, 128 MiB, 3 passes; about 
 to unlock on a recent laptop). Vaults made earlier keep their own settings and still open with
 whatever passphrase they were made with.
 
+## Vault format
+
+The vault file now keeps its data under a random key that "unlock slots" in the file header
+wrap, instead of encrypting straight under the passphrase. That is what will let a recovery key
+and a hardware key be added later without re-encrypting. New vaults use it from the start.
+Vaults made earlier still open; the app offers to upgrade them once per unlock, keeps a copy of
+the old file as `vault.da21.v1.bak`, and asks you to update DeskAuth21 on your other computers
+first, because older versions cannot open an upgraded vault. The exact layout is in
+[docs/vault-format.md](docs/vault-format.md).
+
 ## Importing accounts
 
 Each account is tagged with the app it came from (Google Authenticator, Microsoft

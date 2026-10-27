@@ -1,0 +1,61 @@
+# Vault file format
+
+The vault is one file, `vault.da21`. All integers are big-endian. Both versions start with
+the four bytes `DA21` and a version byte. Anything else, or a version this build does not
+know, is refused and never overwritten.
+
+## Version 1 (vaults made before unlock slots)
+
+```text
+"DA21" | version u8 = 1 | memory_kib u32 | passes u32 | lanes u32 | salt[16] | nonce[24] | ciphertext
+```
+
+The data is encrypted straight under a key made from the passphrase (Argon2id with the
+recorded cost and salt) using XChaCha20-Poly1305. Everything before the nonce is authenticated
+as associated data. Such a vault keeps opening, and keeps saving in this format, until it is
+upgraded.
+
+## Version 2 (current)
+
+```text
+"DA21" | version u8 = 2 | slot_count u8 | slot... | payload_nonce[24] | ciphertext
+slot = kind u8 | body_len u16 | body
+```
+
+The data is encrypted with XChaCha20-Poly1305 under a random 32-byte **vault key**. Everything
+before `payload_nonce` (the preamble and every slot) is authenticated as associated data, so
+removing or editing a slot makes the data fail to open.
+
+Each **slot** holds the vault key wrapped (encrypted) under a key made from something the
+person has, so a way of unlocking can be added or changed without re-encrypting the data.
+
+| kind | meaning | body |
+|---|---|---|
+| 1 | passphrase | `memory_kib u32 | passes u32 | lanes u32 | salt[16] | nonce[24] | wrapped_vault_key[48]` |
+| other | not understood by this build | kept byte for byte when the vault is saved |
+
+For a passphrase slot the wrapping key is `Argon2id(passphrase, salt, memory, passes, lanes)`,
+and the wrapped key is `XChaCha20-Poly1305(wrapping key, nonce, vault key)` with associated
+data `"DA21 slot" | kind | memory | passes | lanes | salt | nonce`, so changing the recorded
+cost breaks the slot.
+
+### Limits a reader enforces
+
+At most 8 slots, each body at most 512 bytes, and a slot's recorded key derivation cost no
+higher than 256 MiB, 10 passes and 4 lanes, so a hostile file cannot make unlocking allocate
+without bound or run for minutes.
+
+## Upgrading from version 1
+
+The session already holds the key it derived from the passphrase, so an upgrade needs no
+passphrase: it picks a new random vault key and wraps it under that same key in a passphrase
+slot with the same salt and cost. The same passphrase therefore keeps working. The old file is
+copied beside the vault as `vault.da21.v1.bak` first (a name that does not end in `.da21`, so
+it is never mistaken for a conflicted copy and merged), and if saving fails the vault stays as
+it was.
+
+## Sharing a vault between computers
+
+A computer that opens a version 1 file and later finds a version 2 file in the same place, or
+the other way round, refuses to merge or overwrite it and asks the person to lock and unlock
+again; it never guesses. A build that only knows version 1 refuses a version 2 file the same way.
