@@ -123,6 +123,9 @@ export const saveRecoveryKey = (phrase: string, currentPassphrase: string) =>
 export const resetPassphraseWithRecoveryKey = (phrase: string, newPassphrase: string) =>
   invoke<void>("reset_passphrase_with_recovery_key", { phrase, newPassphrase });
 
+export type ShortcutAction = "toggle_window" | "lock_vault";
+export type Shortcuts = Record<ShortcutAction, string | null>;
+
 export interface Settings {
   /** `null` means never lock automatically. */
   auto_lock_minutes: number | null;
@@ -136,6 +139,8 @@ export interface Settings {
   lock_on_sleep: boolean;
   /** How long a copied code stays on the clipboard. */
   clipboard_clear_seconds: number;
+  /** Global keyboard shortcuts; `null` means the action has none. */
+  shortcuts: Shortcuts;
   /** False where the system has no way to block screen capture (Linux). */
   capture_protection_supported: boolean;
   /** True where the tray menu lists the accounts (Linux), so "show codes in the menu" applies. */
@@ -150,6 +155,8 @@ export const setHideCodes = (hidden: boolean) => invoke<Settings>("set_hide_code
 export const setTrayShowsCodes = (shown: boolean) => invoke<Settings>("set_tray_shows_codes", { shown });
 export const setLockOnSleep = (enabled: boolean) => invoke<Settings>("set_lock_on_sleep", { enabled });
 export const setClipboardClearSeconds = (seconds: number) => invoke<Settings>("set_clipboard_clear_seconds", { seconds });
+export const setShortcut = (action: ShortcutAction, shortcut: string | null) =>
+  invoke<Settings>("set_shortcut", { action, shortcut });
 export const recordActivity = () => invoke<void>("record_activity");
 
 export type RelocationOutcome = "unchanged" | "moved" | "used_existing" | "selected";

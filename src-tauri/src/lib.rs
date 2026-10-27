@@ -37,6 +37,7 @@ mod merge;
 mod persistence;
 mod settings;
 mod settings_store;
+mod shortcuts;
 mod state;
 mod system_lock_watcher;
 #[cfg(test)]
@@ -74,7 +75,7 @@ fn command_handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'sta
         // Settings and where the vault lives.
         commands::get_settings, commands::set_auto_lock_minutes, commands::set_capture_protection,
         commands::set_hide_codes, commands::set_tray_shows_codes, commands::set_lock_on_sleep,
-        commands::set_clipboard_clear_seconds, commands::record_activity, commands::get_vault_folder,
+        commands::set_clipboard_clear_seconds, commands::set_shortcut, commands::record_activity, commands::get_vault_folder,
         commands::choose_vault_folder,
     ]
 }
@@ -85,7 +86,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(autostart::plugin())
-        .plugin(hotkey::plugin())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .on_window_event(window::keep_running_in_tray)
         .invoke_handler(command_handler())
         .setup(setup_app)
@@ -114,7 +115,7 @@ fn setup_app(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         capture_protection::apply(&window, capture_protection_enabled);
     }
     autostart::load_initial_state(app.handle());
-    hotkey::register(app.handle());
+    hotkey::apply(app.handle());
     tray::create_tray(app.handle())?;
     tray::spawn_refresh_loop(app.handle().clone());
     auto_lock::spawn_loop(app.handle().clone());
