@@ -1,50 +1,61 @@
-import QRCode from "qrcode";
-import { describe, expect, it } from "vitest";
-import { findQrText, scaleToFit, type PixelImage } from "./qr-decoder";
+// @vitest-environment node
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { beforeAll, describe, expect, it } from "vitest";
+import { findQrText } from "./qr-decoder";
+import { configureQrDecoder } from "./qr-wasm";
+import { embedInScreenshot, googleExportLink, renderQr, resample } from "./test-support/qr-fixtures";
 
-const MODULE_SIZE_PX = 6;
-const QUIET_ZONE_MODULES = 4;
-const OPAQUE = 255;
+beforeAll(() => {
+  const wasmPath = createRequire(import.meta.url).resolve("zxing-wasm/reader/zxing_reader.wasm");
+  const wasm = readFileSync(wasmPath);
+  configureQrDecoder({ wasmBinary: wasm.buffer.slice(wasm.byteOffset, wasm.byteOffset + wasm.byteLength) as ArrayBuffer });
+});
 
-/** Renders a real QR code into raw RGBA pixels, with the white border scanners need. */
-function renderQr(text: string): PixelImage {
-  const { size, data } = QRCode.create(text).modules;
-  const side = (size + QUIET_ZONE_MODULES * 2) * MODULE_SIZE_PX;
-  const pixels = new Uint8ClampedArray(side * side * 4).fill(OPAQUE);
-  for (let y = 0; y < side; y++) {
-    for (let x = 0; x < side; x++) {
-      const column = Math.floor(x / MODULE_SIZE_PX) - QUIET_ZONE_MODULES;
-      const row = Math.floor(y / MODULE_SIZE_PX) - QUIET_ZONE_MODULES;
-      const isDark = column >= 0 && row >= 0 && column < size && row < size && data[row * size + column];
-      if (isDark) pixels.fill(0, (y * side + x) * 4, (y * side + x) * 4 + 3);
-    }
-  }
-  return { data: pixels, width: side, height: side };
-}
+const FIVE_ACCOUNTS = googleExportLink(5);
+const TEN_ACCOUNTS = googleExportLink(10);
 
-describe("findQrText", () => {
-  it("decodes a QR code containing a Google Authenticator export link", () => {
-    const link = "otpauth-migration://offline?data=CjEKCkhlbGxvId6tvu8SGEV4YW1wbGU6YWxpY2VAZ21haWwuY29tGgdFeGFtcGxlIAEoATACEAEYASAA";
-    expect(findQrText(renderQr(link))).toBe(link);
+describe("findQrText on ordinary images", () => {
+  it("decodes a clean QR code", async () => {
+    expect(await findQrText(renderQr(FIVE_ACCOUNTS, { modulePx: 6 }))).toBe(FIVE_ACCOUNTS);
   });
 
-  it("decodes a plain otpauth link", () => {
-    const link = "otpauth://totp/Acme:a@b?secret=GEZDGNBVGY3TQOJQ&issuer=Acme";
-    expect(findQrText(renderQr(link))).toBe(link);
+  it("returns null for an image without a QR code", async () => {
+    const blank = { data: new Uint8ClampedArray(64 * 64 * 4).fill(255), width: 64, height: 64 };
+    expect(await findQrText(blank)).toBeNull();
   });
 
-  it("returns null for an image without a QR code", () => {
-    const blank = { data: new Uint8ClampedArray(64 * 64 * 4).fill(OPAQUE), width: 64, height: 64 };
-    expect(findQrText(blank)).toBeNull();
+  it("decodes a dark-mode code (light modules on a dark background)", async () => {
+    const inverted = renderQr(FIVE_ACCOUNTS, { modulePx: 4, dark: [255, 255, 255], light: [0, 0, 0] });
+    expect(await findQrText(inverted)).toBe(FIVE_ACCOUNTS);
+  });
+
+  it("decodes a low-contrast grey-on-grey code", async () => {
+    const faint = renderQr(FIVE_ACCOUNTS, { modulePx: 4, dark: [120, 120, 120], light: [190, 190, 190] });
+    expect(await findQrText(faint)).toBe(FIVE_ACCOUNTS);
+  });
+
+  it("decodes a tightly cropped code with no blank border", async () => {
+    expect(await findQrText(renderQr(FIVE_ACCOUNTS, { modulePx: 5, quietModules: 0 }))).toBe(FIVE_ACCOUNTS);
   });
 });
 
-describe("scaleToFit", () => {
-  it("shrinks large images and preserves aspect ratio", () => {
-    expect(scaleToFit(3200, 1600, 1600)).toEqual({ width: 1600, height: 800 });
+// These are the cases the previous decoder (jsQR, after shrinking to 1600 px) missed.
+describe("findQrText on dense codes in large screenshots", () => {
+  it("decodes a 10-account export in a Retina-sized screenshot", async () => {
+    const screenshot = embedInScreenshot(renderQr(TEN_ACCOUNTS, { modulePx: 4 }), 2880, 1800, { x: 1500, y: 500 });
+    expect(await findQrText(screenshot)).toBe(TEN_ACCOUNTS);
   });
 
-  it("never enlarges small images", () => {
-    expect(scaleToFit(300, 200, 1600)).toEqual({ width: 300, height: 200 });
+  it("decodes a 10-account export in a 4K screenshot", async () => {
+    const screenshot = embedInScreenshot(renderQr(TEN_ACCOUNTS, { modulePx: 3 }), 3840, 2160, { x: 2000, y: 700 });
+    expect(await findQrText(screenshot)).toBe(TEN_ACCOUNTS);
+  });
+});
+
+describe("findQrText on enlarged copies", () => {
+  it("decodes a dense code displayed at 2.3 px per module once it is enlarged, as the retry does", async () => {
+    const squashed = resample(renderQr(TEN_ACCOUNTS, { modulePx: 3 }), 2.3 / 3);
+    expect(await findQrText(resample(squashed, 2))).toBe(TEN_ACCOUNTS);
   });
 });
