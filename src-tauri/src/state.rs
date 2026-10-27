@@ -6,6 +6,7 @@ use crate::record::{AccountRecord, VaultData};
 use crate::settings::Settings;
 use crate::vault::Session;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 use std::sync::{Mutex, MutexGuard, PoisonError};
@@ -45,6 +46,10 @@ pub struct VaultState {
     /// Identifies the vault file contents we last read or wrote, so a change made
     /// by another device can be told apart from our own saves.
     disk_fingerprint: Option<u64>,
+    /// Sibling files we should leave alone until they change, by the fingerprint
+    /// we saw: ones we cannot read with our key, or could not set aside after
+    /// merging. Without this the same file would be retried every second.
+    skipped_copies: HashMap<PathBuf, u64>,
 }
 
 impl VaultState {
@@ -74,6 +79,14 @@ impl VaultState {
 
     pub fn set_disk_fingerprint(&mut self, fingerprint: Option<u64>) {
         self.disk_fingerprint = fingerprint;
+    }
+
+    pub fn is_skipped_copy(&self, path: &Path, fingerprint: u64) -> bool {
+        self.skipped_copies.get(path) == Some(&fingerprint)
+    }
+
+    pub fn skip_copy_until_it_changes(&mut self, path: &Path, fingerprint: u64) {
+        self.skipped_copies.insert(path.to_path_buf(), fingerprint);
     }
 
     pub fn unlock(&mut self, session: Session, data: VaultData) {

@@ -1,6 +1,6 @@
 //! Background check that picks up changes other devices make to the vault file.
 
-use crate::disk_sync::{sync_from_disk, DiskSyncOutcome};
+use crate::disk_sync::{sync_vault_folder, DiskSyncOutcome};
 use crate::state::AppState;
 use crate::tray::refresh_tray;
 use std::time::Duration;
@@ -20,5 +20,5 @@ pub fn spawn_loop(app: AppHandle) {
 fn sync_once(app: &AppHandle) -> DiskSyncOutcome {
     let state = app.state::<AppState>();
     let mut vault = state.vault_guard();
-    sync_from_disk(&state.vault_path(), &mut vault)
+    sync_vault_folder(&state.vault_path(), &mut vault)
 }
