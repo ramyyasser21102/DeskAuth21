@@ -39,6 +39,8 @@ export interface CodeView {
   vendor: VendorId;
   code: string;
   seconds_left: number;
+  /** Length of one code window, for drawing how much of it is left. */
+  period_seconds: number;
 }
 
 export const getVaultStatus = () => invoke<VaultStatus>("vault_status");

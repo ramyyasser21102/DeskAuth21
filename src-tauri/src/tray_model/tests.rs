@@ -9,6 +9,7 @@ fn view(id: &str, label: &str, code: &str, seconds_left: u64) -> CodeView {
         vendor: crate::vendor::Vendor::Other,
         code: code.into(),
         seconds_left,
+        period_seconds: 30,
     }
 }
 

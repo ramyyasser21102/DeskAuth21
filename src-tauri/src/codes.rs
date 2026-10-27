@@ -14,6 +14,8 @@ pub struct CodeView {
     pub vendor: Vendor,
     pub code: String,
     pub seconds_left: u64,
+    /// Length of one code window, so the UI can draw how much of it is left.
+    pub period_seconds: u64,
 }
 
 pub fn build_code_views(records: &[AccountRecord], unix_seconds: u64) -> Vec<CodeView> {
@@ -27,6 +29,7 @@ pub fn build_code_views(records: &[AccountRecord], unix_seconds: u64) -> Vec<Cod
             vendor: record.vendor,
             code: record.account.code_at(unix_seconds),
             seconds_left: record.account.seconds_until_next_code(unix_seconds),
+            period_seconds: record.account.period_seconds,
         })
         .collect()
 }
@@ -64,6 +67,7 @@ mod tests {
         assert_eq!((views[0].issuer.as_str(), views[0].name.as_str()), ("Acme", "a@b"));
         assert_eq!(views[0].code, record.account.code_at(59));
         assert_eq!(views[0].seconds_left, 1);
+        assert_eq!(views[0].period_seconds, record.account.period_seconds);
     }
 
     #[test]
