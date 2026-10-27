@@ -17,9 +17,11 @@ use std::sync::{Mutex, PoisonError};
 use std::time::Duration;
 use tauri::menu::{CheckMenuItem, Menu, MenuEvent, MenuItem, PredefinedMenuItem};
 use tauri::tray::{TrayIcon, TrayIconBuilder};
+use tauri::image::Image;
 use tauri::{AppHandle, Manager, Wry};
 
 const TRAY_ID: &str = "main";
+const MENU_BAR_TEMPLATE_PNG: &[u8] = include_bytes!("../icons/tray-icon.png");
 const MENU_ID_STATUS: &str = "status";
 const MENU_ID_COUNTDOWN: &str = "countdown";
 const MENU_ID_MORE: &str = "more";
@@ -59,12 +61,24 @@ impl TrayMenuState {
     }
 }
 
+/// The menu bar tints a "template" image to suit light or dark mode, so macOS gets the
+/// plain shield. Windows and Linux trays cannot do that and may be light or dark, so they
+/// keep the app icon, whose white tile reads on either.
+fn tray_icon(app: &AppHandle) -> tauri::Result<Image<'static>> {
+    if cfg!(target_os = "macos") {
+        return Image::from_bytes(MENU_BAR_TEMPLATE_PNG);
+    }
+    let window_icon = app.default_window_icon().expect("tauri.conf.json must define an app icon");
+    Ok(window_icon.clone().to_owned())
+}
+
 pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
     app.manage(TrayMenuState::default());
-    let icon = app.default_window_icon().cloned().expect("tauri.conf.json must define an app icon");
+    let icon = tray_icon(app)?;
     let built = build_menu(app, &take_model(app))?;
     TrayIconBuilder::with_id(TRAY_ID)
         .icon(icon)
+        .icon_as_template(cfg!(target_os = "macos"))
         .menu(&built.menu)
         .on_menu_event(handle_menu_event)
         .build(app)?;
