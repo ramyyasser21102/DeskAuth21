@@ -28,6 +28,7 @@ mod state;
 #[cfg(test)]
 mod test_support;
 mod tray;
+mod tray_model;
 mod vault;
 mod vendor;
 mod vault_actions;

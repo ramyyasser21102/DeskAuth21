@@ -37,11 +37,6 @@ pub fn split_code_in_half(code: &str) -> String {
     format!("{first_half} {second_half}")
 }
 
-pub fn tray_menu_text(view: &CodeView) -> String {
-    let code = split_code_in_half(&view.code);
-    format!("{}  {}  ({}s)", view.label, code, view.seconds_left)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
