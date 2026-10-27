@@ -66,10 +66,19 @@ fn imports_require_an_unlocked_vault() {
 #[test]
 fn imported_accounts_survive_a_lock_cycle() {
     let (state, directory) = unlocked_state();
-    assert_eq!(import_accounts(&state, ACCOUNT_URI).unwrap(), 1);
+    assert_eq!(import_accounts(&state, ACCOUNT_URI).unwrap().added, 1);
     lock_vault(&state);
     unlock_vault(&state, PASSPHRASE).unwrap();
     assert_eq!(current_codes_now(&state).unwrap()[0].label, "Acme (a@b)");
+    remove(directory);
+}
+
+#[test]
+fn importing_the_same_export_twice_adds_nothing_new() {
+    let (state, directory) = unlocked_state();
+    assert_eq!(import_accounts(&state, ACCOUNT_URI).unwrap(), ImportSummary { added: 1, skipped_duplicates: 0 });
+    assert_eq!(import_accounts(&state, ACCOUNT_URI).unwrap(), ImportSummary { added: 0, skipped_duplicates: 1 });
+    assert_eq!(current_codes_now(&state).unwrap().len(), 1);
     remove(directory);
 }
 

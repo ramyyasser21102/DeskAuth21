@@ -6,7 +6,7 @@ use crate::error::CommandError;
 use crate::state::{AppState, VaultStatus};
 use crate::tray::refresh_tray;
 use crate::vault::KdfParams;
-use crate::vault_actions;
+use crate::vault_actions::{self, ImportSummary};
 use tauri::{AppHandle, State};
 
 #[tauri::command]
@@ -37,10 +37,10 @@ pub fn lock(state: State<AppState>, app: AppHandle) {
 }
 
 #[tauri::command]
-pub fn import_uri(uri: String, state: State<AppState>, app: AppHandle) -> Result<usize, CommandError> {
-    let imported_count = vault_actions::import_accounts(&state, &uri)?;
+pub fn import_uri(uri: String, state: State<AppState>, app: AppHandle) -> Result<ImportSummary, CommandError> {
+    let summary = vault_actions::import_accounts(&state, &uri)?;
     refresh_tray(&app);
-    Ok(imported_count)
+    Ok(summary)
 }
 
 #[tauri::command]
