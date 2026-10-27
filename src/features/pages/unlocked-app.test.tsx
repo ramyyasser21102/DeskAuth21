@@ -94,3 +94,45 @@ describe("UnlockedApp vendor tabs", () => {
     expect(screen.queryByRole("group", { name: "Filter by app" })).toBeNull();
   });
 });
+
+const mixedAccounts = [account("GitHub", "aegis"), account("Gitlab", "aegis"), account("Amazon", "authy"), account("Slack", "authy")];
+
+async function openMixedCodes() {
+  vi.mocked(listCodes).mockResolvedValue(mixedAccounts);
+  renderApp();
+  await screen.findByText("GitHub");
+}
+
+describe("UnlockedApp grouping", () => {
+  it("puts accounts under a heading for their app, with the count", async () => {
+    await openMixedCodes();
+    expect(screen.getByRole("heading", { name: "Aegis (2)" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Authy (2)" })).toBeTruthy();
+  });
+});
+
+describe("UnlockedApp search", () => {
+  it("narrows the list as you type, across apps", async () => {
+    await openMixedCodes();
+    fireEvent.change(screen.getByLabelText("Search accounts"), { target: { value: "git" } });
+    expect(screen.getByText("GitHub")).toBeTruthy();
+    expect(screen.getByText("Gitlab")).toBeTruthy();
+    expect(screen.queryByText("Amazon")).toBeNull();
+    expect(screen.queryByRole("heading", { name: /Authy/ })).toBeNull();
+  });
+
+  it("finds accounts by the app's name too", async () => {
+    await openMixedCodes();
+    fireEvent.change(screen.getByLabelText("Search accounts"), { target: { value: "authy" } });
+    expect(screen.getByText("Slack")).toBeTruthy();
+    expect(screen.queryByText("GitHub")).toBeNull();
+  });
+
+  it("says nothing matched and offers a way back", async () => {
+    await openMixedCodes();
+    fireEvent.change(screen.getByLabelText("Search accounts"), { target: { value: "zzz" } });
+    expect(screen.getByText('No accounts match "zzz".')).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Show all accounts" }));
+    expect(screen.getByText("GitHub")).toBeTruthy();
+  });
+});
