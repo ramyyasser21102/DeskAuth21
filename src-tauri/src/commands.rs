@@ -1,5 +1,6 @@
 //! Tauri command handlers: thin adapters from the frontend to `vault_actions`.
 
+use crate::clipboard;
 use crate::codes::CodeView;
 use crate::error::CommandError;
 use crate::state::{AppState, VaultStatus};
@@ -45,4 +46,10 @@ pub fn import_uri(uri: String, state: State<AppState>, app: AppHandle) -> Result
 #[tauri::command]
 pub fn list_codes(state: State<AppState>) -> Result<Vec<CodeView>, CommandError> {
     vault_actions::current_codes_now(&state)
+}
+
+/// Copies the code and clears the clipboard again after a delay.
+#[tauri::command]
+pub fn copy_code(account_index: usize, app: AppHandle) -> Result<(), CommandError> {
+    clipboard::copy_code_for_account(&app, account_index)
 }

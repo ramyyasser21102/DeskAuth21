@@ -1,7 +1,9 @@
 //! The menu-bar / system-tray icon and its live-updating menu.
 
 use crate::clock::current_unix_seconds;
+use crate::clipboard::copy_code_for_account;
 use crate::codes::{build_code_views, tray_menu_text, CodeView};
+use crate::copy_policy::{copy_item_id, parse_copy_item_id};
 use crate::state::{AppState, VaultStatus};
 use std::time::Duration;
 use tauri::menu::{Menu, MenuEvent, MenuItem, PredefinedMenuItem};
@@ -13,7 +15,6 @@ const MAIN_WINDOW_LABEL: &str = "main";
 const MENU_ID_STATUS: &str = "status";
 const MENU_ID_SHOW: &str = "show";
 const MENU_ID_QUIT: &str = "quit";
-const COPY_ITEM_ID_PREFIX: &str = "copy:";
 const QUIT_ACCELERATOR: &str = "CmdOrCtrl+Q";
 const EXIT_SUCCESS: i32 = 0;
 const REFRESH_INTERVAL: Duration = Duration::from_secs(1);
@@ -91,8 +92,8 @@ fn append_placeholder(app: &AppHandle, menu: &Menu<Wry>, snapshot: &TraySnapshot
 
 fn append_account_items(app: &AppHandle, menu: &Menu<Wry>, snapshot: &TraySnapshot) -> tauri::Result<()> {
     for (index, view) in snapshot.code_views.iter().enumerate() {
-        let item_id = format!("{COPY_ITEM_ID_PREFIX}{index}");
-        menu.append(&MenuItem::with_id(app, item_id, tray_menu_text(view), true, None::<&str>)?)?;
+        let item = MenuItem::with_id(app, copy_item_id(index), tray_menu_text(view), true, None::<&str>)?;
+        menu.append(&item)?;
     }
     Ok(())
 }
@@ -107,8 +108,16 @@ fn handle_menu_event(app: &AppHandle, event: MenuEvent) {
     match event.id.as_ref() {
         MENU_ID_QUIT => app.exit(EXIT_SUCCESS),
         MENU_ID_SHOW => show_main_window(app),
-        // Copy-to-clipboard items are handled in the clipboard branch.
-        _ => {}
+        item_id => copy_from_menu_item(app, item_id),
+    }
+}
+
+fn copy_from_menu_item(app: &AppHandle, item_id: &str) {
+    let Some(account_index) = parse_copy_item_id(item_id) else {
+        return;
+    };
+    if let Err(error) = copy_code_for_account(app, account_index) {
+        eprintln!("could not copy code: {error}");
     }
 }
 

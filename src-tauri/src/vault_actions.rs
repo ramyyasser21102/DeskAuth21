@@ -49,6 +49,15 @@ pub fn current_codes(state: &AppState, unix_seconds: u64) -> Result<Vec<CodeView
     Ok(build_code_views(vault.accounts(), unix_seconds))
 }
 
+/// The code for one account, by its position in the list shown to the user.
+pub fn code_for_account(state: &AppState, account_index: usize, unix_seconds: u64) -> Result<String, CommandError> {
+    current_codes(state, unix_seconds)?
+        .into_iter()
+        .nth(account_index)
+        .map(|view| view.code)
+        .ok_or(CommandError::AccountNotFound(account_index))
+}
+
 pub fn current_codes_now(state: &AppState) -> Result<Vec<CodeView>, CommandError> {
     current_codes(state, current_unix_seconds())
 }

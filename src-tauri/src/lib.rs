@@ -1,8 +1,10 @@
 //! DeskAuth21: wires the modules together. No business logic lives here.
 
+mod clipboard;
 mod clock;
 mod codes;
 mod commands;
+mod copy_policy;
 mod error;
 mod import;
 mod otp;
@@ -22,6 +24,7 @@ const VAULT_FILE_NAME: &str = "vault.da21";
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .invoke_handler(tauri::generate_handler![
             commands::vault_status,
             commands::create_vault,
@@ -29,6 +32,7 @@ pub fn run() {
             commands::lock,
             commands::import_uri,
             commands::list_codes,
+            commands::copy_code,
         ])
         .setup(setup_app)
         .run(tauri::generate_context!())
