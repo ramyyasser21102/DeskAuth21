@@ -142,7 +142,7 @@ fn list_codes(state: State<AppState>) -> Result<Vec<CodeView>, String> {
     Ok(inner
         .accounts
         .iter()
-        .map(|a| CodeView { label: a.label(), code: a.code_at(t), seconds_left: a.seconds_left(t) })
+        .map(|a| CodeView { label: a.display_label(), code: a.code_at(t), seconds_left: a.seconds_until_next_code(t) })
         .collect())
 }
 
@@ -160,7 +160,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         }
         for (i, a) in inner.accounts.iter().enumerate() {
             let c = a.code_at(t);
-            let text = format!("{}  {} {}  ({}s)", a.label(), &c[..c.len() / 2], &c[c.len() / 2..], a.seconds_left(t));
+            let text = format!("{}  {} {}  ({}s)", a.display_label(), &c[..c.len() / 2], &c[c.len() / 2..], a.seconds_until_next_code(t));
             menu.append(&MenuItem::with_id(app, format!("copy:{i}"), text, true, None::<&str>)?)?;
         }
     }

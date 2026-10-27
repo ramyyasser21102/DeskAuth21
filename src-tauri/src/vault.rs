@@ -144,7 +144,7 @@ mod tests {
             secret: b"12345678901234567890".to_vec(),
             algorithm: OtpAlgorithm::Sha1,
             digits: 6,
-            period: 30,
+            period_seconds: 30,
         }]
     }
 
