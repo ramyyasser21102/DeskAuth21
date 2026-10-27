@@ -40,15 +40,7 @@ impl<'a> Reader<'a> {
     }
 
     fn read_varint(&mut self) -> Result<u64, ImportError> {
-        let mut value = 0u64;
-        for shift in (0..VARINT_MAX_BITS).step_by(VARINT_CHUNK_BITS) {
-            let byte = self.take_byte()?;
-            value |= u64::from(byte & VARINT_PAYLOAD_MASK) << shift;
-            if byte & VARINT_CONTINUATION_BIT == 0 {
-                return Ok(value);
-            }
-        }
-        Err(ImportError::BadPayload)
+        read_varint(&mut self.remaining)
     }
 
     fn read_length_delimited(&mut self) -> Result<&'a [u8], ImportError> {
@@ -61,11 +53,25 @@ impl<'a> Reader<'a> {
         Ok(bytes)
     }
 
-    fn take_byte(&mut self) -> Result<u8, ImportError> {
-        let (&byte, rest) = self.remaining.split_first().ok_or(ImportError::BadPayload)?;
-        self.remaining = rest;
-        Ok(byte)
+}
+
+/// Consumes a base-128 varint from the front of `remaining`.
+fn read_varint(remaining: &mut &[u8]) -> Result<u64, ImportError> {
+    let mut value = 0u64;
+    for shift in (0..VARINT_MAX_BITS).step_by(VARINT_CHUNK_BITS) {
+        let byte = take_byte(remaining)?;
+        value |= u64::from(byte & VARINT_PAYLOAD_MASK) << shift;
+        if byte & VARINT_CONTINUATION_BIT == 0 {
+            return Ok(value);
+        }
     }
+    Err(ImportError::BadPayload)
+}
+
+fn take_byte(remaining: &mut &[u8]) -> Result<u8, ImportError> {
+    let (&byte, rest) = remaining.split_first().ok_or(ImportError::BadPayload)?;
+    *remaining = rest;
+    Ok(byte)
 }
 
 #[cfg(test)]
