@@ -224,6 +224,11 @@ because changing them would lock people out of existing data: the data folder id
 (`com.deskauth21.app`), the `DESKAUTH21_DATA_DIR` variable, the repository name, and the labels
 mixed into vault and hardware-key cryptography.
 
+## Testing on real hardware
+
+[docs/real-hardware-checklist.md](docs/real-hardware-checklist.md) lists what only a person at a real
+computer can check: the tray, shortcuts, hardware keys, screen capture, sleep and file dialogs.
+
 ## Development
 
 ```sh
