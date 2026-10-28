@@ -22,6 +22,7 @@ vi.mock("@/lib/api", () => ({
   getSettings: vi.fn().mockImplementation(async () => (await import("@/test-support/settings-fixture")).DEFAULT_SETTINGS),
   setAutoLockMinutes: vi.fn(),
   recordActivity: vi.fn().mockResolvedValue(undefined),
+  getLaunchAtLogin: vi.fn().mockResolvedValue(false),
   getVaultFolder: vi.fn().mockResolvedValue("/data/DeskAuth21"),
   chooseVaultFolder: vi.fn(),
 }));

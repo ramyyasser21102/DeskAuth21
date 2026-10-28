@@ -5,6 +5,7 @@
 //! structure changes (accounts added or removed, locked or unlocked).
 
 use crate::autostart;
+use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 use crate::clipboard::copy_code_for_account;
 use crate::clock::current_unix_seconds;
 use crate::codes::build_code_views;
@@ -133,9 +134,10 @@ fn copy_from_menu_item(app: &AppHandle, item_id: &str) {
     }
 }
 
+/// The menu has no room for an error, so a failure is shown in a dialog instead of being swallowed.
 fn toggle_autostart_from_menu(app: &AppHandle) {
     if let Err(error) = autostart::toggle(app) {
-        eprintln!("{error}");
+        app.dialog().message(error.to_string()).title("Launch at login").kind(MessageDialogKind::Error).show(|_| {});
     }
     refresh_tray(app);
 }

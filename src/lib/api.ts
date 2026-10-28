@@ -157,6 +157,9 @@ export const setLockOnSleep = (enabled: boolean) => invoke<Settings>("set_lock_o
 export const setClipboardClearSeconds = (seconds: number) => invoke<Settings>("set_clipboard_clear_seconds", { seconds });
 export const setShortcut = (action: ShortcutAction, shortcut: string | null) =>
   invoke<Settings>("set_shortcut", { action, shortcut });
+export const getLaunchAtLogin = () => invoke<boolean>("get_launch_at_login");
+/** Resolves with what the system now has, which is what was asked for or the call fails. */
+export const setLaunchAtLogin = (enabled: boolean) => invoke<boolean>("set_launch_at_login", { enabled });
 export const recordActivity = () => invoke<void>("record_activity");
 
 /** Each of these returns `null` or `false` when the person cancels the file dialog. */
