@@ -105,6 +105,19 @@ you have written it down and retyped three of its words, and it is shown once. I
 the passphrase, choose "Forgot your passphrase?" on the unlock screen, enter the 24 words and
 set a new passphrase. With no passphrase and no recovery key, nothing can open the vault.
 
+## Backup and export
+
+Settings has a **Backup and export** section:
+
+- **Save a backup** copies the encrypted vault file wherever you choose. It is as safe as the vault
+  (it still needs your passphrase and hardware key), so it can live on a USB stick or in cloud storage.
+- **Restore a backup** replaces the vault on this computer with a backup, then locks. You unlock with
+  the passphrase the backup was made with. The vault it replaced is kept next to it as
+  `*.before-restore.backup`.
+- **Export accounts** writes every account as plain `otpauth://` links, one per line, which DA21 and
+  other authenticators can import. This file is **not encrypted** and anyone who has it can make your
+  codes, so it asks for your passphrase again and warns you first.
+
 ## Importing accounts
 
 Each account is tagged with the app it came from (Google Authenticator, Microsoft

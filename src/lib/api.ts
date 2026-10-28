@@ -159,6 +159,11 @@ export const setShortcut = (action: ShortcutAction, shortcut: string | null) =>
   invoke<Settings>("set_shortcut", { action, shortcut });
 export const recordActivity = () => invoke<void>("record_activity");
 
+/** Each of these returns `null` or `false` when the person cancels the file dialog. */
+export const saveVaultBackup = () => invoke<string | null>("save_vault_backup");
+export const restoreVaultBackup = () => invoke<boolean>("restore_vault_backup");
+export const exportAccountsFile = (passphrase: string) => invoke<number | null>("export_accounts_file", { passphrase });
+
 export type RelocationOutcome = "unchanged" | "moved" | "used_existing" | "selected";
 
 export const getVaultFolder = () => invoke<string>("get_vault_folder");

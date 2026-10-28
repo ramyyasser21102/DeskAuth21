@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BackupSettings } from "@/features/backup/backup-settings";
 import { SecuritySettings } from "@/features/security/security-settings";
 import { PrivacySettings } from "@/features/privacy/privacy-settings";
 import { ProfileSetting } from "@/features/profile/profile-setting";
@@ -36,6 +37,7 @@ export function SettingsPage({ onVaultChanged, onShowWelcome }: SettingsPageProp
         <SecuritySettings />
         <AutoLockSetting />
         <VaultFolderSetting onVaultChanged={onVaultChanged} />
+        <BackupSettings onVaultChanged={onVaultChanged} />
         <Button variant="outline" onClick={onShowWelcome}>Show welcome page</Button>
         <Button variant="outline" onClick={handleLock}>Lock now</Button>
       </CardContent>
