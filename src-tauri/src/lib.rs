@@ -49,6 +49,9 @@ mod tray_model;
 mod vault;
 mod vendor;
 mod vault_actions;
+mod vault_backup;
+mod backup_name;
+mod otpauth_export;
 mod vault_security;
 mod vault_location;
 mod vault_relocation;
@@ -76,7 +79,7 @@ fn command_handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'sta
         commands::get_settings, commands::set_auto_lock_minutes, commands::set_capture_protection,
         commands::set_hide_codes, commands::set_tray_shows_codes, commands::set_lock_on_sleep,
         commands::set_clipboard_clear_seconds, commands::set_shortcut, commands::record_activity, commands::get_vault_folder,
-        commands::choose_vault_folder,
+        commands::choose_vault_folder, commands::save_vault_backup, commands::restore_vault_backup, commands::export_accounts_file,
     ]
 }
 

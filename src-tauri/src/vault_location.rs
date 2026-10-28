@@ -40,7 +40,7 @@ pub fn change_vault_folder(state: &AppState, folder: &Path) -> Result<Relocation
 
 /// Copies and then reads back, because a half-copied vault in a sync folder
 /// would replicate everywhere before anyone noticed.
-fn copy_vault_file(from: &Path, to: &Path) -> Result<(), CommandError> {
+pub fn copy_vault_file(from: &Path, to: &Path) -> Result<(), CommandError> {
     let bytes = read_vault_file(from)?;
     write_atomically(to, &bytes)?;
     if std::fs::read(to)? != bytes {

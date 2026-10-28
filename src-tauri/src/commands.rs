@@ -10,7 +10,10 @@ use crate::passphrase_generator;
 use crate::passphrase_strength::{assess, PassphraseStrength};
 use crate::settings::SettingsView;
 use crate::error::CommandError;
+use crate::backup_name::{backup_file_name, BACKUP_EXTENSION};
+use crate::clock::current_unix_seconds;
 use crate::hotkey;
+use crate::vault_backup;
 use crate::shortcuts::{validate_shortcut, ShortcutAction};
 use crate::state::{AppState, VaultStatus};
 use crate::tray::refresh_tray;
@@ -218,4 +221,43 @@ pub async fn choose_vault_folder(state: State<'_, AppState>, app: AppHandle) -> 
 #[tauri::command]
 pub fn list_vendors() -> Vec<VendorInfo> {
     vendor_catalog()
+}
+
+fn picked_path(picked: tauri_plugin_dialog::FilePath) -> Result<std::path::PathBuf, CommandError> {
+    picked.into_path().map_err(|error| CommandError::InvalidSetting(error.to_string()))
+}
+
+/// Asks where to save a copy of the encrypted vault. `None` means they cancelled.
+#[tauri::command]
+pub async fn save_vault_backup(state: State<'_, AppState>, app: AppHandle) -> Result<Option<String>, CommandError> {
+    let dialog = app.dialog().file().set_file_name(backup_file_name(current_unix_seconds()));
+    let Some(picked) = dialog.blocking_save_file() else {
+        return Ok(None);
+    };
+    let destination = picked_path(picked)?;
+    vault_backup::save_backup(&state, &destination)?;
+    Ok(Some(destination.display().to_string()))
+}
+
+/// Asks for a backup file and makes it the vault, locking. `false` means they cancelled.
+#[tauri::command]
+pub async fn restore_vault_backup(state: State<'_, AppState>, app: AppHandle) -> Result<bool, CommandError> {
+    let dialog = app.dialog().file().add_filter("DA21 backup", &[BACKUP_EXTENSION]);
+    let Some(picked) = dialog.blocking_pick_file() else {
+        return Ok(false);
+    };
+    vault_backup::restore_backup(&state, &picked_path(picked)?)?;
+    lock_and_clean_up(&app);
+    Ok(true)
+}
+
+/// Writes every account, readable by anyone, to a file they choose. The passphrase is checked
+/// before the dialog opens. Returns how many were written, or `None` if they cancelled.
+#[tauri::command]
+pub async fn export_accounts_file(passphrase: String, state: State<'_, AppState>, app: AppHandle) -> Result<Option<usize>, CommandError> {
+    state.vault_guard().session()?.verify_passphrase(&passphrase)?;
+    let Some(picked) = app.dialog().file().set_file_name("DA21-accounts.txt").blocking_save_file() else {
+        return Ok(None);
+    };
+    Ok(Some(vault_backup::export_accounts(&state, &passphrase, &picked_path(picked)?)?))
 }
