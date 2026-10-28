@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { RestoreBackupButton } from "@/features/backup/restore-backup-button";
 import { UseExistingVaultButton } from "@/features/sync/use-existing-vault-button";
 import { createVault, unlockVault } from "@/lib/api";
 import { PassphraseForm } from "./passphrase-form";
@@ -28,6 +29,7 @@ export function CreateVaultScreen({ onCreated }: { onCreated: () => void }) {
         onSubmit={handleSubmit}
       />
       <UseExistingVaultButton onChosen={onCreated} />
+      <RestoreBackupButton replacesVault={false} onRestored={onCreated} />
     </div>
   );
 }
@@ -48,6 +50,7 @@ export function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
         {needsKey && <PasswordField id="key-pin" label="Key PIN (only if your key has one)" value={keyPin} onChange={setKeyPin} />}
       </PassphraseForm>
       <Button variant="ghost" onClick={() => setIsUsingRecoveryKey(true)}>Forgot your passphrase? Use your recovery key</Button>
+      <RestoreBackupButton replacesVault onRestored={onUnlocked} />
     </div>
   );
 }

@@ -113,7 +113,8 @@ Settings has a **Backup and export** section:
   (it still needs your passphrase and hardware key), so it can live on a USB stick or in cloud storage.
 - **Restore a backup** replaces the vault on this computer with a backup, then locks. You unlock with
   the passphrase the backup was made with. The vault it replaced is kept next to it as
-  `*.before-restore.backup`.
+  `*.before-restore.backup`. It is also offered on the first screens, so a new computer can start
+  from a backup file.
 - **Export accounts** writes every account as plain `otpauth://` links, one per line, which DA21 and
   other authenticators can import. This file is **not encrypted** and anyone who has it can make your
   codes, so it asks for your passphrase again and warns you first.
