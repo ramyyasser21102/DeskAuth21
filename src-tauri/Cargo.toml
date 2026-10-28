@@ -57,6 +57,7 @@ many_single_char_names = "warn"
 tauri-plugin-autostart = "2.7.0"
 tauri-plugin-dialog = "2.8.3"
 tauri-plugin-global-shortcut = "2.4.1"
+tauri-plugin-single-instance = "2.5.5"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.10"

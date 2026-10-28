@@ -37,6 +37,7 @@ mod merge;
 mod persistence;
 mod settings;
 mod settings_store;
+mod single_instance;
 mod shortcuts;
 mod state;
 mod system_lock_watcher;
@@ -86,6 +87,7 @@ fn command_handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'sta
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(single_instance::plugin())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(autostart::plugin())

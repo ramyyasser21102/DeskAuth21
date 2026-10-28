@@ -8,9 +8,13 @@ use std::path::PathBuf;
 pub const DATA_DIR_VARIABLE: &str = "DESKAUTH21_DATA_DIR";
 
 /// An empty value counts as unset, because shells export empty variables easily.
+pub fn is_overridden(override_value: Option<&OsString>) -> bool {
+    override_value.is_some_and(|value| !value.is_empty())
+}
+
 pub fn resolve_app_data_dir(default_dir: PathBuf, override_value: Option<OsString>) -> PathBuf {
     match override_value {
-        Some(value) if !value.is_empty() => PathBuf::from(value),
+        Some(value) if is_overridden(Some(&value)) => PathBuf::from(value),
         _ => default_dir,
     }
 }
@@ -21,6 +25,13 @@ mod tests {
 
     fn default_dir() -> PathBuf {
         PathBuf::from("default")
+    }
+
+    #[test]
+    fn an_empty_value_is_not_an_override() {
+        assert!(!is_overridden(None));
+        assert!(!is_overridden(Some(&OsString::new())));
+        assert!(is_overridden(Some(&OsString::from("/tmp/other"))));
     }
 
     #[test]
