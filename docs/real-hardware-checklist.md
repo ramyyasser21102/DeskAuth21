@@ -115,8 +115,8 @@ You only need one computer: use two data folders pointing at the same synced or 
 - [ ] The installer or bundle opens. **macOS:** right-click > Open (unsigned warning), and the app
       is named `DA21.app`. **Windows:** SmartScreen "More info > Run anyway". **Linux:** the package
       installs and the app starts.
-- [ ] Launch it a second time while it is running and note what happens. There is no
-      single-instance guard today, so a second copy opening is expected, not a failure.
+- [ ] Launch it a second time while it is running (without `DESKAUTH21_DATA_DIR`): no second copy
+      appears, and the running window comes to the front.
 - [ ] Quitting from the tray menu really exits, and the clipboard code (if any) is cleared.
 
 ## Reporting what fails

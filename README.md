@@ -181,6 +181,9 @@ DESKAUTH21_DATA_DIR=/tmp/deskauth-a src-tauri/target/release/deskauth21 &
 DESKAUTH21_DATA_DIR=/tmp/deskauth-b src-tauri/target/release/deskauth21 &
 ```
 
+(Normally DA21 allows one running copy and brings it forward if you start it again; a copy started
+with `DESKAUTH21_DATA_DIR` is exempt, which is what makes this possible.)
+
 In each, create a vault with the same passphrase, open Settings and choose the same folder as
 the vault location (the second can use "Open a vault from a synced folder" on its first
 screen). Add, rename or delete an account in one and watch it appear in the other. Each copy
