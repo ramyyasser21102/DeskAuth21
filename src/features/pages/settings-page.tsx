@@ -5,6 +5,7 @@ import { SecuritySettings } from "@/features/security/security-settings";
 import { PrivacySettings } from "@/features/privacy/privacy-settings";
 import { ProfileSetting } from "@/features/profile/profile-setting";
 import { ShortcutSettings } from "@/features/shortcuts/shortcut-settings";
+import { LaunchAtLoginSetting } from "@/features/startup/launch-at-login-setting";
 import { ThemeToggle } from "@/features/theme/theme-toggle";
 import { AutoLockSetting } from "@/features/settings/auto-lock-setting";
 import { VaultFolderSetting } from "@/features/sync/vault-folder-setting";
@@ -32,6 +33,7 @@ export function SettingsPage({ onVaultChanged, onShowWelcome }: SettingsPageProp
           <span className="text-sm font-medium">Appearance</span>
           <ThemeToggle />
         </div>
+        <LaunchAtLoginSetting />
         <PrivacySettings />
         <ShortcutSettings />
         <SecuritySettings />
