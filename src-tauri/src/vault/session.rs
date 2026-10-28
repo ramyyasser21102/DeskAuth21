@@ -133,6 +133,14 @@ impl Session {
         }
     }
 
+    /// Proves the person knows the passphrase without changing anything.
+    pub fn verify_passphrase(&self, passphrase: &str) -> Result<(), VaultError> {
+        match &self.keys {
+            Keys::Legacy(keys) => keys.verify_passphrase(passphrase),
+            Keys::Slotted(keys) => keys.verify_passphrase(passphrase),
+        }
+    }
+
     pub fn format_version(&self) -> u8 {
         match self.keys {
             Keys::Legacy(_) => VERSION_1,

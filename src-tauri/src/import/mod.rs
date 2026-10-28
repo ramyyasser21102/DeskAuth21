@@ -11,6 +11,8 @@ mod bitwarden;
 mod migration;
 mod otpauth_lines;
 mod otpauth_uri;
+#[cfg(test)]
+pub use otpauth_uri::parse_otpauth_uri;
 mod protobuf;
 mod query;
 mod twofas;
