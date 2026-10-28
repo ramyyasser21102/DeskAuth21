@@ -17,6 +17,11 @@ pub struct LegacyKeys {
 }
 
 impl LegacyKeys {
+    pub fn verify_passphrase(&self, passphrase: &str) -> Result<(), VaultError> {
+        let key = derive_key(passphrase, &self.salt, self.params)?;
+        if *key == *self.key { Ok(()) } else { Err(VaultError::Decrypt) }
+    }
+
     pub fn open(bytes: &[u8], passphrase: &str) -> Result<(Self, VaultData), VaultError> {
         let header = Header::decode(bytes)?;
         let key = derive_key(passphrase, &header.salt, header.params)?;

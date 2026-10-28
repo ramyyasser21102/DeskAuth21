@@ -22,6 +22,11 @@ mod tests;
 pub use hardware_ops::{file_requires_hardware_key, HardwareKeyInfo};
 pub use session::Session;
 
+/// Whether `bytes` look like a vault of a version this program can open. Says nothing about the passphrase.
+pub fn is_vault_file(bytes: &[u8]) -> bool {
+    matches!(layout::file_version(bytes), Some(layout::VERSION_1 | layout::VERSION_2))
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum VaultError {
     #[error("not a DA21 vault, or an unsupported version")]
