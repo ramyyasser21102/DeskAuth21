@@ -15,6 +15,7 @@ mod data_dir_override;
 mod codes;
 mod commands;
 mod commands_hardware;
+mod commands_launch;
 mod disk_sync;
 mod disk_watch;
 mod copy_policy;
@@ -80,7 +81,7 @@ fn command_handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'sta
         commands::get_settings, commands::set_auto_lock_minutes, commands::set_capture_protection,
         commands::set_hide_codes, commands::set_tray_shows_codes, commands::set_lock_on_sleep,
         commands::set_clipboard_clear_seconds, commands::set_shortcut, commands::record_activity, commands::get_vault_folder,
-        commands::choose_vault_folder, commands::save_vault_backup, commands::restore_vault_backup, commands::export_accounts_file,
+        commands::choose_vault_folder, commands_launch::get_launch_at_login, commands_launch::set_launch_at_login, commands::save_vault_backup, commands::restore_vault_backup, commands::export_accounts_file,
     ]
 }
 
