@@ -1,26 +1,72 @@
-# DA21
+<p align="center">
+  <img src="assets/readme-icon.png" alt="DA21 logo: a laptop with a shield and a lock" width="160" height="160">
+</p>
 
-A free, private, cross-platform desktop authenticator (TOTP) that lives in your
-menu bar (macOS/Linux) or system tray (Windows). Built with Tauri 2 (Rust + TypeScript).
+<h1 align="center">DA21</h1>
 
-## Status
+<p align="center">
+  <strong>A free, private authenticator that lives in your menu bar.</strong><br>
+  The same six-digit codes as Google Authenticator, on your computer. No accounts, no servers, no tracking.
+</p>
 
-Early development. Currently working:
+<p align="center">
+  <a href="https://github.com/ramyyasser21102/DeskAuth21/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/ramyyasser21102/DeskAuth21/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/ramyyasser21102/DeskAuth21/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/ramyyasser21102/DeskAuth21?include_prereleases&color=black"></a>
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-black"></a>
+  <img alt="Platforms: macOS, Windows, Linux" src="https://img.shields.io/badge/platforms-macOS%20%C2%B7%20Windows%20%C2%B7%20Linux-black">
+</p>
 
-- TOTP generation (RFC 6238; SHA1/SHA256/SHA512, 6 or 8 digits)
-- Passphrase-encrypted vault (Argon2id + XChaCha20-Poly1305) with lock/unlock
-- Import from Google Authenticator exports: QR images, pasted screenshots or links
-- Tray menu with live codes; click a code to copy it (cleared after 15 seconds by default)
-- Closing the window keeps the app running in the tray
-- Global shortcuts, settable in Settings: show or hide the window (default `Cmd/Ctrl+Shift+A`) and lock the vault (off by default)
-- "Launch at login" toggle in the tray menu (starts hidden in the tray)
-- Auto-lock after 1, 5, 15 or 30 minutes without activity, or never (default 5)
-- Screen capture protection, hidden codes and an optional codes-free tray menu (see below)
-- Rename and delete accounts (a delete asks for confirmation and warns about losing access)
-- Sync between computers by keeping the vault in a synced folder (see below)
+<p align="center">
+  <a href="#install">Install</a> &middot;
+  <a href="#features">Features</a> &middot;
+  <a href="#privacy-and-its-limits">Privacy</a> &middot;
+  <a href="#syncing-between-devices">Sync</a> &middot;
+  <a href="#importing-accounts">Import</a> &middot;
+  <a href="SECURITY.md">Security</a>
+</p>
 
-Planned: biometric/keychain unlock, lock on sleep/screen lock, code search, CLI, changing the
-passphrase, a self-hosted relay for faster sync.
+---
+
+DA21 is a desktop authenticator (TOTP) for macOS, Windows and Linux, built with Tauri 2
+(Rust and TypeScript). Click the menu bar or tray icon, click a code to copy it, and paste it.
+Everything is encrypted on your computer and works offline.
+
+## Install
+
+Download the installer for your system from the
+[Releases](https://github.com/ramyyasser21102/DeskAuth21/releases) page:
+
+| System | File |
+|---|---|
+| macOS | `.dmg` (universal: Apple silicon and Intel) |
+| Windows | `.exe` installer or `.msi` |
+| Linux | `.AppImage`, `.deb` or `.rpm` |
+
+The builds are **unsigned**, so each system warns the first time you open one. The steps are in
+[Installing a build](#installing-a-build) below. This is a preview release: it is tested
+automatically, but not yet on every kind of real hardware.
+
+## Features
+
+- **Codes at a glance:** live codes with a countdown ring, search, and groups by app. Click to copy;
+  the clipboard is cleared after 15 seconds by default.
+- **Menu bar and tray:** click the icon to open the app, right-click for Settings, Lock and
+  Launch at login. Closing the window keeps it running.
+- **Bring your accounts over:** Google Authenticator, Aegis, 2FAS, Bitwarden, `otpauth://` links, QR
+  images and pasted screenshots.
+- **Encrypted vault:** Argon2id and XChaCha20-Poly1305, a 24-word recovery key, and an optional
+  hardware key (FIDO2) as a second factor.
+- **Privacy built in:** hidden codes until revealed, screen-capture blocking, auto-lock, and lock on
+  sleep or screen lock.
+- **Sync without a server:** keep the encrypted vault in a folder iCloud, Dropbox or Syncthing already
+  syncs.
+- **Backup, restore and export** from Settings.
+- **Global shortcuts** you can change: show or hide the window (default `Cmd/Ctrl+Shift+A`) and
+  lock the vault.
+- **Light and dark themes** that follow your system, with motion that respects reduced-motion.
+
+Still ahead: biometric or keychain unlock, a command-line tool, Windows hardware-key support and
+a self-hosted relay for faster sync.
 
 ## The menu bar icon
 
