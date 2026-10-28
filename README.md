@@ -237,6 +237,6 @@ Changes land via short-lived feature branches and pull requests into `main`.
 
 ## License and security
 
-DeskAuth21 is released under the [MIT license](LICENSE); bundled third-party material is listed in
+DA21 is released under the [MIT license](LICENSE); bundled third-party material is listed in
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). To report a vulnerability, follow
 [SECURITY.md](SECURITY.md).

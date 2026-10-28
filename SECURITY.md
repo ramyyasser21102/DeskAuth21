@@ -1,6 +1,6 @@
 # Security policy
 
-DeskAuth21 keeps your one-time-code seeds, so a flaw in it matters. Thank you for
+DA21 keeps your one-time-code seeds, so a flaw in it matters. Thank you for
 reporting one responsibly.
 
 ## Reporting a vulnerability
